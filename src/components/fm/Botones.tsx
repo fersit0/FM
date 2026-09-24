@@ -1,11 +1,16 @@
 import type { ReactNode } from 'react'
 
-/** 6.4 Botón principal: 56 px, radio 16, fondo --estado. Dice lo que hace. */
-export function BotonPrincipal({ children, onClick, disabled }: { children: ReactNode; onClick?: () => void; disabled?: boolean }) {
-  return <button className="fm-boton" onClick={onClick} disabled={disabled}>{children}</button>
+/** 5. Botón principal: 0.88 W, 64 pt, cápsula; colores por pantalla. */
+export function BotonPrincipal({ children, onClick, disabled, piedra = false }: { children: ReactNode; onClick?: () => void; disabled?: boolean; piedra?: boolean }) {
+  return <button className={`boton ${piedra ? 'piedra' : ''}`} onClick={onClick} disabled={disabled}>{children}</button>
 }
 
-/** 6.5 Botón secundario: texto crema-2, área táctil de 44. */
-export function BotonSecundario({ children, onClick, className = '' }: { children: ReactNode; onClick?: () => void; className?: string }) {
-  return <button className={`fm-secundario ${className}`} onClick={onClick}>{children}</button>
+/** Botón secundario en cápsula de contorno de 2 pt */
+export function BotonContorno({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
+  return <button className="boton contorno" onClick={onClick}>{children}</button>
+}
+
+/** Acción menor: texto de 17 pt al 60% */
+export function BotonTexto({ children, onClick, subrayado = false, className = '' }: { children: ReactNode; onClick?: () => void; subrayado?: boolean; className?: string }) {
+  return <button className={`secundario ${subrayado ? 'subrayado' : ''} ${className}`} onClick={onClick}>{children}</button>
 }

@@ -2,7 +2,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
 import './design/tokens.css'
-import './design/base.css'
 import './design/pantalla.css'
 import App from './App'
 import { pedirPersistencia } from './data/db'
@@ -18,7 +17,7 @@ if ('serviceWorker' in navigator) {
 }
 registerSW({ immediate: true })
 
-document.body.dataset.temp = 'reposo'
+document.body.dataset.pantalla = 'inicio'
 
 sembrarSiToca().then(() => {
   createRoot(document.getElementById('root')!).render(

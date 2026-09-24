@@ -7,7 +7,7 @@ import { DIAS_NOMBRE, claveFecha } from '../logic/fechas'
 import { hapticosActivos, setHapticosActivos, haptico } from '../lib/haptics'
 import { sonidoActivo, setSonidoActivo, prepararAudio, sonarFinDescanso } from '../lib/sonido'
 import { PASOS_ATAJO, NOMBRE_ATAJO } from '../lib/atajos'
-import { Hoja, Grupo, Fila } from '../components/fm'
+import { Hoja, Grupo, Fila, Pez } from '../components/fm'
 
 /** 7.8 Ajustes en hoja: lista agrupada. */
 export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; abierta: boolean; onCerrar: () => void; onAviso: (t: string) => void }) {
@@ -106,17 +106,18 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
         <input ref={archivo} type="file" accept="application/json,.json" onChange={importar} className="oculto-visual" />
       </Grupo>
 
-      <Grupo>
-        <Fila texto="Versión" dato={__VERSION__} />
-      </Grupo>
+      <div style={{ position: 'relative' }}>
+        <Grupo><Fila texto="Versión" dato={__VERSION__} /></Grupo>
+        <Pez expresion="saludando" tamano={72} style={{ right: 0, top: -20 }} />
+      </div>
     </Hoja>
   )
 }
 
 function Interruptor({ valor, onCambiar, etiqueta }: { valor: boolean; onCambiar: (v: boolean) => void; etiqueta: string }) {
   return (
-    <button className="fm-switch" role="switch" aria-checked={valor} aria-label={etiqueta} onClick={() => onCambiar(!valor)}>
-      <span className={`fm-switch-pista ${valor ? 'on' : ''}`}><span className="fm-switch-bola" /></span>
+    <button className="switch" role="switch" aria-checked={valor} aria-label={etiqueta} onClick={() => onCambiar(!valor)}>
+      <span className={`switch-pista ${valor ? 'on' : ''}`}><span className="switch-bola" /></span>
     </button>
   )
 }

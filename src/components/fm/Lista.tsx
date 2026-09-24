@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react'
 
-/** 6.6 Listas agrupadas estilo iOS: bloque capa-1, filas de 52, hairline con sangría. */
+/** Listas planas con separadores de 1 px, sin tarjetas. */
 export function Grupo({ titulo, children }: { titulo?: string; children: ReactNode }) {
   return (
     <div>
-      {titulo && <p className="fm-grupo-titulo">{titulo}</p>}
-      <div className="fm-grupo">{children}</div>
+      {titulo && <p className="grupo-titulo">{titulo}</p>}
+      <div className="lista">{children}</div>
     </div>
   )
 }
@@ -13,14 +13,14 @@ export function Grupo({ titulo, children }: { titulo?: string; children: ReactNo
 export function Fila({ num, texto, detalle, dato, onClick, children }: { num?: string | number; texto: ReactNode; detalle?: ReactNode; dato?: ReactNode; onClick?: () => void; children?: ReactNode }) {
   const contenido = (
     <>
-      {num !== undefined && <span className="fm-fila-num">{num}</span>}
-      <span className="fm-fila-texto">
-        <span className="cuerpo">{texto}</span>
-        {detalle && <span className="nota">{detalle}</span>}
+      {num !== undefined && <span className="fila-num">{num}</span>}
+      <span className="fila-texto">
+        <span className="t-cuerpo">{texto}</span>
+        {detalle && <span className="t-nota tenue">{detalle}</span>}
       </span>
-      {dato !== undefined && <span className="fm-fila-dato">{dato}</span>}
+      {dato !== undefined && <span className="fila-dato">{dato}</span>}
       {children}
     </>
   )
-  return onClick ? <button className="fm-fila" onClick={onClick}>{contenido}</button> : <div className="fm-fila">{contenido}</div>
+  return onClick ? <button className="fila" onClick={onClick}>{contenido}</button> : <div className="fila">{contenido}</div>
 }

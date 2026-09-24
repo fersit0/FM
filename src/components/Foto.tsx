@@ -2,18 +2,8 @@ import { useEffect, useState } from 'react'
 import { urlFotoBase } from '../data/fotos'
 import type { FotoEjercicio } from '../data/tipos'
 
-/**
- * 8.1 Foto del ejercicio: primero la propia (IndexedDB), si no la base del repo, si no nada (no ocupa espacio).
- * Tratamiento: desaturada al 35% y oscurecida hacia los bordes, radio 16.
- */
-export function Foto({ clave, ejercicioId, propias, nombre, ancha = false, onClick }: {
-  clave: string
-  ejercicioId: string
-  propias: FotoEjercicio[]
-  nombre: string
-  ancha?: boolean
-  onClick?: () => void
-}) {
+/** Foto del ejercicio: propia primero, luego base. Blanco y negro, contraste +10%, radio 0. */
+export function Foto({ clave, ejercicioId, propias, nombre }: { clave: string; ejercicioId: string; propias: FotoEjercicio[]; nombre: string }) {
   const propia = propias.find((f) => f.ejercicioId === ejercicioId)
   const [url, setUrl] = useState<string | null>(null)
   useEffect(() => {
@@ -25,10 +15,9 @@ export function Foto({ clave, ejercicioId, propias, nombre, ancha = false, onCli
     setUrl(urlFotoBase(clave))
   }, [propia, clave])
   if (!url) return null
-  const Tag = onClick ? 'button' : 'div'
   return (
-    <Tag className={`fm-foto ${ancha ? 'ancha' : ''}`} onClick={onClick} aria-label={onClick ? `${nombre}: ver técnica` : nombre}>
+    <div className="foto ficha-foto" role="img" aria-label={nombre}>
       <img src={url} alt="" loading="lazy" />
-    </Tag>
+    </div>
   )
 }
