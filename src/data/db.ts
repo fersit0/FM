@@ -1,27 +1,31 @@
 // IndexedDB con idb. Todo vive en el teléfono.
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
-import type { Sesion, SetLog, Bodyweight, Photo } from './tipos'
+import type { Sesion, SetLog, Bodyweight, Photo, FotoEjercicio } from './tipos'
 
 interface GymDB extends DBSchema {
   sesiones: { key: string; value: Sesion; indexes: { fecha: string } }
   setLogs: { key: number; value: SetLog; indexes: { sessionId: string; exerciseId: string } }
   pesoCorporal: { key: string; value: Bodyweight }
   fotos: { key: string; value: Photo }
+  fotosEjercicio: { key: string; value: FotoEjercicio }
 }
 
 let dbPromise: Promise<IDBPDatabase<GymDB>> | null = null
 
 export function db(): Promise<IDBPDatabase<GymDB>> {
   if (!dbPromise) {
-    dbPromise = openDB<GymDB>('gym-app', 1, {
-      upgrade(d) {
-        const s = d.createObjectStore('sesiones', { keyPath: 'id' })
-        s.createIndex('fecha', 'fecha')
-        const l = d.createObjectStore('setLogs', { keyPath: 'id', autoIncrement: true })
-        l.createIndex('sessionId', 'sessionId')
-        l.createIndex('exerciseId', 'exerciseId')
-        d.createObjectStore('pesoCorporal', { keyPath: 'fecha' })
-        d.createObjectStore('fotos', { keyPath: 'fecha' })
+    dbPromise = openDB<GymDB>('gym-app', 2, {
+      upgrade(d, vieja) {
+        if (vieja < 1) {
+          const s = d.createObjectStore('sesiones', { keyPath: 'id' })
+          s.createIndex('fecha', 'fecha')
+          const l = d.createObjectStore('setLogs', { keyPath: 'id', autoIncrement: true })
+          l.createIndex('sessionId', 'sessionId')
+          l.createIndex('exerciseId', 'exerciseId')
+          d.createObjectStore('pesoCorporal', { keyPath: 'fecha' })
+          d.createObjectStore('fotos', { keyPath: 'fecha' })
+        }
+        if (vieja < 2) d.createObjectStore('fotosEjercicio', { keyPath: 'ejercicioId' })
       },
     })
   }
@@ -83,14 +87,26 @@ export async function borrarFoto(fecha: string): Promise<void> {
   await (await db()).delete('fotos', fecha)
 }
 
+// Fotos propias de ejercicios
+export async function todasLasFotosEjercicio(): Promise<FotoEjercicio[]> {
+  return (await db()).getAll('fotosEjercicio')
+}
+export async function guardarFotoEjercicio(f: FotoEjercicio): Promise<void> {
+  await (await db()).put('fotosEjercicio', f)
+}
+export async function borrarFotoEjercicio(id: string): Promise<void> {
+  await (await db()).delete('fotosEjercicio', id)
+}
+
 export async function borrarTodo(): Promise<void> {
   const d = await db()
-  const tx = d.transaction(['sesiones', 'setLogs', 'pesoCorporal', 'fotos'], 'readwrite')
+  const tx = d.transaction(['sesiones', 'setLogs', 'pesoCorporal', 'fotos', 'fotosEjercicio'], 'readwrite')
   await Promise.all([
     tx.objectStore('sesiones').clear(),
     tx.objectStore('setLogs').clear(),
     tx.objectStore('pesoCorporal').clear(),
     tx.objectStore('fotos').clear(),
+    tx.objectStore('fotosEjercicio').clear(),
   ])
   await tx.done
 }

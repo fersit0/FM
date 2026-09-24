@@ -2,8 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Misma versión que package.json; se muestra en Ajustes
+const version = '0.2.0'
+
 export default defineConfig({
   base: '/gym-app/',
+  define: { __VERSION__: JSON.stringify(version) },
   plugins: [
     react(),
     VitePWA({
@@ -27,7 +31,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,jpg}'],
         navigateFallback: '/gym-app/index.html',
       },
     }),

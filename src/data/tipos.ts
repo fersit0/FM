@@ -41,6 +41,8 @@ export interface Ejercicio extends Detalle {
   porLado?: boolean
   alternativas: Alternativa[]
   ilustracion: string
+  /** incremento del dial de peso en kg (2.5 por defecto) */
+  incrementoKg?: number
 }
 
 export interface Sesion {
@@ -82,6 +84,13 @@ export interface Photo {
   blob: Blob
 }
 
+/** Foto propia de un ejercicio (la máquina real del gym), tomada desde la ficha */
+export interface FotoEjercicio {
+  ejercicioId: string
+  blob: Blob
+  fecha: string
+}
+
 export interface Settings {
   horaTope: string
   horaCompleta: string
@@ -94,6 +103,8 @@ export interface Settings {
   tema: 'oscuro' | 'claro'
   /** cuántas semanas cumplidas había cuando se pospuso la regla de 4 semanas */
   reglaPospuestaEn?: number
+  /** "Salgo de la oficina a las" (HH:MM) o vacío */
+  horaSalida?: string
 }
 
 export const SETTINGS_DEFAULT: Settings = {

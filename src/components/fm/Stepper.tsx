@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 
-/** 7.4 Stepper de reps: cápsula capa-2, botones 56×56, mantener repite cada 120 ms tras 400 ms. */
+/** 6.3 Stepper: tres piezas sueltas, botones circulares de 56, cifra media al centro. Mantener repite. */
 export function Stepper({ valor, onChange, min = 0, max = 99, unidad = 'reps' }: { valor: number; onChange: (v: number) => void; min?: number; max?: number; unidad?: string }) {
   const timer = useRef<number | null>(null)
   const repetidor = useRef<number | null>(null)
@@ -23,18 +23,22 @@ export function Stepper({ valor, onChange, min = 0, max = 99, unidad = 'reps' }:
     if (repetidor.current) clearInterval(repetidor.current)
     timer.current = repetidor.current = null
   }
+  const props = (d: number) => ({
+    onPointerDown: (e: React.PointerEvent) => { e.preventDefault(); empezar(d) },
+    onPointerUp: soltar, onPointerCancel: soltar, onPointerLeave: soltar,
+  })
 
   return (
     <div className="fm-stepper" role="group" aria-label={unidad}>
-      <button className="fm-stepper-boton" aria-label="Menos" onPointerDown={(e) => { e.preventDefault(); empezar(-1) }} onPointerUp={soltar} onPointerCancel={soltar} onPointerLeave={soltar}>
-        <svg className="fm-icono" viewBox="0 0 22 22"><path d="M5 11h12" /></svg>
+      <button className="fm-stepper-boton" aria-label="Menos" {...props(-1)}>
+        <svg className="fm-icono" viewBox="0 0 24 24"><path d="M6 12h12" /></svg>
       </button>
       <div className="fm-stepper-cifra" aria-live="polite">
-        <span className="cifra-grande">{valor}</span>
+        <span key={valor} className="cifra-media cifra-cambio">{valor}</span>
         <span className="unidad">{unidad}</span>
       </div>
-      <button className="fm-stepper-boton" aria-label="Más" onPointerDown={(e) => { e.preventDefault(); empezar(1) }} onPointerUp={soltar} onPointerCancel={soltar} onPointerLeave={soltar}>
-        <svg className="fm-icono" viewBox="0 0 22 22"><path d="M5 11h12M11 5v12" /></svg>
+      <button className="fm-stepper-boton" aria-label="Más" {...props(1)}>
+        <svg className="fm-icono" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12" /></svg>
       </button>
     </div>
   )

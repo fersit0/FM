@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Sesion, SetLog, Bodyweight, Photo, Settings } from '../data/tipos'
+import type { Sesion, SetLog, Bodyweight, Photo, Settings, FotoEjercicio } from '../data/tipos'
 import * as db from '../data/db'
 import { leerSettings, escribirSettings } from '../data/settings'
 
@@ -9,6 +9,7 @@ export interface Datos {
   sets: SetLog[]
   peso: Bodyweight[]
   fotos: Photo[]
+  fotosEjercicio: FotoEjercicio[]
   settings: Settings
   recargar: () => Promise<void>
   guardarSesion: (s: Sesion) => Promise<void>
@@ -19,6 +20,8 @@ export interface Datos {
   borrarPeso: (fecha: string) => Promise<void>
   guardarFoto: (f: Photo) => Promise<void>
   borrarFoto: (fecha: string) => Promise<void>
+  guardarFotoEjercicio: (f: FotoEjercicio) => Promise<void>
+  borrarFotoEjercicio: (id: string) => Promise<void>
   setSettings: (s: Settings) => void
 }
 
@@ -28,14 +31,16 @@ export function useDatos(): Datos {
   const [sets, setSets] = useState<SetLog[]>([])
   const [peso, setPeso] = useState<Bodyweight[]>([])
   const [fotos, setFotos] = useState<Photo[]>([])
+  const [fotosEjercicio, setFotosEjercicio] = useState<FotoEjercicio[]>([])
   const [settings, setSettingsState] = useState<Settings>(() => leerSettings())
 
   const recargar = useCallback(async () => {
-    const [s, l, p, f] = await Promise.all([db.todasLasSesiones(), db.todosLosSets(), db.todoElPeso(), db.todasLasFotos()])
+    const [s, l, p, f, fe] = await Promise.all([db.todasLasSesiones(), db.todosLosSets(), db.todoElPeso(), db.todasLasFotos(), db.todasLasFotosEjercicio()])
     setSesiones(s)
     setSets(l)
     setPeso(p)
     setFotos(f)
+    setFotosEjercicio(fe)
     setListo(true)
   }, [])
 
@@ -56,7 +61,7 @@ export function useDatos(): Datos {
     }
 
   return {
-    listo, sesiones, sets, peso, fotos, settings, recargar, setSettings,
+    listo, sesiones, sets, peso, fotos, fotosEjercicio, settings, recargar, setSettings,
     guardarSesion: envuelve(db.guardarSesion),
     borrarSesion: envuelve(db.borrarSesion),
     guardarSet: envuelve(db.guardarSet),
@@ -65,5 +70,7 @@ export function useDatos(): Datos {
     borrarPeso: envuelve(db.borrarPeso),
     guardarFoto: envuelve(db.guardarFoto),
     borrarFoto: envuelve(db.borrarFoto),
+    guardarFotoEjercicio: envuelve(db.guardarFotoEjercicio),
+    borrarFotoEjercicio: envuelve(db.borrarFotoEjercicio),
   }
 }

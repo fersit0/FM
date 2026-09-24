@@ -1,267 +1,192 @@
-/* FM: tokens de diseño (DISENO.md, secciones 2 a 6). Los componentes leen --estado; nunca pintan temperatura a mano. */
+/* FM v2: tokens (DISENO-FM-v2.md, secciones 3 a 6). El color de estado solo vive en el horizonte,
+   la aguja del dial, el segmento actual de la barra y el botón principal. */
 :root {
   color-scheme: dark;
 
-  /* base: noche, nunca negro puro */
-  --noche: #0A0E1C;
-  --capa-1: #111831;
-  --capa-2: #19223F;
-  --linea: rgba(239, 227, 204, 0.08);
+  --noche: #080B14;
+  --capa-1: #10141F;
+  --capa-2: #181D2B;
+  --separador: rgba(242, 234, 219, 0.10);
 
-  /* texto: crema, nunca blanco puro */
-  --crema: #EFE3CC;
-  --crema-2: rgba(239, 227, 204, 0.62);
-  --crema-3: rgba(239, 227, 204, 0.36);
-  --negro-calido: #15110E;
+  --crema: #F2EADB;
+  --crema-2: rgba(242, 234, 219, 0.60);
+  --crema-3: rgba(242, 234, 219, 0.32);
+  --tinta: #140F0B;
 
-  /* temperatura */
-  --olivo: #9FAA68;
-  --ambar: #FFB23E;
-  --naranja: #FF6A1F;
-  --rojo: #FF4A1C;
-  --teal: #3FC1C9;
+  /* temperatura: solo familia naranja, nada amarillo */
+  --olivo: #A4AE70;
+  --brasa-1: #FF8A3D;
+  --brasa-2: #FF6A1F;
+  --brasa-3: #FF4A1C;
+  --teal: #4FC3C9;
 
-  /* variable viva */
-  --estado: var(--crema);
-  /* texto dentro del módulo encendido */
-  --modulo-texto: var(--negro-calido);
+  --estado: var(--brasa-2);
+  --intensidad: 0.35;
 
-  /* tipografía del sistema */
-  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
 
-  /* movimiento */
-  --ease-peso: cubic-bezier(0.22, 0.8, 0.24, 1);
-  --ease-luz: cubic-bezier(0.4, 0, 0.2, 1);
-  --t-toque: 90ms;
-  --t-control: 180ms;
-  --t-panel: 360ms;
-  --t-luz: 700ms;
+  /* movimiento: una sola curva */
+  --curva: cubic-bezier(0.32, 0.72, 0, 1);
+  --t-hoja: 420ms;
+  --t-panel: 380ms;
+  --t-cifra: 150ms;
+  --t-horizonte: 900ms;
+  --t-toque: 100ms;
 
-  /* radios */
-  --r-modulo: 32px;
-  --r-superficie: 24px;
-  --r-control: 20px;
-  --r-foto: 20px;
-  --r-chip: 12px;
-
-  /* layout */
   --margen: 20px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Temperatura: un solo estado en <body> */
-body[data-temp='reposo'] { --estado: var(--crema); }
-body[data-temp='calentamiento'] { --estado: var(--olivo); }
-body[data-temp='trabajo'] { --estado: var(--ambar); }
-body[data-temp='fuerte'] { --estado: var(--naranja); }
-body[data-temp='ultima'] { --estado: var(--rojo); }
-body[data-temp='descanso'] { --estado: color-mix(in srgb, var(--teal) 70%, var(--capa-2)); }
-body[data-temp='listo'] { --estado: color-mix(in srgb, var(--ambar) 72%, var(--capa-1)); }
+body[data-temp='reposo'] { --estado: var(--brasa-2); --intensidad: 0.35; }
+body[data-temp='calentamiento'] { --estado: var(--olivo); --intensidad: 0.6; }
+body[data-temp='trabajo'] { --estado: var(--brasa-1); --intensidad: 0.7; }
+body[data-temp='fuerte'] { --estado: var(--brasa-2); --intensidad: 0.85; }
+body[data-temp='ultima'] { --estado: var(--brasa-3); --intensidad: 1; }
+body[data-temp='descanso'] { --estado: var(--teal); --intensidad: 0.6; }
+body[data-temp='listo'] { --estado: var(--brasa-1); --intensidad: 0.5; }
 
-/* ---------- Tipografía: la personalidad está en la escala ---------- */
-.cifra-heroe { font-size: 96px; line-height: 0.9; font-weight: 700; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
-.cifra-grande { font-size: 56px; line-height: 0.95; font-weight: 650; letter-spacing: -0.035em; font-variant-numeric: tabular-nums; }
-.titulo-fm { font-size: 28px; line-height: 1.1; font-weight: 650; letter-spacing: -0.02em; }
+/* ---------- Tipografía: cifras enormes y delgadas ---------- */
+.cifra-heroe { font-size: 104px; line-height: 1; font-weight: 300; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.cifra-media { font-size: 44px; line-height: 1; font-weight: 400; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.titulo-grande { font-size: 34px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; }
+.titulo { font-size: 22px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
 .cuerpo { font-size: 17px; line-height: 1.35; font-weight: 400; letter-spacing: -0.01em; }
-.secundario { font-size: 15px; line-height: 1.3; font-weight: 500; color: var(--crema-2); }
-.etiqueta-fm { font-size: 13px; line-height: 1.2; font-weight: 500; letter-spacing: 0.01em; color: var(--crema-2); }
-.tiempo { font-family: var(--mono); font-weight: 500; font-variant-numeric: tabular-nums; }
-/* unidad junto a la cifra, en la línea base */
-.unidad { font-size: 13px; font-weight: 500; letter-spacing: 0.01em; opacity: 0.6; margin-left: 6px; }
+.subtexto { font-size: 15px; line-height: 1.3; font-weight: 400; letter-spacing: 0; color: var(--crema-2); }
+.nota { font-size: 13px; line-height: 1.3; font-weight: 400; letter-spacing: 0; color: var(--crema-2); }
+.unidad { font-size: 17px; font-weight: 400; color: var(--crema-2); margin-left: 6px; letter-spacing: 0; }
+.tenue { color: var(--crema-2); }
+.cifra-cambio { animation: fundido var(--t-cifra) var(--curva); }
+@keyframes fundido { from { opacity: 0.2; } to { opacity: 1; } }
 
-/* ---------- Grano: solo sobre el fondo ---------- */
-.grano {
+/* ---------- 4. Horizonte: la firma ---------- */
+.horizonte {
   position: fixed;
-  inset: 0;
+  inset: auto 0 0 0;
+  height: 55vh;
   pointer-events: none;
-  opacity: 0.03;
   z-index: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 160px 160px;
+  opacity: var(--intensidad);
+  background:
+    radial-gradient(140% 80% at 50% 115%,
+      color-mix(in srgb, var(--estado) 55%, transparent) 0%,
+      color-mix(in srgb, var(--estado) 18%, transparent) 45%,
+      transparent 75%);
+  transition: background var(--t-horizonte) cubic-bezier(0.4, 0, 0.2, 1), opacity var(--t-horizonte) cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-/* ---------- 7.1 Módulo encendido ---------- */
-.fm-modulo-sitio { position: relative; }
-/* luz que se derrama hacia la habitación */
-.fm-modulo-sitio::before {
-  content: '';
-  position: absolute;
-  inset: -45% -25%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--estado) 14%, transparent), transparent);
+.horizonte-grano {
+  position: fixed;
+  inset: auto 0 0 0;
+  height: 55vh;
   pointer-events: none;
-  transition: background var(--t-luz) var(--ease-luz);
-}
-.fm-modulo {
-  position: relative;
-  overflow: clip;
-  min-width: 0;
-  background:
-    radial-gradient(120% 90% at 50% 35%,
-      color-mix(in oklch, var(--estado) 88%, white 12%) 0%,
-      var(--estado) 55%,
-      color-mix(in oklch, var(--estado) 78%, black 22%) 100%);
-  border-radius: var(--r-modulo);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.18);
-  color: var(--modulo-texto);
-  padding: 24px;
-  transition: background var(--t-luz) var(--ease-luz), color var(--t-luz) var(--ease-luz);
-}
-/* reposo: módulo en capa-2 con luz tenue azul, texto crema */
-body[data-temp='reposo'] {
-  --modulo-texto: var(--crema);
-}
-body[data-temp='reposo'] .fm-modulo {
-  background:
-    radial-gradient(120% 90% at 50% 30%,
-      color-mix(in oklch, var(--capa-2) 86%, var(--teal) 14%) 0%,
-      var(--capa-2) 60%,
-      color-mix(in oklch, var(--capa-2) 80%, black 20%) 100%);
-  box-shadow: inset 0 1px 0 rgba(239, 227, 204, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.25);
-}
-body[data-temp='reposo'] .fm-modulo-sitio::before {
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--teal) 7%, transparent), transparent);
-}
-body[data-temp='reposo'] .fm-boton { color: var(--negro-calido); }
-
-/* ---------- 7.2 Escala de sintonía ---------- */
-.fm-escala { position: relative; display: flex; align-items: center; justify-content: space-between; height: 28px; width: 100%; }
-.fm-escala-grupo { display: flex; align-items: center; gap: 6px; }
-.fm-escala-grupo + .fm-escala-grupo { margin-left: 8px; }
-.fm-marca { width: 1.5px; height: 10px; background: var(--crema-3); border-radius: 1px; flex: none; transition: height var(--t-control) var(--ease-peso), background-color var(--t-control) var(--ease-luz); }
-.fm-marca.hecha { height: 14px; background: var(--crema); }
-.fm-marca.actual { opacity: 0; }
-.fm-aguja {
-  position: absolute;
-  top: 2px;
-  left: 0;
-  width: 3px;
-  height: 24px;
-  border-radius: 1.5px;
-  background: var(--estado);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--estado) 70%, transparent);
-  transition: transform var(--t-panel) var(--ease-peso), background-color var(--t-luz) var(--ease-luz), opacity var(--t-control);
+  z-index: 0;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  -webkit-mask-image: linear-gradient(to top, black 40%, transparent);
+  mask-image: linear-gradient(to top, black 40%, transparent);
 }
 
-/* ---------- 7.3 Dial de peso ---------- */
-.fm-dial { position: relative; height: 64px; margin: 8px -24px 0; contain: inline-size; }
-.fm-dial-pista {
-  height: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  display: flex;
-  align-items: flex-end;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-  padding-bottom: 16px;
-}
+/* ---------- 6.1 Barra de progreso de sesión ---------- */
+.fm-progreso { display: flex; gap: 4px; width: 100%; height: 3px; }
+.fm-segmento { flex: 1; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--crema-3) 40%, transparent); overflow: hidden; position: relative; }
+.fm-segmento.hecho { background: color-mix(in srgb, var(--crema) 85%, transparent); }
+.fm-segmento.actual { background: var(--crema-3); }
+.fm-segmento.actual::after { content: ''; position: absolute; inset: 0; background: var(--estado); transform-origin: left; transform: scaleX(var(--llenado, 0)); transition: transform var(--t-panel) var(--curva), background-color var(--t-horizonte); }
+
+/* ---------- 6.2 Dial de peso, sin caja ---------- */
+.fm-peso { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.fm-peso-cifra { display: flex; align-items: baseline; justify-content: center; background: none; border: 0; padding: 0; color: var(--crema); }
+.fm-peso-input { width: 100%; background: transparent; border: 0; color: var(--crema); outline: none; padding: 0; text-align: center; }
+.fm-dial { position: relative; width: 100%; height: 64px; margin: 4px 0 0; contain: inline-size;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, black 12%, black 88%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, black 12%, black 88%, transparent 100%); }
+.fm-dial-pista { height: 100%; overflow-x: auto; overflow-y: hidden; display: flex; align-items: flex-start; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; padding-top: 8px; }
 .fm-dial-pista::-webkit-scrollbar { display: none; }
 .fm-dial-relleno { flex: none; width: calc(50% - 7px); }
-.fm-dial-marca { flex: none; width: 14px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; scroll-snap-align: center; position: relative; height: 32px; }
-.fm-dial-marca::before { content: ''; width: 1.5px; height: 12px; background: currentColor; opacity: 0.45; border-radius: 1px; }
-.fm-dial-marca.cinco::before { height: 20px; opacity: 0.6; }
-.fm-dial-marca.diez::before { height: 28px; opacity: 0.8; }
-.fm-dial-marca .fm-dial-num { position: absolute; top: 100%; margin-top: 3px; font-size: 11px; font-weight: 500; opacity: 0.6; font-variant-numeric: tabular-nums; }
-.fm-dial-aguja {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  transform: translateX(-50%);
-  width: 3px;
-  height: 40px;
-  border-radius: 1.5px;
-  background: var(--modulo-texto);
-  pointer-events: none;
-}
-/* degradado de bordes: la regla se apaga hacia los lados (no es decoración, es foco) */
-.fm-dial::after {
-  content: '';
-  position: absolute; inset: 0;
-  pointer-events: none;
-  background: linear-gradient(90deg, var(--estado) 0%, transparent 18%, transparent 82%, var(--estado) 100%);
-  opacity: 0.85;
-  transition: background var(--t-luz) var(--ease-luz);
-}
-body[data-temp='reposo'] .fm-dial::after { background: linear-gradient(90deg, var(--capa-2) 0%, transparent 18%, transparent 82%, var(--capa-2) 100%); }
-.fm-cifra-boton { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; }
-.fm-cifra-input { width: 100%; background: transparent; border: 0; color: inherit; font: inherit; outline: none; padding: 0; }
+.fm-dial-marca { flex: none; width: 14px; display: flex; flex-direction: column; align-items: center; scroll-snap-align: center; position: relative; height: 40px; }
+.fm-dial-marca::before { content: ''; width: 1px; height: 14px; background: var(--crema-3); }
+.fm-dial-marca.cinco::before, .fm-dial-marca.diez::before { width: 1.5px; height: 22px; background: var(--crema-2); }
+.fm-dial-num { position: absolute; top: 26px; font-size: 13px; color: var(--crema-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fm-dial-aguja { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 2px; height: 36px; border-radius: 1px; background: var(--estado); box-shadow: 0 0 8px var(--estado); pointer-events: none; transition: background-color var(--t-horizonte), box-shadow var(--t-horizonte); }
 
-/* ---------- 7.4 Stepper de reps ---------- */
-.fm-stepper { display: flex; align-items: center; justify-content: space-between; background: var(--capa-2); color: var(--crema); border-radius: 999px; height: 56px; }
-.fm-stepper-boton { width: 56px; height: 56px; border-radius: 999px; display: grid; place-items: center; color: var(--crema-2); transition: transform var(--t-toque), filter var(--t-toque); }
-.fm-stepper-boton:active { transform: scale(0.98); filter: brightness(0.85); }
-.fm-stepper-cifra { display: flex; align-items: baseline; gap: 6px; }
-.fm-stepper-cifra .cifra-grande { font-size: 32px; line-height: 1; }
-.fm-stepper .unidad { color: var(--crema-2); opacity: 1; margin: 0; }
+/* ---------- 6.3 Stepper de reps: tres piezas sueltas ---------- */
+.fm-stepper { display: flex; align-items: center; justify-content: center; gap: 28px; }
+.fm-stepper-boton { width: 56px; height: 56px; border-radius: 50%; background: var(--capa-2); color: var(--crema); display: grid; place-items: center; transition: transform var(--t-toque), filter var(--t-toque); }
+.fm-stepper-boton:active { transform: scale(0.97); filter: brightness(0.9); }
+.fm-stepper-cifra { display: flex; align-items: baseline; min-width: 120px; justify-content: center; }
 
-/* ---------- 7.5 / 7.6 Botones ---------- */
-.fm-boton {
-  width: 100%;
-  height: 60px;
-  border-radius: 999px;
-  background: var(--estado);
-  color: var(--negro-calido);
-  font-size: 17px;
-  font-weight: 600;
-  display: flex; align-items: center; justify-content: center;
-  transition: background-color var(--t-luz) var(--ease-luz), transform var(--t-toque), filter var(--t-toque);
-}
-.fm-boton:active { transform: scale(0.98); filter: brightness(0.85); }
-.fm-boton:disabled { opacity: 0.4; }
-.fm-secundario { color: var(--crema-2); font-size: 15px; font-weight: 500; min-height: 44px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; transition: transform var(--t-toque), filter var(--t-toque); }
-.fm-secundario.capsula { background: var(--capa-2); border-radius: 999px; padding: 0 18px; color: var(--crema); }
-.fm-secundario:active { transform: scale(0.98); filter: brightness(0.85); }
-/* zona del pulgar */
-.fm-pie {
-  position: sticky;
-  bottom: calc(var(--safe-bottom) + 16px);
-  margin: auto calc(-1 * var(--margen)) 0;
-  padding: 28px var(--margen) 0;
-  background: linear-gradient(to top, var(--noche) 0%, var(--noche) 55%, transparent 100%);
-}
+/* ---------- 6.4 / 6.5 Botones ---------- */
+.fm-boton { width: 100%; height: 56px; border-radius: 16px; background: var(--estado); color: var(--tinta); font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center; transition: background-color var(--t-horizonte) cubic-bezier(0.4, 0, 0.2, 1), transform var(--t-toque), filter var(--t-toque); }
+.fm-boton:active { transform: scale(0.97); filter: brightness(0.9); }
+.fm-boton:disabled { opacity: 0.35; }
+.fm-secundario { color: var(--crema-2); font-size: 17px; font-weight: 400; min-height: 44px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; letter-spacing: -0.01em; transition: opacity var(--t-toque); }
+.fm-secundario:active { opacity: 0.6; }
+.fm-secundarios { display: flex; justify-content: space-between; align-items: center; margin: 0 -8px; }
 
-/* ---------- 7.7 Temporizador de descanso ---------- */
-.fm-temporizador { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
-.fm-temporizador .tiempo { font-size: 64px; line-height: 1; }
-.fm-temporizador-linea { width: 100%; height: 2px; background: color-mix(in srgb, var(--modulo-texto) 22%, transparent); border-radius: 1px; overflow: hidden; }
-.fm-temporizador-restante { height: 100%; background: var(--modulo-texto); transform-origin: left; transition: transform 250ms linear; }
-.fm-temporizador-botones { display: flex; gap: 8px; }
-.fm-temporizador .fm-secundario { color: var(--modulo-texto); opacity: 0.8; }
-.fm-temporizador .fm-secundario.capsula { background: color-mix(in srgb, var(--modulo-texto) 12%, transparent); opacity: 1; }
+/* ---------- 6.6 Listas agrupadas ---------- */
+.fm-grupo { background: var(--capa-1); border-radius: 12px; overflow: hidden; }
+.fm-grupo-titulo { font-size: 13px; color: var(--crema-2); padding: 0 16px 6px; }
+.fm-fila { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 16px; width: 100%; text-align: left; color: var(--crema); position: relative; }
+.fm-fila + .fm-fila::before { content: ''; position: absolute; left: 16px; right: 0; top: 0; height: 0.5px; background: var(--separador); }
+.fm-fila-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fm-fila-texto .cuerpo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fm-fila-dato { color: var(--crema-2); white-space: nowrap; font-variant-numeric: tabular-nums; flex: none; }
+.fm-fila-num { width: 20px; flex: none; color: var(--crema-3); font-variant-numeric: tabular-nums; }
+button.fm-fila:active { background: var(--capa-2); }
+.fm-fila input, .fm-fila select { width: auto; min-width: 0; max-width: 170px; text-align: right; background: none; padding: 0; min-height: 0; color: var(--crema-2); }
+.fm-fila input[type='time'] { color: var(--crema-2); }
 
-/* ---------- 7.8 Barra inferior ---------- */
-.fm-barra {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-  background: color-mix(in srgb, var(--noche) 80%, transparent);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  padding: 8px var(--margen) calc(var(--safe-bottom) + 8px);
-  display: grid; grid-template-columns: repeat(3, 1fr);
-}
-.fm-barra-item { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 48px; justify-content: center; color: var(--crema-3); font-size: 11px; font-weight: 500; transition: color var(--t-control) var(--ease-luz); }
-.fm-barra-item[aria-current='page'] { color: var(--crema); }
-.fm-icono { width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; fill: none; }
-
-/* ---------- 7.9 Hoja ---------- */
-.fm-hoja-fondo { position: fixed; inset: 0; z-index: 30; background: rgba(10, 14, 28, 0.6); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity var(--t-panel) var(--ease-luz), visibility 0s linear var(--t-panel); display: flex; align-items: flex-end; justify-content: center; }
+/* ---------- 6.7 Hoja ---------- */
+.fm-hoja-fondo { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.5); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity var(--t-hoja) var(--curva), visibility 0s linear var(--t-hoja); display: flex; align-items: flex-end; justify-content: center; }
 .fm-hoja-fondo.abierta { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
-.fm-hoja { width: 100%; max-width: 520px; max-height: 88dvh; background: var(--capa-1); border-radius: var(--r-superficie) var(--r-superficie) 0 0; padding: 8px var(--margen) calc(var(--safe-bottom) + 24px); display: flex; flex-direction: column; gap: 16px; transform: translateY(100%); transition: transform var(--t-panel) var(--ease-peso); overflow: hidden; }
+.fm-hoja { width: 100%; max-width: 520px; background: var(--capa-1); border-radius: 12px 12px 0 0; padding: 6px var(--margen) calc(var(--safe-bottom) + 24px); display: flex; flex-direction: column; gap: 16px; transform: translateY(100%); transition: transform var(--t-hoja) var(--curva); overflow: hidden; }
+.fm-hoja.media { max-height: 56dvh; }
+.fm-hoja.completa { max-height: 92dvh; min-height: 60dvh; }
 .fm-hoja-fondo.abierta .fm-hoja { transform: translateY(0); }
-.fm-hoja-asa { width: 36px; height: 5px; border-radius: 3px; background: var(--crema-3); margin: 0 auto 4px; }
-.fm-hoja-cuerpo { overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 16px; }
+.fm-hoja-asa { width: 36px; height: 5px; border-radius: 3px; background: var(--crema-3); margin: 0 auto 2px; flex: none; }
+.fm-hoja-cuerpo { overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 16px; padding-bottom: 8px; }
+.fm-hoja .fm-grupo { background: var(--capa-2); }
+.fm-hoja button.fm-fila:active { background: var(--noche); }
 
-/* ---------- Íconos y toques ---------- */
-.fm-icono-boton { width: 44px; height: 44px; display: grid; place-items: center; color: var(--crema-2); border-radius: 999px; transition: transform var(--t-toque), filter var(--t-toque); }
-.fm-icono-boton:active { transform: scale(0.98); filter: brightness(0.85); }
+/* ---------- 6.8 Barra inferior ---------- */
+.fm-barra { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: color-mix(in srgb, var(--noche) 72%, transparent); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); border-top: 0.5px solid var(--separador); padding: 6px var(--margen) calc(var(--safe-bottom) + 6px); display: grid; grid-template-columns: repeat(3, 1fr); }
+.fm-barra-item { display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 48px; justify-content: center; color: var(--crema-3); font-size: 11px; font-weight: 500; transition: color var(--t-toque); }
+.fm-barra-item[aria-current='page'] { color: var(--crema); }
+.fm-icono { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+.fm-icono-boton { width: 44px; height: 44px; display: grid; place-items: center; color: var(--crema-2); border-radius: 22px; transition: opacity var(--t-toque); }
+.fm-icono-boton:active { opacity: 0.6; }
 
-/* ---------- Reducir movimiento: cortes o fundidos de 120 ms ---------- */
+/* ---------- Temporizador (7.2, 7.4) ---------- */
+.fm-temporizador { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; width: 100%; }
+.fm-temporizador-cifra { color: var(--crema); }
+.fm-temporizador-linea { width: 60%; height: 1.5px; background: var(--crema-3); border-radius: 1px; overflow: hidden; }
+.fm-temporizador-restante { height: 100%; background: var(--crema); transform-origin: left; transition: transform 200ms linear; }
+.fm-temporizador-botones { display: flex; justify-content: center; gap: 24px; }
+
+/* ---------- Puntos de semana ---------- */
+.fm-semana { display: flex; justify-content: space-between; }
+.fm-punto { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 28px; color: var(--crema-3); font-size: 13px; }
+.fm-punto i { width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--crema-3); box-sizing: content-box; }
+.fm-punto.hecho i { background: var(--crema); border-color: var(--crema); }
+.fm-punto.hoy i { box-shadow: 0 0 0 3px var(--noche), 0 0 0 4px var(--crema-2); }
+.fm-punto.hoy { color: var(--crema-2); }
+.fm-puntos-chicos { display: inline-flex; gap: 8px; }
+.fm-puntos-chicos i { width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--crema-3); box-sizing: content-box; }
+.fm-puntos-chicos i.hecho { background: var(--crema); border-color: var(--crema); }
+
+/* ---------- Fotos (8.1) ---------- */
+.fm-foto { display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: 16px; overflow: hidden; position: relative; padding: 0; background: var(--capa-1); flex: none; }
+.fm-foto img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(0.65); }
+.fm-foto::after { content: ''; position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(8, 11, 20, 0.45) 100%); pointer-events: none; }
+.fm-foto.ancha { aspect-ratio: 16 / 9; }
+button.fm-foto:active { opacity: 0.85; }
+
+/* ---------- Movimiento ---------- */
+.fm-panel { animation: entrar-panel var(--t-panel) var(--curva); }
+@keyframes entrar-panel { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
-  :root { --t-toque: 0ms; --t-control: 120ms; --t-panel: 120ms; --t-luz: 120ms; }
-  .fm-aguja { transition: none; }
+  @keyframes entrar-panel { from { opacity: 0; } to { opacity: 1; } }
+  :root { --t-hoja: 150ms; --t-panel: 150ms; --t-horizonte: 200ms; }
 }
-
-/* dos superficies iguales que se tocan: borde de 1px */
-body[data-temp='reposo'] .fm-stepper { box-shadow: inset 0 0 0 1px var(--linea); }

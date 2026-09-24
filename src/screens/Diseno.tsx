@@ -1,92 +1,61 @@
 import { useEffect, useState } from 'react'
-import { Modulo, Escala, Dial, CifraPeso, Stepper, BotonPrincipal, BotonSecundario, Temporizador, Barra, Hoja, type Destino } from '../components/fm'
+import { Horizonte, Progreso, Peso, Stepper, BotonPrincipal, BotonSecundario, Grupo, Fila, Temporizador, Barra, Hoja, type Destino } from '../components/fm'
 
 export type Temp = 'reposo' | 'calentamiento' | 'trabajo' | 'fuerte' | 'ultima' | 'descanso' | 'listo'
 export const TEMPS: Temp[] = ['reposo', 'calentamiento', 'trabajo', 'fuerte', 'ultima', 'descanso', 'listo']
 
-/** Ruta /diseno: banco de componentes en todos sus estados y temperaturas. Solo desarrollo. */
+/** #diseno: banco de componentes en todos sus estados y temperaturas. Solo desarrollo. */
 export function Diseno() {
   const [temp, setTemp] = useState<Temp>(() => (new URLSearchParams(location.search).get('temp') as Temp) || 'trabajo')
-  const [hechas, setHechas] = useState(5)
-  const grupos = [3, 3, 4, 3, 2, 3]
-  // reparte las hechas por grupo para la demo
-  const porGrupo: number[] = []
-  let resto = hechas
-  let actual = 0
-  grupos.forEach((n, i) => { const h = Math.min(n, resto); porGrupo.push(h); resto -= h; if (h >= n && resto > 0) actual = i + 1; else if (h < n && actual === i) actual = i })
-  if (hechas >= grupos.reduce((a, b) => a + b, 0)) actual = grupos.length - 1
-  const [peso, setPeso] = useState(32.5)
+  const [hechas, setHechas] = useState(1)
+  const [peso, setPeso] = useState(18)
   const [reps, setReps] = useState(10)
   const [fin, setFin] = useState(() => Date.now() + 90_000)
   const [hoja, setHoja] = useState(false)
   const [destino, setDestino] = useState<Destino>('hoy')
-
   useEffect(() => {
     document.body.dataset.temp = temp
   }, [temp])
-
   return (
-    <div className="fm-pantalla" style={{ paddingBottom: 120 }}>
-      <p className="etiqueta-fm">Banco de componentes</p>
+    <div className="fm-pantalla fm-con-barra" style={{ gap: 24 }}>
+      <Horizonte />
+      <p className="subtexto">Banco de componentes</p>
       <div className="fm-chips">
-        {TEMPS.map((t) => (
-          <button key={t} className={`fm-chip ${t === temp ? 'activo' : ''}`} onClick={() => setTemp(t)}>{t}</button>
-        ))}
+        {TEMPS.map((t) => <button key={t} className={`fm-chip ${t === temp ? 'activo' : ''}`} onClick={() => setTemp(t)}>{t}</button>)}
       </div>
-
-      <p className="secundario">Escala de sintonía</p>
-      <Escala grupos={grupos} hechas={porGrupo} actual={actual} />
-      <div className="fm-fila">
-        <BotonSecundario capsula onClick={() => setHechas((h) => Math.min(18, h + 1))}>Serie hecha</BotonSecundario>
-        <BotonSecundario onClick={() => setHechas(0)}>Reiniciar</BotonSecundario>
+      <Progreso total={7} actual={2} llenado={hechas / 3} />
+      <div className="fm-secundarios">
+        <BotonSecundario onClick={() => setHechas((h) => (h + 1) % 4)}>Serie hecha</BotonSecundario>
       </div>
-
-      <p className="secundario">Módulo encendido con dial y stepper</p>
-      <Modulo>
-        <CifraPeso valor={peso} onChange={setPeso} />
-        <Dial valor={peso} onChange={setPeso} />
-        <Stepper valor={reps} onChange={setReps} />
-      </Modulo>
-
-      <p className="secundario">Módulo con temporizador de descanso</p>
-      <Modulo>
-        <Temporizador fin={fin} total={90} onFin={() => {}} onMas={() => setFin((f) => f + 15_000)} onSaltar={() => setFin(Date.now())} />
-      </Modulo>
+      <Peso valor={peso} onChange={setPeso} />
+      <Stepper valor={reps} onChange={setReps} />
+      <Temporizador fin={fin} total={90} onFin={() => {}} onMas={() => setFin((f) => f + 15_000)} onMenos={() => setFin((f) => f - 15_000)} onAvisar={() => {}} onSaltar={() => setFin(Date.now())} />
       <BotonSecundario onClick={() => setFin(Date.now() + 90_000)}>Reiniciar descanso</BotonSecundario>
-
-      <p className="secundario">Tipografía</p>
       <div className="fm-columna">
-        <div><span className="cifra-heroe">B</span></div>
-        <div><span className="cifra-grande">52</span><span className="unidad">min</span></div>
-        <p className="titulo-fm">Press militar sentado</p>
+        <p className="titulo-grande">Cuerpo completo A</p>
+        <p className="titulo">Sentadilla goblet</p>
         <p className="cuerpo">Tienes 18 minutos. Alcanza para algo bueno.</p>
-        <p className="secundario">Serie 2 de 4</p>
-        <p className="etiqueta-fm">La vez pasada</p>
-        <span className="tiempo" style={{ fontSize: 32 }}>1:29</span>
+        <p className="subtexto">Serie 2 de 4, 10 a 12 reps</p>
+        <p className="nota">La vez pasada</p>
+        <div><span className="cifra-media">48</span><span className="unidad">min</span></div>
       </div>
-
-      <p className="secundario">Botones</p>
+      <Grupo titulo="Lista agrupada">
+        <Fila num={1} texto="Press de banca plano con mancuernas" dato="16 kg" />
+        <Fila num={2} texto="Jalón al pecho en polea" dato="42 kg" onClick={() => setHoja(true)} />
+        <Fila texto="Sonido" detalle="Dos notas al terminar el descanso" dato="Apagado" />
+      </Grupo>
       <BotonPrincipal>Serie hecha</BotonPrincipal>
-      <BotonPrincipal disabled>Serie hecha</BotonPrincipal>
-      <div className="fm-fila">
+      <BotonPrincipal disabled>Siguiente serie</BotonPrincipal>
+      <div className="fm-secundarios">
+        <BotonSecundario>Anterior</BotonSecundario>
+        <BotonSecundario onClick={() => setHoja(true)}>Técnica</BotonSecundario>
         <BotonSecundario>Saltar</BotonSecundario>
-        <BotonSecundario capsula>Técnica</BotonSecundario>
-        <BotonSecundario capsula onClick={() => setHoja(true)}>Abrir hoja</BotonSecundario>
       </div>
-
-      <p className="secundario">Superficies</p>
-      <div className="fm-superficie">
-        <p className="cuerpo">Capa 1, sin borde ni sombra.</p>
-        <div className="fm-superficie-2"><p className="cuerpo">Capa 2 encima.</p></div>
-      </div>
-
-      <Hoja abierta={hoja} titulo="Press militar sentado" onCerrar={() => setHoja(false)}>
-        <p className="etiqueta-fm">Técnica</p>
-        <p className="cuerpo">Empujar hacia arriba hasta estirar sin trabar los codos. Bajar controlado a la altura de las orejas.</p>
-        <p className="etiqueta-fm">Errores</p>
-        <p className="cuerpo">Arquear la espalda. Bajar de más. Impulso con las piernas.</p>
+      <Hoja abierta={hoja} titulo="Sentadilla goblet" altura="completa" onCerrar={() => setHoja(false)}>
+        <Grupo titulo="Qué debes sentir">
+          <Fila texto="Glúteos y muslos al subir. Si arde la espalda baja, te encorvaste." />
+        </Grupo>
       </Hoja>
-
       <Barra destino={destino} onCambiar={setDestino} />
     </div>
   )
