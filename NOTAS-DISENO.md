@@ -85,3 +85,31 @@ Pendiente:
 - Probar en el iPhone: atajo "FM Descanso" (si no abre, cambiar a "FMDescanso"), háptico del switch, cámara desde la ficha, safe areas.
 - Fotos propias de las máquinas del club; incluirlas en el respaldo JSON.
 - Fase 5 de CLAUDE.md: repo en GitHub y GitHub Pages.
+
+# Pase v3 (fm-assets/DISENO-FM-v3.md)
+
+Reemplaza a v1 y v2. Los mockups de `fm-assets/referencia/` son el objetivo; se borraron horizonte, degradados, tokens anteriores, `#diseno` y las ilustraciones.
+
+## Bloques A y B
+- Sesión a medias: ya no hay pantalla intermedia; Inicio muestra "Seguir sesión" y debajo "Descartar".
+- Un solo estado en `body[data-pantalla]` (inicio, tinta, calentamiento, serie, descanso, resumen) que fija fondo, texto, círculo y botón según la tabla de la sección 2, y actualiza `theme-color`.
+- Los colores derivados (texto al 60%, 40%, 25%, separador al 12%) se declaran en `body` y en `.hoja` para que se calculen con el texto de cada pantalla.
+- Dial: 21 px por marca de 2.5 kg, así la regla de 0.86 W muestra justo 40 kg. Los números van cada 10 kg.
+
+## Bloque C
+- Círculo de Serie: 0.48 W, 0.66 W, 0.84 W con 3 series; con 4 series (regla de 4 semanas) el tamaño se interpola igual. Con más de 2 dígitos en el peso la cifra se reduce (90%, 80%, 68%) para que "kg" quede siempre dentro.
+- Descanso: el círculo se encoge de 0.96 W a 0.56 W calculado en cada frame desde la hora de término; la cifra no cambia de tamaño y la recorta el círculo. No hizo falta detener el encogimiento en 0.70 W: "0:00" cabe en 0.56 W a 390 de ancho.
+- Ajustes se abre desde un texto "Ajustes" arriba a la derecha de Inicio (la barra solo lleva tres textos, como pide el spec).
+- La lista de ejercicios de Inicio se abre tocando el subtítulo "6 ejercicios, unos 65 min".
+- "Cambiar" a una alternativa sigue dentro de la ficha de técnica ("Cambiar por"). La hoja del ✕ trae además la versión de la sesión (completa, corta, bonus, ligera) porque el brief la exige.
+- Cierre (cardio final del brief) usa la misma pantalla que Calentamiento, en piedra.
+- Ejercicios sin peso (plancha, elevación de piernas, lagartijas): el círculo muestra los segundos o las reps y no hay dial.
+
+## Bloques D y E
+- Técnica: foto a sangre 4:3 en blanco y negro con contraste 1.1; desde Ejercicios lleva arriba la gráfica de línea de 3 pt con el último punto rojo. Pez `concentrado` junto a "Qué debes sentir".
+- Historial: peso corporal y fotos (brief) siguen en dos filas al final que abren hojas. Vacío con pez `dormido`.
+- Pez `picaro` aparece junto al subtítulo de Inicio cuando la sesión se recorta por falta de tiempo. Pez `confundido` queda pendiente: hoy el error de guardado es solo una línea de texto.
+- Ícono: `fm-assets/icono/` copiado a `public/` y referido en manifest y head; `theme_color` y `background_color` en `#121318`.
+- Versión 0.3.0.
+
+Pendiente: probar en el iPhone el atajo "FM Descanso", el háptico del switch, la cámara desde la ficha y cómo se ve el recorte del número en el descanso; incluir fotos propias en el respaldo; fase 5 (GitHub Pages).

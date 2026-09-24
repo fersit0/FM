@@ -145,6 +145,7 @@ h1, h2, h3, p, figure, ul, ol { margin: 0; }
 .hoja.completa { height: 100dvh; max-height: 100dvh; padding-top: calc(var(--safe-top) + 8px); }
 .hoja-fondo.abierta .hoja { transform: translateY(0); }
 .hoja-asa { width: 36px; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--piedra) 32%, transparent); margin: 0 auto 4px; flex: none; }
+.hoja-cuerpo > * { flex: none; }
 .hoja-cuerpo { overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 16px; padding-bottom: 8px; }
 .hoja.completa .hoja-cuerpo { margin: 0 calc(-1 * var(--margen)); padding: 0 var(--margen) 24px; }
 .hoja-cerrar { align-self: flex-end; }
