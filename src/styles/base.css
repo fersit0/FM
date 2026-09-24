@@ -1,0 +1,217 @@
+@import './tokens.css';
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+html {
+  background: var(--noche);
+  color: var(--crema);
+  font-family: var(--fuente);
+  font-size: 16px;
+  line-height: 1.35;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--noche);
+  transition: background-color var(--medio) var(--inercia);
+}
+
+#root { min-height: 100dvh; display: flex; flex-direction: column; }
+
+button, input, select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input, select {
+  border: 0;
+  background: var(--marco);
+  color: var(--crema);
+  border-radius: var(--radio-chico);
+  padding: 12px 14px;
+  min-height: 48px;
+  width: 100%;
+  outline: none;
+}
+input:focus, select:focus { box-shadow: inset 0 0 0 2px var(--temp); }
+
+h1, h2, h3, p { margin: 0; }
+
+/* Pantalla con tabs */
+.app { flex: 1; display: flex; flex-direction: column; min-height: 100dvh; }
+.pantalla {
+  flex: 1;
+  padding: calc(var(--safe-top) + 20px) var(--lado) calc(var(--safe-bottom) + 96px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+}
+.pantalla-llena {
+  flex: 1;
+  padding: calc(var(--safe-top) + 12px) var(--lado) calc(var(--safe-bottom) + 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 100dvh;
+}
+
+/* Tipografía */
+.etiqueta {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--crema-3);
+  font-weight: 600;
+}
+.titulo { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+.titulo-2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+.numero { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.numero-grande { font-family: var(--mono); font-size: 56px; font-weight: 600; line-height: 1; letter-spacing: -0.03em; }
+.texto-2 { color: var(--crema-2); }
+.texto-3 { color: var(--crema-3); }
+
+/* Módulos: rectángulos redondeados sólidos, profundidad con color */
+.modulo {
+  background: var(--navy);
+  border-radius: var(--radio);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.modulo-marco {
+  background: var(--marco);
+  border-radius: var(--radio);
+  padding: 20px;
+}
+.modulo-temp {
+  background: var(--temp);
+  color: var(--temp-texto);
+  border-radius: var(--radio);
+  padding: 22px 20px;
+  transition: background-color var(--medio) var(--inercia), color var(--medio) var(--inercia);
+}
+
+/* Botones con peso */
+.boton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 64px;
+  padding: 0 24px;
+  border-radius: var(--radio);
+  font-size: 20px;
+  font-weight: 700;
+  background: var(--naranja);
+  color: var(--crema-tinta);
+  transition: transform var(--rapido) var(--inercia), background-color var(--medio) var(--inercia), opacity var(--rapido);
+  width: 100%;
+}
+.boton:active { transform: scale(0.98); }
+.boton:disabled { opacity: 0.4; }
+.boton-temp { background: var(--temp); color: var(--temp-texto); }
+.boton-secundario { background: var(--navy-alto); color: var(--crema); }
+.boton-marco { background: var(--marco); color: var(--crema); }
+.boton-chico { min-height: 48px; font-size: 16px; padding: 0 18px; border-radius: var(--radio-chico); width: auto; }
+.boton-capsula { min-height: 44px; font-size: 15px; padding: 0 18px; border-radius: var(--radio-capsula); width: auto; }
+.boton-texto { color: var(--crema-2); font-weight: 600; font-size: 15px; min-height: 44px; padding: 0 8px; }
+
+.fila { display: flex; align-items: center; gap: 10px; }
+.fila-entre { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.columna { display: flex; flex-direction: column; gap: 8px; }
+
+/* Tabs inferiores: un solo objeto sólido */
+.tabs {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  padding: 10px var(--lado) calc(var(--safe-bottom) + 10px);
+  background: linear-gradient(to top, var(--noche) 70%, transparent);
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+}
+.tabs-barra {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--marco);
+  border-radius: var(--radio-capsula);
+  padding: 6px;
+  width: 100%;
+  max-width: 480px;
+  gap: 4px;
+}
+.tab {
+  min-height: 48px;
+  border-radius: var(--radio-capsula);
+  color: var(--crema-3);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color var(--medio) var(--inercia), color var(--medio) var(--inercia);
+}
+.tab[aria-current='page'] { background: var(--navy-alto); color: var(--crema); }
+
+/* Aviso discreto */
+.aviso {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--safe-bottom) + 84px);
+  background: var(--crema);
+  color: var(--crema-tinta);
+  padding: 10px 16px;
+  border-radius: var(--radio-capsula);
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 20;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.oculto-visual { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Semana: superficie que se llena */
+.semana { display: flex; flex-direction: column; gap: 12px; }
+.semana-cuenta { font-size: 28px; font-weight: 600; }
+.semana-dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.semana-dia { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.semana-letra { font-size: 12px; font-weight: 700; color: var(--crema-3); }
+.semana-dia.hoy .semana-letra { color: var(--crema); }
+.semana-luz {
+  display: block; width: 100%; height: 14px; border-radius: 7px;
+  background: var(--marco);
+  transition: background-color var(--medio) var(--inercia);
+}
+.semana-dia.hecho .semana-luz { background: var(--naranja); }
+.semana-dia.frida .semana-luz { background: var(--olivo); }
+
+/* Hoy */
+.hoy-protagonista { display: flex; flex-direction: column; gap: 6px; min-height: 200px; justify-content: flex-end; }
+.hoy-etiqueta { color: inherit; opacity: 0.7; }
+.hoy-protagonista .titulo { font-size: 48px; }
+.hoy-estado { font-size: 20px; font-weight: 700; margin-top: 8px; }
+.hoy-detalle { opacity: 0.85; font-size: 16px; }
+.hoy-frida { align-self: flex-start; margin-top: 6px; }
+.hoy-rescate { background: var(--cobalto); }

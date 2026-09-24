@@ -1,0 +1,98 @@
+/* Tokens de diseño. Paleta según Anexo A: fondos fríos y profundos, crema para leer,
+   naranja como elemento vivo, teal puntual, olivo para recuperación. */
+:root {
+  color-scheme: dark;
+
+  /* Fondos */
+  --noche: #0f1626;        /* azul noche, base de todo */
+  --navy: #172037;         /* módulos */
+  --navy-alto: #1f2b4a;    /* módulo activo / elevado por color */
+  --negro-calido: #14110f; /* marcos y estructura */
+  --marco: #0a0d17;        /* borde oscuro que contiene luz */
+  --cobalto: #24407d;      /* espacio mental, azul denso */
+
+  /* Lectura */
+  --crema: #f3e9d6;
+  --crema-2: #cfc3aa;
+  --crema-3: #8e8672;
+  --crema-tinta: #1a1614;  /* texto sobre superficies claras */
+
+  /* Elemento vivo */
+  --naranja: #ff6b1f;
+  --naranja-quemado: #d9501a;
+  --mandarina: #ff8f33;
+  --coral: #ff7a59;
+  --ambar: #f0a63a;
+  --rojo-naranja: #f5461f;
+
+  /* Apoyo */
+  --teal: #2fc2b3;
+  --olivo: #8b9a5a;
+  --olivo-oscuro: #55613a;
+  --plata: #a8adb5;
+
+  /* Estados de temperatura (se sobreescriben con data-temp) */
+  --temp: var(--cobalto);
+  --temp-texto: var(--crema);
+  --temp-suave: #1b2a52;
+  --temp-nombre: 'reposo';
+
+  /* Tipografía */
+  --fuente: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Medidas */
+  --radio: 22px;
+  --radio-chico: 12px;
+  --radio-capsula: 999px;
+  --lado: 16px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Movimiento: inercia, sin rebote */
+  --rapido: 150ms;
+  --medio: 220ms;
+  --inercia: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root[data-temp='reposo'] {
+  --temp: var(--cobalto);
+  --temp-suave: #1b2a52;
+  --temp-texto: var(--crema);
+}
+:root[data-temp='prep'] {
+  --temp: var(--olivo);
+  --temp-suave: #3b4430;
+  --temp-texto: var(--crema-tinta);
+}
+:root[data-temp='moderado'] {
+  --temp: var(--ambar);
+  --temp-suave: #4a3a1c;
+  --temp-texto: var(--crema-tinta);
+}
+:root[data-temp='fuerte'] {
+  --temp: var(--naranja);
+  --temp-suave: #4b2412;
+  --temp-texto: var(--crema-tinta);
+}
+:root[data-temp='pico'] {
+  --temp: var(--rojo-naranja);
+  --temp-suave: #4d1c12;
+  --temp-texto: var(--crema);
+}
+
+/* Tema claro en crema (opcional desde Ajustes) */
+:root[data-tema='claro'] {
+  color-scheme: light;
+  --noche: #efe5d2;
+  --navy: #e2d6bf;
+  --navy-alto: #d6c8ad;
+  --negro-calido: #f7f0e2;
+  --marco: #cbbd9f;
+  --crema: #1a1614;
+  --crema-2: #4a4238;
+  --crema-3: #7a7060;
+  --crema-tinta: #1a1614;
+  --cobalto: #3352a3;
+  --temp-suave: #d8cdb4;
+}
