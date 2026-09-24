@@ -18,6 +18,9 @@
   --circulo-texto: var(--piedra);
   --boton-fondo: var(--rojo);
   --boton-texto: var(--tinta);
+}
+/* derivados: se resuelven en body, donde vive --texto de cada pantalla */
+body, .hoja {
   --texto-2: color-mix(in srgb, var(--texto) 60%, transparent);
   --texto-3: color-mix(in srgb, var(--texto) 40%, transparent);
   --texto-4: color-mix(in srgb, var(--texto) 25%, transparent);
@@ -137,7 +140,7 @@ h1, h2, h3, p, figure, ul, ol { margin: 0; }
 /* Hoja */
 .hoja-fondo { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.5); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 420ms var(--curva), visibility 0s linear 420ms; display: flex; align-items: flex-end; justify-content: center; }
 .hoja-fondo.abierta { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
-.hoja { width: 100%; max-width: 520px; background: var(--tinta); color: var(--piedra); --texto: var(--piedra); --texto-2: color-mix(in srgb, var(--piedra) 60%, transparent); --separador: color-mix(in srgb, var(--piedra) 12%, transparent); --fondo: var(--tinta); padding: 8px var(--margen) calc(var(--safe-bottom) + 24px); display: flex; flex-direction: column; gap: 16px; transform: translateY(100%); transition: transform 420ms var(--curva); overflow: hidden; }
+.hoja { width: 100%; max-width: 520px; background: var(--tinta); color: var(--piedra); --texto: var(--piedra); --fondo: var(--tinta); padding: 8px var(--margen) calc(var(--safe-bottom) + 24px); display: flex; flex-direction: column; gap: 16px; transform: translateY(100%); transition: transform 420ms var(--curva); overflow: hidden; }
 .hoja.media { max-height: 60dvh; }
 .hoja.completa { height: 100dvh; max-height: 100dvh; padding-top: calc(var(--safe-top) + 8px); }
 .hoja-fondo.abierta .hoja { transform: translateY(0); }
@@ -158,7 +161,7 @@ h1, h2, h3, p, figure, ul, ol { margin: 0; }
 @keyframes pez-entra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 /* Fotos: blanco y negro, contraste +10%, radio 0 */
-.foto { display: block; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: color-mix(in srgb, var(--piedra) 8%, transparent); }
+.foto { display: block; flex: none; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: color-mix(in srgb, var(--piedra) 8%, transparent); }
 .foto img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(1) contrast(1.1); }
 
 /* Puntos de semana */
@@ -173,6 +176,6 @@ button.punto { padding: 0; }
 .aviso-flotante { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--safe-bottom) + 84px); background: var(--piedra); color: var(--tinta); padding: 12px 20px; border-radius: 999px; font-size: 15px; font-weight: 600; z-index: 20; }
 
 /* Cambio de ejercicio: entra desde la derecha */
-.panel { animation: panel-entra 380ms var(--curva) both; }
+.panel { position: absolute; inset: 0; z-index: 1; animation: panel-entra 380ms var(--curva) both; }
 @keyframes panel-entra { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { @keyframes panel-entra { from { opacity: 0; } to { opacity: 1; } } }

@@ -172,7 +172,9 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, onTecnica, on
 
   const serieActual = Math.min(siguienteNum, series)
   const d = series <= 1 ? 0.66 * W : 0.48 * W + (0.36 * W * (serieActual - 1)) / (series - 1)
-  const cifra = Math.round(d * 0.42)
+  // la cifra mide el 42% del diámetro; con más dígitos se reduce para que el kg siempre quede dentro
+  const largo = String(peso).length
+  const cifra = Math.round(d * 0.42 * (largo <= 2 ? 1 : largo === 3 ? 0.9 : largo === 4 ? 0.8 : 0.68))
 
   async function serieHecha() {
     prepararAudio()
@@ -291,7 +293,7 @@ function Resumen({ datos, sesion, sets, ejercicios, onTerminar }: { datos: Datos
   const hechosEj = ejercicios.filter((e) => propios.some((s) => s.exerciseId === e.item.id)).length
   const cumpleSemana = estadoSemana([...datos.sesiones.filter((s) => s.id !== sesion.id), { ...sesion, terminada: true }], new Date(fin)).hechas === 3
   const frase = subieron.length ? `Subiste en ${subieron.map((s) => `${s.nombre}, +${s.delta} kg`).join('; ')}.` : cumpleSemana ? `${sesion.tipo} hecha. Con esta, semana cumplida.` : `${sesion.tipo} hecha. Mañana te vas a acordar.`
-  const d = 0.91 * W, cy = 0.47 * H
+  const d = 0.91 * W, cy = 0.48 * H
   async function terminar() {
     await datos.guardarSesion({ ...sesion, fin, terminada: true })
     haptico.finSesion()
