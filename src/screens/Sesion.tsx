@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Sesion as SesionTipo, Ejercicio, Alternativa, SetLog, Version } from '../data/tipos'
 import type { SesionActiva } from '../hooks/useSesionActiva'
-import { ejerciciosDe, CALENTAMIENTO, CIERRE, buscarCualquiera } from '../data/ejercicios'
+import { ejerciciosDe, CALENTAMIENTO, CIERRE, buscarCualquiera, itemDeRutina } from '../data/ejercicios'
 import { seriesPara, entraEnVersion, estadoSemana } from '../logic/semana'
 import { sugerirPeso, subioDePeso, porSesion } from '../logic/progresion'
 import { claveFecha } from '../logic/fechas'
@@ -14,6 +14,7 @@ import { abrirAtajo } from '../lib/atajos'
 import { useCuentaRegresiva, mmss } from '../hooks/useCuentaRegresiva'
 import { Circulo, Dial, CifraPeso, Stepper, BotonPrincipal, BotonContorno, BotonTexto, Hoja, Grupo, Fila, Pez } from '../components/fm'
 import { FichaHoja } from '../components/Ficha'
+import { Foto } from '../components/Foto'
 
 interface Props {
   datos: Datos
@@ -43,11 +44,11 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
     const lista = ejerciciosDe(sesion.tipo as 'A' | 'B').filter((e) => entraEnVersion(e.orden, version))
     const ejercicios: Paso[] = lista.map((base, i) => {
       const cambio = sesion.cambios?.find((c) => c.ejercicioId === base.id)
-      const item = cambio ? base.alternativas.find((a) => a.id === cambio.alternativaId) ?? base : base
+      const item = cambio ? (cambio.alternativaId === base.id ? base : base.alternativas.find((a) => a.id === cambio.alternativaId) ?? base) : itemDeRutina(base, settings.reemplazos)
       return { tipo: 'ejercicio', base, item, indice: i, series: seriesPara(base.id, item.series, version, settings.seriesExtra, ligera) }
     })
     return [{ tipo: 'calentamiento' }, ...ejercicios, { tipo: 'cierre' }, { tipo: 'resumen' }]
-  }, [sesion.tipo, sesion.cambios, version, settings.seriesExtra, ligera])
+  }, [sesion.tipo, sesion.cambios, version, settings.seriesExtra, settings.reemplazos, ligera])
   const ejercicios = pasos.filter((p): p is PasoEj => p.tipo === 'ejercicio')
   const indice = Math.min(activa.paso, pasos.length - 1)
   const paso = pasos[indice]
@@ -56,6 +57,20 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
   }, [activa, pasos.length, setActiva])
   const [menu, setMenu] = useState(false)
   const [tecnica, setTecnica] = useState(false)
+  const [alternativas, setAlternativas] = useState(false)
+  const ultimoPesoDe = (id: string) => {
+    const g = porSesion(sets, id)
+    const u = g[g.length - 1]
+    if (!u) return 'Sin registro'
+    const peso = Math.max(...u.map((x) => x.pesoKg ?? 0))
+    return peso > 0 ? `${peso} kg` : `${Math.max(...u.map((x) => x.reps))} reps`
+  }
+  function usarSiempre(base: Ejercicio, altId: string | null) {
+    const reemplazos = { ...(settings.reemplazos ?? {}) }
+    if (altId) reemplazos[base.id] = altId
+    else delete reemplazos[base.id]
+    datos.setSettings({ ...settings, reemplazos })
+  }
   async function cambiarVersion(v: Version, lig: boolean) {
     await datos.guardarSesion({ ...sesion, version: v, ligera: lig })
     setMenu(false)
@@ -69,9 +84,11 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
   async function elegirAlternativa(alt: Alternativa | null) {
     if (paso.tipo !== 'ejercicio') return
     const cambios = (sesion.cambios ?? []).filter((c) => c.ejercicioId !== paso.base.id)
-    if (alt) cambios.push({ ejercicioId: paso.base.id, alternativaId: alt.id })
+    // se guarda siempre el cambio (con el id del original si vuelve), para que gane sobre "Usar siempre esta"
+    cambios.push({ ejercicioId: paso.base.id, alternativaId: alt ? alt.id : paso.base.id })
     await datos.guardarSesion({ ...sesion, cambios })
     setTecnica(false)
+    setAlternativas(false)
   }
   const descansando = activa.descansoFin !== undefined
 
@@ -100,6 +117,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
       <Hoja abierta={menu} onCerrar={() => setMenu(false)}>
         <Grupo>
           {paso.tipo === 'ejercicio' && <Fila texto="Ver técnica" onClick={() => { setMenu(false); setTecnica(true) }} />}
+          {paso.tipo === 'ejercicio' && <Fila texto="Cambiar por alternativa" detalle="Si la máquina está ocupada o no te late" onClick={() => { setMenu(false); setAlternativas(true) }} />}
           {indice > 0 && <Fila texto={paso.tipo === 'ejercicio' && paso.indice > 0 ? 'Ejercicio anterior' : 'Paso anterior'} onClick={() => { setMenu(false); ir(indice - 1) }} />}
           {paso.tipo !== 'resumen' && <Fila texto={paso.tipo === 'ejercicio' ? 'Saltar ejercicio' : 'Saltar'} onClick={() => { setMenu(false); ir(indice + 1) }} />}
           <Fila texto="Seguir después" detalle="Se queda guardada donde vas" onClick={() => { setMenu(false); onSalir() }} />
@@ -114,6 +132,25 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
         </Grupo>
       </Hoja>
       {paso.tipo === 'ejercicio' && <FichaHoja abierta={tecnica} onCerrar={() => setTecnica(false)} base={paso.base} item={paso.item} datos={datos} series={paso.series} onElegirAlternativa={elegirAlternativa} />}
+      {paso.tipo === 'ejercicio' && (
+        <Hoja abierta={alternativas} titulo="Cambiar por" onCerrar={() => setAlternativas(false)}>
+          <Grupo>
+            {[paso.base, ...paso.base.alternativas].filter((a) => a.id !== paso.item.id).map((a) => {
+              const siempre = a.id === paso.base.id ? !settings.reemplazos?.[paso.base.id] : settings.reemplazos?.[paso.base.id] === a.id
+              return (
+                <div key={a.id} className="fila" style={{ alignItems: 'flex-start' }}>
+                  <Foto clave={a.ilustracion} ejercicioId={a.id} propias={datos.fotosEjercicio} nombre={a.nombre} chica />
+                  <span className="fila-texto" style={{ gap: 6 }}>
+                    <button className="t-cuerpo" style={{ textAlign: 'left', whiteSpace: 'normal' }} onClick={() => elegirAlternativa(a.id === paso.base.id ? null : (a as Alternativa))}>{a.nombre}</button>
+                    <span className="t-nota tenue">{'caso' in a ? `${a.caso}. ` : 'Original. '}{ultimoPesoDe(a.id)}</span>
+                    <button className="t-nota" style={{ textAlign: 'left', color: siempre ? 'var(--rojo)' : 'var(--texto-2)' }} onClick={() => usarSiempre(paso.base, a.id === paso.base.id ? null : a.id)}>{siempre ? 'Es la de siempre' : 'Usar siempre esta'}</button>
+                  </span>
+                </div>
+              )
+            })}
+          </Grupo>
+        </Hoja>
+      )}
     </div>
   )
 }
@@ -160,7 +197,7 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, onTecnica, on
   const incremento = base.incrementoKg ?? PASO_KG
   const hechos = useMemo(() => sets.filter((s) => s.sessionId === sesion.id && s.exerciseId === item.id).sort((a, b) => a.numSerie - b.numSerie), [sets, sesion.id, item.id])
   const historial = useMemo(() => sets.filter((s) => s.sessionId !== sesion.id), [sets, sesion.id])
-  const sugerencia = useMemo(() => sugerirPeso(historial, item.id, item.repsMax, item.modo), [historial, item.id, item.repsMax, item.modo])
+  const sugerencia = useMemo(() => sugerirPeso(historial, item.id, item.repsMax, item.modo, item.repsMin), [historial, item.id, item.repsMax, item.modo, item.repsMin])
   const ultimaVez = useMemo(() => porSesion(historial, item.id).slice(-1)[0], [historial, item.id])
   const siguienteNum = hechos.length + 1
   const completo = hechos.length >= series
@@ -194,6 +231,7 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, onTecnica, on
   else if (hechos.length === 0) {
     if (sugerencia.tipo === 'subir' && ultimaVez && pesoSugerido !== null) aviso = `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Sube a ${pesoSugerido}.`
     else if (sugerencia.tipo === 'bajar' && pesoSugerido !== null) aviso = `Dos veces seguidas bajaron las reps. Baja a ${pesoSugerido}.`
+    else if (sugerencia.tipo === 'quedarse') aviso = `La vez pasada no llegaste al mínimo. Quédate en ${sugerencia.peso} o baja.`
     else if (base.orden === 1 && item.modo === 'peso' && peso > 0) aviso = `Antes, una de aproximación con ${Math.round(peso / 2 / 0.5) * 0.5} kg, 10 reps. No se registra.`
   }
 

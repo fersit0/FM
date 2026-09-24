@@ -165,6 +165,10 @@ h1, h2, h3, p, figure, ul, ol { margin: 0; }
 .foto { display: block; flex: none; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: color-mix(in srgb, var(--piedra) 8%, transparent); }
 .foto img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(1) contrast(1.1); }
 
+/* Miniatura */
+.foto-chica { width: 64px; height: 48px; flex: none; overflow: hidden; display: block; }
+.foto-chica img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(1) contrast(1.1); }
+
 /* Puntos de semana */
 .puntos { display: flex; gap: 10px; align-items: center; }
 .punto { width: 8px; height: 8px; border-radius: 50%; background: var(--texto-4); flex: none; display: block; }

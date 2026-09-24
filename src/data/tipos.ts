@@ -105,6 +105,8 @@ export interface Settings {
   reglaPospuestaEn?: number
   /** "Salgo de la oficina a las" (HH:MM) o vacío */
   horaSalida?: string
+  /** alternativas que sustituyen a un ejercicio en la rutina ("Usar siempre esta") */
+  reemplazos?: Record<string, string>
 }
 
 export const SETTINGS_DEFAULT: Settings = {

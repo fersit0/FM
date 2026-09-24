@@ -36,9 +36,10 @@ export function useDatos(): Datos {
 
   const recargar = useCallback(async () => {
     const [s, l, p, f, fe] = await Promise.all([db.todasLasSesiones(), db.todosLosSets(), db.todoElPeso(), db.todasLasFotos(), db.todasLasFotosEjercicio()])
-    setSesiones(s)
-    setSets(l)
-    setPeso(p)
+    // Datos dañados o de versiones viejas: se ignoran sin borrar lo demás
+    setSesiones(s.filter((x) => x && typeof x.id === 'string' && typeof x.fecha === 'string' && typeof x.inicio === 'number' && ['A', 'B', 'FRIDA'].includes(x.tipo)).map((x) => ({ ...x, version: x.version ?? 'completa', terminada: !!x.terminada })))
+    setSets(l.filter((x) => x && typeof x.sessionId === 'string' && typeof x.exerciseId === 'string' && typeof x.reps === 'number'))
+    setPeso(p.filter((x) => x && typeof x.fecha === 'string' && typeof x.kg === 'number'))
     setFotos(f)
     setFotosEjercicio(fe)
     setListo(true)

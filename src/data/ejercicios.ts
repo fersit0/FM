@@ -469,6 +469,12 @@ export const EJERCICIOS: Ejercicio[] = [
   },
 ]
 
+/** Ejercicio a usar en la rutina: el original o la alternativa marcada con "Usar siempre esta" */
+export function itemDeRutina(base: Ejercicio, reemplazos?: Record<string, string>): Ejercicio | Alternativa {
+  const id = reemplazos?.[base.id]
+  return (id && base.alternativas.find((a) => a.id === id)) || base
+}
+
 export function ejerciciosDe(sesion: Letra): Ejercicio[] {
   return EJERCICIOS.filter((e) => e.sesion === sesion).sort((a, b) => a.orden - b.orden)
 }

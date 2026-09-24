@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // Misma versión que package.json; se muestra en Ajustes
-const version = '0.3.0'
+const version = '0.4.0'
 
 export default defineConfig({
   base: '/gym-app/',
@@ -11,7 +11,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon-32.png', 'apple-touch-icon.png', 'pez/*.png'],
       manifest: {
         name: 'Gym',

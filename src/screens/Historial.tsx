@@ -20,6 +20,9 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
   const [sesion, setSesion] = useState<Sesion | null>(null)
   const [peso, setPeso] = useState(false)
   const [fotos, setFotos] = useState(false)
+  const [agregar, setAgregar] = useState(false)
+  const [fechaNueva, setFechaNueva] = useState(() => claveFecha(ahora))
+  const [tipoNuevo, setTipoNuevo] = useState<'A' | 'B' | 'FRIDA'>('A')
   const hayAlgo = datos.sesiones.some((s) => s.terminada)
   return (
     <div className="pantalla con-barra">
@@ -48,6 +51,9 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
           </Grupo>
         </>
       )}
+      <Grupo titulo="Se me olvidó registrar">
+        <Fila texto="Fui este día" detalle="Agrega una sesión con fecha y qué hiciste" onClick={() => setAgregar(true)} />
+      </Grupo>
       <Grupo titulo="Cuerpo">
         <Fila texto="Peso corporal" dato={datos.peso.length ? `${datos.peso[datos.peso.length - 1].kg} kg` : 'Sin registro'} onClick={() => setPeso(true)} />
         <Fila texto="Fotos" dato={datos.fotos.length ? `${datos.fotos.length}` : 'Ninguna'} onClick={() => setFotos(true)} />
@@ -64,6 +70,24 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
       </Hoja>
       <Hoja abierta={sesion !== null} altura="completa" titulo={sesion ? `${sesion.tipo}, ${fechaCorta(sesion.fecha)}` : ''} onCerrar={() => setSesion(null)}>
         {sesion && <DetalleSesion datos={datos} sesion={sesion} />}
+      </Hoja>
+      <Hoja abierta={agregar} titulo="Fui este día" onCerrar={() => setAgregar(false)}>
+        <Grupo>
+          <Fila texto="Fecha"><input type="date" value={fechaNueva} max={claveFecha(ahora)} onChange={(e) => setFechaNueva(e.target.value)} aria-label="Fecha" /></Fila>
+          <Fila texto="Qué hice">
+            <select value={tipoNuevo} onChange={(e) => setTipoNuevo(e.target.value as 'A' | 'B' | 'FRIDA')} aria-label="Qué hice">
+              <option value="A">Cuerpo completo A</option>
+              <option value="B">Cuerpo completo B</option>
+              <option value="FRIDA">Lunes con Frida</option>
+            </select>
+          </Fila>
+        </Grupo>
+        <BotonTexto onClick={async () => {
+          if (!fechaNueva) return
+          const inicio = new Date(fechaNueva + 'T19:30:00').getTime()
+          await datos.guardarSesion({ id: `manual-${fechaNueva}-${tipoNuevo}-${inicio}`, fecha: fechaNueva, tipo: tipoNuevo, version: 'completa', inicio, fin: inicio + 60 * 60000, terminada: true, cambios: [] })
+          setAgregar(false)
+        }}>Guardar</BotonTexto>
       </Hoja>
       <PesoHoja datos={datos} ahora={ahora} abierta={peso} onCerrar={() => setPeso(false)} />
       <FotosHoja datos={datos} ahora={ahora} abierta={fotos} onCerrar={() => setFotos(false)} />

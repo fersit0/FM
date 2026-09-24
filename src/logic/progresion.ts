@@ -1,7 +1,7 @@
 // Registro y progresión (sección 8 del brief). Puro, sin React.
 import type { SetLog } from '../data/tipos'
 
-export type Sugerencia = 'inicial' | 'subir' | 'repetir' | 'bajar'
+export type Sugerencia = 'inicial' | 'subir' | 'repetir' | 'quedarse' | 'bajar'
 
 export interface ResultadoSugerencia {
   tipo: Sugerencia
@@ -46,6 +46,7 @@ export function sugerirPeso(
   exerciseId: string,
   repsMax: number,
   modo: 'peso' | 'tiempo' | 'corporal' = 'peso',
+  repsMin = 0,
 ): ResultadoSugerencia {
   const sesiones = porSesion(logs, exerciseId)
   if (sesiones.length === 0) {
@@ -79,6 +80,10 @@ export function sugerirPeso(
     if (mismoPeso && repsTotal(s2) < repsTotal(s1) && repsTotal(s3) < repsTotal(s2)) {
       return { tipo: 'bajar', peso, texto: 'Baja un escalón.' }
     }
+  }
+
+  if (repsMin > 0 && ultima.some((s) => s.reps < repsMin)) {
+    return { tipo: 'quedarse', peso, texto: 'La vez pasada no llegaste al mínimo. Quédate o baja.' }
   }
 
   return { tipo: 'repetir', peso, texto: 'Repite el peso.' }

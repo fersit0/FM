@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import type { Ejercicio } from '../data/tipos'
+import type { Ejercicio, Alternativa } from '../data/tipos'
 import { ejerciciosDe, CALENTAMIENTO, CIERRE, REGLAS_GLOBALES, VERSION_CORTA_TEXTO, REGLA_ALTERNATIVA } from '../data/ejercicios'
 import { porSesion } from '../logic/progresion'
 import { usePantalla } from '../design/pantallaActiva'
@@ -11,6 +11,7 @@ import { FichaHoja } from '../components/Ficha'
 export function Ejercicios({ datos }: { datos: Datos }) {
   usePantalla('tinta')
   const [abierto, setAbierto] = useState<Ejercicio | null>(null)
+  const [alternativa, setAlternativa] = useState<Alternativa | null>(null)
   const [reglas, setReglas] = useState(false)
   const ultimoPeso = (e: Ejercicio) => {
     const grupos = porSesion(datos.sets, e.id)
@@ -29,7 +30,8 @@ export function Ejercicios({ datos }: { datos: Datos }) {
         </Grupo>
       ))}
       <Grupo titulo="Reglas"><Fila texto="Calentamiento, cierre y reglas de cada serie" onClick={() => setReglas(true)} /></Grupo>
-      {abierto && <FichaHoja abierta onCerrar={() => setAbierto(null)} base={abierto} item={abierto} datos={datos} series={abierto.series} conGrafica />}
+      {abierto && <FichaHoja abierta onCerrar={() => setAbierto(null)} base={abierto} item={abierto} datos={datos} series={abierto.series} conGrafica onVerAlternativa={setAlternativa} />}
+      {abierto && alternativa && <FichaHoja abierta onCerrar={() => setAlternativa(null)} base={abierto} item={alternativa} datos={datos} conGrafica />}
       <Hoja abierta={reglas} altura="completa" titulo="Reglas" onCerrar={() => setReglas(false)}>
         <Grupo>
           <Fila texto="Calentamiento" detalle={`${CALENTAMIENTO.texto} ${CALENTAMIENTO.siOcupada}`} />

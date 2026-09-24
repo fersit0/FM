@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Settings } from '../data/tipos'
 import { armarRespaldo, leerRespaldo, blobABase64, base64ABlob } from '../logic/respaldo'
-import { borrarTodo, guardarSesion, guardarSet, guardarPeso, guardarFoto } from '../data/db'
+import { borrarTodo, guardarSesion, guardarSet, guardarPeso, guardarFoto, guardarFotoEjercicio } from '../data/db'
 import { DIAS_NOMBRE, claveFecha } from '../logic/fechas'
 import { hapticosActivos, setHapticosActivos, haptico } from '../lib/haptics'
 import { sonidoActivo, setSonidoActivo, prepararAudio, sonarFinDescanso } from '../lib/sonido'
@@ -23,7 +23,8 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
 
   async function exportar() {
     const fotos = await Promise.all(datos.fotos.map(async (f) => ({ fecha: f.fecha, tipo: f.blob.type, base64: await blobABase64(f.blob) })))
-    const r = armarRespaldo({ settings, sesiones: datos.sesiones, sets: datos.sets, peso: datos.peso, fotos })
+    const fotosEjercicio = await Promise.all(datos.fotosEjercicio.map(async (f) => ({ ejercicioId: f.ejercicioId, fecha: f.fecha, tipo: f.blob.type, base64: await blobABase64(f.blob) })))
+    const r = armarRespaldo({ settings, sesiones: datos.sesiones, sets: datos.sets, peso: datos.peso, fotos, fotosEjercicio })
     const nombre = `gym-respaldo-${claveFecha(new Date())}.json`
     const file = new File([JSON.stringify(r)], nombre, { type: 'application/json' })
     try {
@@ -55,6 +56,7 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
       for (const s of r.sets) await guardarSet(s)
       for (const p of r.peso) await guardarPeso(p)
       for (const foto of r.fotos) await guardarFoto({ fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo) })
+      for (const foto of r.fotosEjercicio ?? []) await guardarFotoEjercicio({ ejercicioId: foto.ejercicioId, fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo) })
       datos.setSettings(r.settings)
       await datos.recargar()
       onAviso('Respaldo importado')

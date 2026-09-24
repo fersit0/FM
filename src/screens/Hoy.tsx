@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Sesion, Version } from '../data/tipos'
 import { usePantalla, useMedidas } from '../design/pantallaActiva'
 import { estadoSemana, siguienteSesion, avisoRescate, semanasCumplidas, tocaProponerSeriesExtra, entraEnVersion } from '../logic/semana'
 import { estadoTiempo, estadoSiSalgo, versionInicial, textoManana } from '../logic/horario'
 import { porSesion } from '../logic/progresion'
-import { ejerciciosDe } from '../data/ejercicios'
+import { ejerciciosDe, itemDeRutina } from '../data/ejercicios'
 import { claveFecha, DIAS_NOMBRE, formatoHora, minutosDe } from '../logic/fechas'
 import { Circulo, BotonPrincipal, BotonTexto, Hoja, Grupo, Fila, Pez } from '../components/fm'
 
@@ -34,9 +34,17 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   const estado = siSalgo ? siSalgo.estado : tiempo.estado
   const version = versionInicial(estado, semana.bonus)
   const [hojaLista, setHojaLista] = useState(false)
+  const [versionNueva, setVersionNueva] = useState(() => typeof window.fmActualizar === 'function')
+  useEffect(() => {
+    const f = () => setVersionNueva(true)
+    window.addEventListener('fm:version-nueva', f)
+    return () => window.removeEventListener('fm:version-nueva', f)
+  }, [])
+  const esLunes = ahora.getDay() === 1
   const [hojaExtra, setHojaExtra] = useState(false)
   const lista = useMemo(() => ejerciciosDe(toca).filter((e) => entraEnVersion(e.orden, version)), [toca, version])
-  const filas = useMemo(() => lista.map((e) => {
+  const filas = useMemo(() => lista.map((base) => {
+    const e = itemDeRutina(base, settings.reemplazos)
     const grupos = porSesion(sets, e.id)
     const u = grupos[grupos.length - 1]
     let dato = ''
@@ -46,7 +54,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
       dato = e.modo === 'peso' ? `${peso} kg` : e.modo === 'tiempo' ? `${reps} s` : `${reps} reps`
     }
     return { id: e.id, nombre: e.nombre, dato }
-  }), [lista, sets])
+  }), [lista, sets, settings.reemplazos])
   const minutos = version === 'corta' ? 45 : version === 'bonus' ? 75 : 65
   const tope = formatoHora(minutosDe(settings.horaTope))
   const claveHoy = claveFecha(ahora)
@@ -94,6 +102,13 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
       </div>
 
       <div className="inicio-pie">
+        {versionNueva && <button className="inicio-linea-roja" onClick={() => window.fmActualizar?.()}>Hay versión nueva. Toca para actualizar.</button>}
+        {esLunes && !semana.fridaHecha && !sesionEnCurso && (
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <span className="t-cuerpo">¿Fuiste con Frida?</span>
+            <BotonTexto onClick={alternarFrida}>Sí, fui</BotonTexto>
+          </div>
+        )}
         {proponerExtra && !sesionEnCurso && <button className="inicio-linea-roja" onClick={() => setHojaExtra(true)}>Ya toca pasar a 4 series.</button>}
         {sesionEnCurso ? (
           <>

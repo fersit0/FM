@@ -11,6 +11,7 @@ export interface Respaldo {
   sets: SetLog[]
   peso: Bodyweight[]
   fotos: { fecha: string; tipo: string; base64: string }[]
+  fotosEjercicio?: { ejercicioId: string; fecha: string; tipo: string; base64: string }[]
 }
 
 export function armarRespaldo(datos: {
@@ -19,6 +20,7 @@ export function armarRespaldo(datos: {
   sets: SetLog[]
   peso: Bodyweight[]
   fotos: { fecha: string; tipo: string; base64: string }[]
+  fotosEjercicio?: { ejercicioId: string; fecha: string; tipo: string; base64: string }[]
 }): Respaldo {
   return { app: 'gym-app', version: 1, exportado: new Date().toISOString(), ...datos }
 }
@@ -46,6 +48,7 @@ export function leerRespaldo(texto: string): Respaldo {
       .map((s) => ({ ...s, id: undefined })),
     peso: lista<Bodyweight>(r.peso).filter((p) => p && typeof p.fecha === 'string' && typeof p.kg === 'number'),
     fotos: lista<Respaldo['fotos'][number]>(r.fotos).filter((f) => f && typeof f.fecha === 'string' && typeof f.base64 === 'string'),
+    fotosEjercicio: lista<NonNullable<Respaldo['fotosEjercicio']>[number]>(r.fotosEjercicio).filter((f) => f && typeof f.ejercicioId === 'string' && typeof f.base64 === 'string'),
   }
 }
 

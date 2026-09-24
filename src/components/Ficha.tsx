@@ -16,8 +16,8 @@ function rango(e: Ejercicio | Alternativa): string {
 }
 
 /** 7.2 Técnica: hoja completa tinta con foto arriba, secciones y "Tomar foto de mi máquina". */
-export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onElegirAlternativa, conGrafica = false }: {
-  abierta: boolean; onCerrar: () => void; base: Ejercicio; item: Ejercicio | Alternativa; datos: Datos; series?: number; onElegirAlternativa?: (a: Alternativa | null) => void; conGrafica?: boolean
+export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onElegirAlternativa, conGrafica = false, onVerAlternativa }: {
+  abierta: boolean; onCerrar: () => void; base: Ejercicio; item: Ejercicio | Alternativa; datos: Datos; series?: number; onElegirAlternativa?: (a: Alternativa | null) => void; conGrafica?: boolean; onVerAlternativa?: (a: Alternativa) => void
 }) {
   const ficha = FICHAS[item.id] ?? FICHAS[base.id]
   const archivo = useRef<HTMLInputElement>(null)
@@ -61,7 +61,7 @@ export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onEleg
         <Grupo>
           {esAlternativa && onElegirAlternativa && <Fila texto={base.nombre} detalle="Volver al original" onClick={() => onElegirAlternativa(null)} />}
           {base.alternativas.filter((a) => a.id !== item.id).map((a) => (
-            <Fila key={a.id} texto={a.nombre} detalle={`${a.caso}. ${a.series} series, ${rango(a)}${a.porLado ? ' por lado' : ''}`} onClick={onElegirAlternativa ? () => onElegirAlternativa(a) : undefined} />
+            <Fila key={a.id} texto={a.nombre} detalle={`${a.caso}. ${a.series} series, ${rango(a)}${a.porLado ? ' por lado' : ''}`} onClick={onElegirAlternativa ? () => onElegirAlternativa(a) : onVerAlternativa ? () => onVerAlternativa(a) : undefined} />
           ))}
         </Grupo>
       </Seccion>

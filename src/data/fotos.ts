@@ -1,5 +1,6 @@
 // Fotos base por ejercicio (clave = campo `ilustracion` del ejercicio o alternativa).
 // Fuente: yuhonas/free-exercise-db (Unlicense, dominio público), reducidas a 900 px en public/fotos/.
+// Revisadas una por una (tabla en NOTAS-DISENO.md): sin foto es mejor que una incorrecta.
 export const FOTOS_BASE: Record<string, string> = {
   'press-banca': 'Dumbbell_Bench_Press',
   'press-piso': 'Dumbbell_Floor_Press',
@@ -13,7 +14,6 @@ export const FOTOS_BASE: Record<string, string> = {
   'sentadilla-mancuernas': 'Dumbbell_Squat',
   'sentadilla-banco': 'Bodyweight_Squat',
   militar: 'Dumbbell_Shoulder_Press',
-  'militar-pie': 'Dumbbell_Shoulder_Press',
   'militar-neutro': 'Dumbbell_Shoulder_Press',
   'hombro-maquina': 'Machine_Shoulder_Military_Press',
   'curl-z': 'EZ-Bar_Curl',
@@ -22,20 +22,15 @@ export const FOTOS_BASE: Record<string, string> = {
   'triceps-polea': 'Triceps_Pushdown',
   'triceps-cabeza': 'Seated_Triceps_Press',
   'fondos-banco': 'Bench_Dips',
-  plancha: 'Plank',
-  'plancha-rodillas': 'Plank',
   'dead-bug': 'Dead_Bug',
   'press-inclinado': 'Incline_Dumbbell_Press',
   'remo-polea': 'Seated_Cable_Rows',
   'remo-pecho': 'Leverage_Iso_Row',
   laterales: 'Side_Lateral_Raise',
   'laterales-sentado': 'Seated_Side_Lateral_Raise',
-  'laterales-polea': 'Cable_Seated_Lateral_Raise',
   martillo: 'Hammer_Curls',
   'curl-cuerda': 'Cable_Hammer_Curls_-_Rope_Attachment',
   piernas: 'Flat_Bench_Lying_Leg_Raise',
-  'piernas-piso': 'Flat_Bench_Lying_Leg_Raise',
-  rodillas: 'Flat_Bench_Lying_Leg_Raise',
 }
 
 export function urlFotoBase(clave: string): string | null {

@@ -45,6 +45,11 @@ describe('doble progresión', () => {
     ]
     expect(sugerirPeso(logs, 'A1', 10).tipo).toBe('repetir')
   })
+  it('si no llegó al mínimo: quedarse o bajar', () => {
+    const logs = sesionDe('s1', '2026-09-21', 'A1', 16, [8, 7, 6])
+    expect(sugerirPeso(logs, 'A1', 10, 'peso', 8).tipo).toBe('quedarse')
+    expect(sugerirPeso(logs, 'A1', 10, 'peso', 6).tipo).toBe('repetir')
+  })
   it('la alternativa tiene su propio historial', () => {
     const logs = sesionDe('s1', '2026-09-21', 'A1', 14, [10, 10, 10])
     expect(sugerirPeso(logs, 'A1-piso', 10).tipo).toBe('inicial')
