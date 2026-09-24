@@ -324,3 +324,50 @@ h1, h2, h3, p { margin: 0; }
 .rutina-alt { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; }
 .rutina-alt .detalle { gap: 8px; margin-top: 4px; }
 .rutina-alt .detalle p, .rutina-alt .lista { font-size: 14px; color: var(--crema-2); }
+
+/* Progreso */
+.segmentos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--marco); padding: 5px; border-radius: var(--radio-capsula); }
+.segmento { min-height: 42px; border-radius: var(--radio-capsula); font-size: 14px; font-weight: 700; color: var(--crema-3); transition: background-color var(--medio) var(--inercia), color var(--medio) var(--inercia); }
+.segmento.activo { background: var(--navy-alto); color: var(--crema); }
+
+.trafico { width: 100%; height: auto; display: block; }
+.trafico-carril { stroke: var(--navy); stroke-width: 2; }
+.trafico-actual .trafico-carril { stroke: var(--navy-alto); }
+.trafico-fecha { fill: var(--crema-3); font-size: 10px; font-family: var(--mono); }
+.trafico-luz { transition: opacity var(--medio); }
+.luz-naranja { fill: var(--naranja); background: var(--naranja); }
+.luz-ambar { fill: var(--ambar); background: var(--ambar); }
+.luz-pico { fill: var(--rojo-naranja); background: var(--rojo-naranja); }
+.luz-olivo { fill: var(--olivo); background: var(--olivo); }
+.luz-teal { fill: var(--teal); background: var(--teal); }
+
+.leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--crema-3); }
+.leyenda .luz { display: inline-block; width: 14px; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 4px; }
+
+.grafica { width: 100%; height: auto; display: block; }
+.grafica-guia { stroke: var(--navy); stroke-width: 1; }
+.grafica-eje { fill: var(--crema-3); font-size: 10px; font-family: var(--mono); }
+.grafica-serie.principal path { stroke: var(--naranja); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.grafica-serie.principal circle { fill: var(--naranja); }
+.grafica-serie.alterna path { stroke: var(--teal); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.grafica-serie.alterna circle { fill: var(--teal); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { min-width: 48px; min-height: 40px; padding: 0 12px; border-radius: var(--radio-capsula); background: var(--marco); color: var(--crema-3); font-family: var(--mono); font-weight: 700; transition: background-color var(--medio) var(--inercia), color var(--medio) var(--inercia); }
+.chip.activo { background: var(--naranja); color: var(--crema-tinta); }
+.progreso-lista { gap: 8px; margin-top: 6px; }
+
+.fotos-boton { position: relative; align-self: flex-start; }
+.fotos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.foto { margin: 0; background: var(--marco); border-radius: var(--radio-chico); overflow: hidden; display: flex; flex-direction: column; }
+.foto img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; display: block; }
+.foto figcaption { padding: 6px 10px; }
+
+/* Ajustes */
+.campo { display: flex; flex-direction: column; gap: 6px; }
+.campo input, .campo select { max-width: 100%; }
+.interruptor { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; width: 100%; text-align: left; font-size: 16px; font-weight: 600; }
+.interruptor-pista { flex: none; width: 54px; height: 32px; border-radius: 16px; background: var(--marco); position: relative; transition: background-color var(--medio) var(--inercia); }
+.interruptor-pista.on { background: var(--naranja); }
+.interruptor-bola { position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 12px; background: var(--crema); transition: transform var(--medio) var(--inercia); }
+.interruptor-pista.on .interruptor-bola { transform: translateX(22px); }
