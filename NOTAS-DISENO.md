@@ -113,3 +113,65 @@ Reemplaza a v1 y v2. Los mockups de `fm-assets/referencia/` son el objetivo; se 
 - Versión 0.3.0.
 
 Pendiente: probar en el iPhone el atajo "FM Descanso", el háptico del switch, la cámara desde la ficha y cómo se ve el recorte del número en el descanso; incluir fotos propias en el respaldo; fase 5 (GitHub Pages).
+
+# Publicar, completar y blindar
+
+## Publicar
+- `.github/workflows/deploy.yml` publica en GitHub Pages en cada push a `main` (corre pruebas, build y despliega `dist/`). No hay `gh` ni sesión de GitHub en esta Mac: el repo lo crea el usuario y el primer push va con las instrucciones del mensaje final. URL esperada: `https://<usuario>.github.io/gym-app/`.
+- Actualización: `registerType: 'prompt'`. Cuando hay service worker nuevo, Inicio muestra "Hay versión nueva. Toca para actualizar." y al tocar se activa y recarga. Los datos viven en IndexedDB y localStorage, así que no se pierden. Sustituye al aviso automático "actualizada" de CLAUDE.md por pedido explícito del usuario.
+- Offline: el service worker precachea todo (js, css, html, png, jpg de fotos, pez e íconos) y responde `index.html` a cualquier ruta.
+
+## Semana y progresión
+- Los lunes Inicio muestra "¿Fuiste con Frida?" con "Sí, fui"; desaparece al marcarlo. El punto del lunes sigue siendo tocable.
+- Historial tiene "Fui este día": fecha (hasta hoy) y qué hiciste (A, B o Frida); crea una sesión terminada sin series a las 7:30 pm de ese día.
+- Progresión: nueva sugerencia `quedarse` cuando la última vez alguna serie no llegó al mínimo del rango ("Quédate en X o baja"). Subir y bajar siguen las reglas del brief.
+
+## Alternativas
+- Menú ✕ → "Cambiar por alternativa": lista original y alternativas con foto chica, caso y último peso. Tocar el nombre la usa en esta sesión (registro propio); "Usar siempre esta" la deja en la rutina (`settings.reemplazos`). Un cambio en la sesión siempre gana sobre el reemplazo permanente.
+- En Ejercicios, las alternativas de la ficha abren su propia ficha (contenido del brief, foto y gráfica).
+- El brief da 2 a 4 alternativas por ejercicio; no se inventaron más (sección 13 del brief).
+
+## Fotos, revisadas una por una (fm-assets no trae fotos; base: free-exercise-db, Unlicense)
+
+| Ejercicio o alternativa | Archivo | Coincide |
+|---|---|---|
+| A1 Press de banca plano con mancuernas | Dumbbell_Bench_Press | Sí |
+| A1 Press en el piso | Dumbbell_Floor_Press | Sí |
+| A1 Máquina de press de pecho / B1 máquina inclinado | Leverage_Chest_Press / Leverage_Incline_Chest_Press | Sí |
+| A1, B1 Lagartijas con pies en banco | Push-Ups_With_Feet_Elevated | Sí |
+| A2 Jalón al pecho | Wide-Grip_Lat_Pulldown | Sí |
+| A2, B2 Remo con mancuerna a una mano | One-Arm_Dumbbell_Row | Sí |
+| A2 Dominadas asistidas (ambas) | Band_Assisted_Pull-Up | Sí (asistencia con liga, no máquina) |
+| A3 Sentadilla goblet / B3 goblet | Goblet_Squat | Sí (con pesa rusa) |
+| A3, B3 Prensa (y recorrido corto) | Leg_Press | Sí |
+| A3, B3 Sentadilla con dos mancuernas | Dumbbell_Squat | Sí |
+| A3, B3 Sentadilla a un banco | Bodyweight_Squat | Sí (sin banco en la foto) |
+| A4 Press militar sentado / agarre neutro | Dumbbell_Shoulder_Press | Sí |
+| A4 Press militar de pie | Dumbbell_Shoulder_Press | No (sentado): sin foto |
+| A4 Máquina de press de hombro | Machine_Shoulder_Military_Press | Sí |
+| A5 Curl con barra Z | EZ-Bar_Curl | Sí |
+| A5, B5 Curl alternado | Dumbbell_Alternate_Bicep_Curl | Sí |
+| A5 Curl en polea baja | Standing_Biceps_Cable_Curl | Sí |
+| A6 Extensión de tríceps en polea | Triceps_Pushdown | Sí |
+| A6 Extensión sobre la cabeza | Seated_Triceps_Press | Sí |
+| A6 Fondos en banco | Bench_Dips | Sí |
+| A7 Plancha y plancha con rodillas | Plank | No (la foto es una postura de rodillas): sin foto |
+| A7, B6 Dead bug | Dead_Bug | Sí |
+| B1 Press inclinado | Incline_Dumbbell_Press | Sí |
+| B2 Remo sentado en polea (y con pausa) | Seated_Cable_Rows | Sí |
+| B2 Remo con pecho apoyado | Leverage_Iso_Row | Sí |
+| B4 Elevaciones laterales | Side_Lateral_Raise | Sí |
+| B4 Laterales sentado | Seated_Side_Lateral_Raise | Sí |
+| B4 Laterales en polea | Cable_Seated_Lateral_Raise | No (sentado y no se ve el gesto): sin foto |
+| B5 Curl martillo | Hammer_Curls | Sí |
+| B5 Curl con cuerda | Cable_Hammer_Curls_-_Rope_Attachment | Sí |
+| B6 Elevación de piernas en banco | Flat_Bench_Lying_Leg_Raise | Sí |
+| B6 En el piso / rodillas dobladas | Flat_Bench_Lying_Leg_Raise | No (en banco): sin foto |
+
+- La foto propia siempre gana y ahora viaja en el respaldo JSON (`fotosEjercicio`).
+
+## Nunca trabarse
+- ✕ siempre visible en sesión (por encima del panel). "Terminar sesión" guarda aunque haya 0 series.
+- `ErrorBoundary` en la raíz: "Algo falló. Tu sesión está guardada." con "Volver al inicio"; los errores se guardan en `localStorage['gym-app:errores']` (últimos 20).
+- Al cargar, los registros dañados o de versiones viejas se filtran sin borrar el resto; los ajustes se completan con los valores por defecto.
+- Pruebas de punta a punta en `e2e/flujos.spec.mjs` (`npm run e2e`, contra el servidor de desarrollo): sesión completa, saltar todo, alternativa y "usar siempre", recargar a medio descanso, retomar sesión a medias, terminar con 0 series, lunes con Frida, registrar un día pasado, exportar e importar, actualizar versión. Las 10 pasan.

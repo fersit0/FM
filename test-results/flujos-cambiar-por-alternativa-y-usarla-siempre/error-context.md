@@ -1,0 +1,64 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - button "Opciones de la sesión" [ref=e5] [cursor=pointer]:
+      - img [ref=e6] [cursor=pointer]
+    - generic [ref=e8]: 1 de 7
+  - generic [ref=e9]:
+    - generic [ref=e10]:
+      - heading "Press de banca plano con mancuernas" [level=1] [ref=e11]
+      - generic [ref=e12]:
+        - paragraph [ref=e13]: Serie 1 de 3
+        - button "Técnica" [ref=e14] [cursor=pointer]
+    - button "Peso 0 kilos, tocar para escribir" [ref=e15] [cursor=pointer]:
+      - generic [ref=e16] [cursor=pointer]: "0"
+      - generic [ref=e17] [cursor=pointer]: kg
+    - generic [ref=e20]:
+      - generic [ref=e22]: "0"
+      - generic [ref=e27]: "10"
+      - generic [ref=e32]: "20"
+      - generic [ref=e37]: "30"
+      - generic [ref=e42]: "40"
+      - generic [ref=e47]: "50"
+      - generic [ref=e52]: "60"
+      - generic [ref=e57]: "70"
+      - generic [ref=e62]: "80"
+      - generic [ref=e67]: "90"
+      - generic [ref=e72]: "100"
+      - generic [ref=e77]: "110"
+      - generic [ref=e82]: "120"
+      - generic [ref=e87]: "130"
+      - generic [ref=e92]: "140"
+      - generic [ref=e97]: "150"
+      - generic [ref=e102]: "160"
+      - generic [ref=e107]: "170"
+      - generic [ref=e112]: "180"
+      - generic [ref=e117]: "190"
+      - generic [ref=e122]: "200"
+    - group "reps" [ref=e124]:
+      - button "Menos" [ref=e125] [cursor=pointer]:
+        - img [ref=e126] [cursor=pointer]
+      - generic [ref=e127]:
+        - generic [ref=e128]: "10"
+        - generic [ref=e129]: reps
+      - button "Más" [ref=e130] [cursor=pointer]:
+        - img [ref=e131] [cursor=pointer]
+    - button "Serie hecha" [ref=e134] [cursor=pointer]
+  - dialog "Cambiar por" [ref=e136]:
+    - heading "Cambiar por" [level=2] [ref=e138]
+    - generic [ref=e141]:
+      - generic [ref=e144]:
+        - button "Press en el piso con mancuernas" [ref=e145] [cursor=pointer]
+        - generic [ref=e146]: Sin banco. Sin registro
+        - button "Usar siempre esta" [ref=e147] [cursor=pointer]
+      - generic [ref=e150]:
+        - button "Máquina de press de pecho sentado" [ref=e151] [cursor=pointer]
+        - generic [ref=e152]: Ocupado. Sin registro
+        - button "Usar siempre esta" [ref=e153] [cursor=pointer]
+      - generic [ref=e156]:
+        - button "Lagartijas con los pies sobre el banco" [ref=e157] [cursor=pointer]
+        - generic [ref=e158]: Peso no alcanza. Sin registro
+        - button "Usar siempre esta" [ref=e159] [cursor=pointer]
+```
