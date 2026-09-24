@@ -2,6 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
 import './styles/base.css'
+import './design/tokens.css'
+import './design/pantalla.css'
 import App from './App'
 import { pedirPersistencia } from './data/db'
 import { sembrarSiToca } from './dev/seed'
@@ -15,6 +17,13 @@ if ('serviceWorker' in navigator) {
   })
 }
 registerSW({ immediate: true })
+
+// Grano fijo sobre el fondo, detrás de todo
+const grano = document.createElement('div')
+grano.className = 'grano'
+grano.setAttribute('aria-hidden', 'true')
+document.body.prepend(grano)
+document.body.dataset.temp = 'reposo'
 
 sembrarSiToca().then(() => {
   createRoot(document.getElementById('root')!).render(

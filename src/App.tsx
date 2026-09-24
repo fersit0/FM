@@ -6,6 +6,7 @@ import { Progreso } from './screens/Progreso'
 import { Rutina } from './screens/Rutina'
 import { Ajustes } from './screens/Ajustes'
 import { Sesion } from './screens/Sesion'
+import { Diseno } from './screens/Diseno'
 import { useDatos } from './hooks/useDatos'
 import { useReloj } from './hooks/useReloj'
 import { useSesionActiva } from './hooks/useSesionActiva'
@@ -53,6 +54,8 @@ export default function App() {
   )
 
   const cerrarAviso = useCallback(() => setAviso(null), [])
+
+  if (location.hash === '#diseno') return <Diseno />
 
   if (!datos.listo) return <div className="app" />
 

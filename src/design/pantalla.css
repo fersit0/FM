@@ -1,0 +1,26 @@
+/* Layout base de las pantallas FM (sección 5) */
+.fm-pantalla {
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  padding: calc(var(--safe-top) + 16px) var(--margen) calc(var(--safe-bottom) + 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 520px;
+  min-width: 0;
+  margin: 0 auto;
+  font-family: var(--sans);
+  color: var(--crema);
+}
+.fm-fila { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fm-columna { display: flex; flex-direction: column; gap: 12px; }
+.fm-superficie { background: var(--capa-1); border-radius: var(--r-superficie); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.fm-superficie-2 { background: var(--capa-2); border-radius: var(--r-control); padding: 16px; }
+.fm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fm-chip { background: var(--capa-2); color: var(--crema-2); border-radius: var(--r-chip); padding: 8px 12px; font-size: 13px; font-weight: 500; }
+.fm-chip.activo { background: var(--crema); color: var(--negro-calido); }
+/* La ruta /diseno usa el fondo noche del nuevo sistema */
+body { background: var(--noche); }
+#root { position: relative; z-index: 1; }
