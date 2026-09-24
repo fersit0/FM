@@ -19,7 +19,8 @@ export default function App() {
   const ahora = useReloj()
   const { activa, setActiva } = useSesionActiva()
   const [vista, setVista] = useState<Vista>('hoy')
-  const [enSesion, setEnSesion] = useState(false)
+  // Si hay sesión en curso, la app abre directo en ella (sobrevive cerrar Safari)
+  const [enSesion, setEnSesion] = useState(() => activa !== null)
   const [aviso, setAviso] = useState<string | null>(null)
 
   useEffect(() => {
