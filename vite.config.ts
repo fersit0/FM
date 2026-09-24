@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 const version = '0.4.0'
 
 export default defineConfig({
-  base: '/gym-app/',
+  base: '/FM/',
   define: { __VERSION__: JSON.stringify(version) },
   plugins: [
     react(),
@@ -18,8 +18,8 @@ export default defineConfig({
         short_name: 'Gym',
         description: 'Rutina personal de gym',
         lang: 'es-MX',
-        start_url: '/gym-app/',
-        scope: '/gym-app/',
+        start_url: '/FM/',
+        scope: '/FM/',
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#121318',
@@ -32,7 +32,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,jpg}'],
-        navigateFallback: '/gym-app/index.html',
+        navigateFallback: '/FM/index.html',
       },
     }),
   ],

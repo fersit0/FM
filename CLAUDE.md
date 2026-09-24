@@ -12,7 +12,7 @@ App personal de rutina de gym para un solo usuario. Toda la especificación est�
 - CSS propio con variables de diseño en `src/styles/tokens.css`. Sin Tailwind, sin librerías de componentes.
 - Datos en IndexedDB con `idb`. Preferencias en localStorage.
 - PWA con `vite-plugin-pwa`, estrategia `autoUpdate`, `registerType: 'autoUpdate'`, y un aviso discreto de "actualizada" cuando el service worker cambie.
-- Deploy en GitHub Pages con GitHub Actions. Configurar `base` en `vite.config.ts` con el nombre del repo (`/gym-app/`). El workflow se dispara en cada push a `main`.
+- Deploy en GitHub Pages con GitHub Actions. Configurar `base` en `vite.config.ts` con el nombre del repo (`/FM/`, el repo es fersit0/FM). El workflow se dispara en cada push a `main`.
 - Pedir `navigator.storage.persist()` al arrancar para que iOS no borre los datos.
 - Wake Lock API durante una sesión activa.
 - Todo el texto de la interfaz en español mexicano casual, con el tono de la sección 3 del brief.
