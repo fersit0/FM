@@ -392,7 +392,7 @@ export const EJERCICIOS: Ejercicio[] = [
   },
   {
     id: 'B4', nombre: 'Elevaciones laterales', sesion: 'B', orden: 4,
-    series: 3, repsMin: 12, repsMax: 15, descansoSeg: 60, modo: 'peso',
+    series: 3, repsMin: 12, repsMax: 15, descansoSeg: 60, modo: 'peso', incrementoKg: 1,
     ubicar: 'Mancuernas ligeras (empezar con las que parezcan poca cosa).',
     tecnica: [
       'De pie, mancuernas a los costados, codos apenas doblados.',

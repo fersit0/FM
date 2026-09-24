@@ -385,8 +385,8 @@ function Resumen({ datos, sesion, sets, ejercicios, onTerminar }: { datos: Datos
         <div className="fm-stat"><span className="cifra-media">{propios.length}</span><span className="nota">series</span></div>
       </div>
       {subieron.length ? (
-        <Grupo>
-          {subieron.map((s) => <Fila key={s.nombre} texto={`Subiste en ${s.nombre.toLowerCase()}`} dato={`+${s.delta} kg`} />)}
+        <Grupo titulo="Subiste en">
+          {subieron.map((s) => <Fila key={s.nombre} texto={s.nombre} dato={`+${s.delta} kg`} />)}
         </Grupo>
       ) : (
         <p className="cuerpo tenue">Hoy sostuviste los pesos.</p>

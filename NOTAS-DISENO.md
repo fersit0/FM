@@ -52,3 +52,36 @@ Pendiente:
 - "Avísame" abre `shortcuts://run-shortcut?name=FM%20Descanso&input=text&text=<segundos>` y marca `avisado` para no duplicar el sonido. Falta probar en el iPhone si el nombre con espacio funciona; si no, cambiar `NOMBRE_ATAJO` en `src/lib/atajos.ts` a "FMDescanso".
 - Al abrir la app con una sesión a medias aparece "Tienes una sesión a medias" con Seguir / Descartar (antes entraba directo).
 - Las fotos base de free-exercise-db (licencia Unlicense, dominio público) se descargaron a `public/fotos/` reducidas a 900 px (31 fotos, 3 MB). Fuente: https://github.com/yuhonas/free-exercise-db
+
+## Bloque B: sistema visual v2
+
+- Tokens en `src/design/tokens.css`. El color de estado solo vive en el horizonte, la aguja, el segmento actual y el botón principal.
+- Horizonte: capa fija de 55vh con `--intensidad` por estado y grano en `overlay` al 4%, solo sobre el horizonte.
+- Todo lo de la v1 que el spec señala se borró: módulo encendido, degradado radial, stepper en cápsula, escala de marcas, monoespaciada, ilustraciones SVG y su motor de poses.
+- `#diseno` sigue existiendo con los componentes nuevos, solo para desarrollo y capturas.
+
+## Bloque C: pantallas
+
+- Hoy: "Cuerpo completo A/B" como título grande (el brief no pone nombre a las sesiones más allá de la letra). Duración estimada: completa "unos 65 min", corta 45, bonus 75.
+- Lo que el brief pide y el spec saca del Home quedó así: Frida se marca tocando el punto del lunes; la regla de 4 semanas es una línea arriba del botón que abre una hoja Aceptar / Después; "Salgo de la oficina a las" vive en ajustes y, si tiene hora, el subtexto de Hoy dice "Sales a las 7:10. Alcanza completa." Domingo de rescate y bonus son una línea de subtexto.
+- Sesión: "Cambiar" a una alternativa se hace desde la ficha de técnica (sección "Cambiar por"), así la fila de secundarios queda en Anterior, Técnica y Saltar. Descartar sesión está en la hoja del ✕.
+- Descanso: al llegar a cero el botón pasa a "Siguiente serie" y el horizonte a la temperatura de la serie que sigue. Si el ejercicio ya se completó, "Siguiente ejercicio".
+- Historial: peso corporal y fotos (que pide el brief) van en un grupo "Cuerpo" con dos filas que abren hojas; así la lista de semanas queda limpia.
+- Ajustes: además de lo que lista el spec, se conservan horas tope, minutos de carretera y casa-club, día de pesaje y el interruptor de 4 series porque el brief los exige. La versión se muestra desde `vite.config.ts` (mismo número que package.json).
+
+## Bloque D: fotos y técnica
+
+- Fotos base: 31 imágenes de yuhonas/free-exercise-db (Unlicense, dominio público), reducidas a 900 px y JPEG 72 en `public/fotos/`. Mapa clave → archivo en `src/data/fotos.ts`. Alternativas sin foto exacta reutilizan la más parecida (militar de pie y neutro usan la de press sentado; rodillas dobladas y piso usan la de piernas en banco).
+- Foto propia: "Tomar foto" en la ficha abre la cámara, se comprime a 1200 px JPEG 0.8 y se guarda en IndexedDB (store `fotosEjercicio`, versión 2 de la base). Sustituye a la base para ese ejercicio; "Quitar foto" regresa a la base. Las fotos propias no entran al respaldo JSON todavía.
+- Tratamiento: `saturate(0.65)` y viñeta radial, radio 16. En la sesión la foto va 16:9 para caber sin scroll en 844 px; en la ficha, 4:3.
+- Fichas de técnica de los 13 ejercicios en `src/data/fichas.ts` (qué trabaja, qué sentir, preparación, ejecución, errores con corrección, cómo escoger el peso, alternativa). Los pesos iniciales sugeridos son orientativos para alguien de 23 años que empieza; la regla de ajuste es la del brief. Las alternativas muestran la ficha corta del brief.
+- Incremento del dial: 2.5 kg en todo menos elevaciones laterales (1 kg).
+
+## Resumen del pase v2
+
+Hecho: timers por hora de término que sobreviven recargas, Avísame con Atajos, sesión a medias con Seguir / Descartar, horizonte como única expresión de color, cifras 104/300, dial sin caja, stepper suelto, listas agrupadas, Hoy con una sola decisión, sesión completa, historial por semanas con puntos, ejercicios con ficha y foto propia, ajustes con instrucciones de Atajos.
+
+Pendiente:
+- Probar en el iPhone: atajo "FM Descanso" (si no abre, cambiar a "FMDescanso"), háptico del switch, cámara desde la ficha, safe areas.
+- Fotos propias de las máquinas del club; incluirlas en el respaldo JSON.
+- Fase 5 de CLAUDE.md: repo en GitHub y GitHub Pages.
