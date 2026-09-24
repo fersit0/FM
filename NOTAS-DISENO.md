@@ -22,3 +22,24 @@ Decisiones tomadas sin preguntar, con la opción más simple y limpia.
 - El dial tiene incrementos de 2.5 kg fijos (el brief no define incrementos por ejercicio). Un peso guardado fuera de la rejilla (14 kg) se respeta hasta que se toca el dial.
 - Temperatura por serie: la primera es `trabajo`, las intermedias `fuerte`, la última `ultima`; con 2 series va directo de ámbar a rojo.
 - Se quitó el pez con tenis del resumen (sección 13: sin personajes en este pase).
+
+## Paso 3: resto de pantallas
+
+- Barra de tres destinos: Hoy, Señal (antes Progreso) y Ejercicios (antes Rutina). Ajustes vive en una hoja que se abre desde el ícono arriba a la derecha de Hoy.
+- Hoy: la letra de la sesión es la cifra héroe; el módulo lleva ámbar (`trabajo`) cuando alcanza la completa y azul en reposo cuando no. Si faltan más de 3 horas para la última pesa, el módulo muestra la hora tope en vez de una cifra de minutos absurda ("Antes de las 7, sin prisa").
+- Lo que el brief exige y el spec no dibuja (X de 3 con los días, Lunes con Frida, domingo de rescate, regla de 4 semanas, "Salgo de la oficina a las") se quedó en Hoy como filas planas y botones secundarios, debajo del módulo, sin tarjetas. "Salgo a las" se despliega al tocar el texto.
+- No hay logo "FM" ni espacio reservado (sección 15). El ícono provisional de la PWA es el cuadrado noche con la franja ámbar encendida.
+- Señal: bandas por semana con luces (corta ámbar, completa naranja, bonus rojo, Frida olivo), debajo datos simples y la tendencia de peso por ejercicio en línea fina crema; las alternativas en crema-3. Peso corporal y fotos (que pide el brief) van al final de Señal, como filas planas.
+- Ejercicios: filas planas con línea de 1 px; tocar abre la hoja con ilustración, técnica, errores y alternativas. Las reglas globales están en una hoja aparte ("Reglas").
+- Se borró el sistema anterior completo: `src/styles`, fuentes empaquetadas (ahora fuente del sistema), tabs, tarjetas, tráfico con halo naranja, superficie de calor y el pez.
+- Voz: sin mayúsculas sostenidas, sin puntos medios; separadores con coma.
+
+## Resumen
+
+Hecho: tokens FM, banco de componentes en `#diseno`, sesión guiada completa (calentamiento, ejercicio, descanso, cierre, resumen), Hoy, Señal, Ejercicios y Ajustes en hoja, hápticos y sonido con ajuste, ícono provisional. Capturas con Playwright para revisar cada pantalla (`scripts/capturas*.mjs`).
+
+Pendiente:
+- Probar en el iPhone real: si el truco del switch da háptico (iOS 18+), el dial con el dedo, el teclado numérico al tocar la cifra, `100dvh` y safe areas.
+- Fotos duotono de los ejercicios cuando existan; hoy están las ilustraciones SVG.
+- Incremento del dial por ejercicio (hoy 2.5 kg para todo).
+- Fase 5 de CLAUDE.md: repo en GitHub, workflow de Pages y verificación de instalación y offline.

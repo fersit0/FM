@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import { useTemperatura, type Temperatura } from '../hooks/useTemperatura'
+import type { Sesion, Version } from '../data/tipos'
+import { useTemp } from '../design/temperatura'
 import { estadoSemana, siguienteSesion, avisoRescate, semanasCumplidas, tocaProponerSeriesExtra } from '../logic/semana'
 import { estadoTiempo, estadoSiSalgo, versionInicial, textoManana } from '../logic/horario'
-import { claveFecha, DIAS_NOMBRE, MESES_CORTOS, formatoHora } from '../logic/fechas'
-import { Semana } from '../components/Semana'
-import type { Sesion, Version } from '../data/tipos'
+import { porSesion } from '../logic/progresion'
+import { ejerciciosDe } from '../data/ejercicios'
+import { claveFecha, DIAS_NOMBRE, MESES_CORTOS, formatoHora, minutosDe } from '../logic/fechas'
+import { Modulo, BotonPrincipal, BotonSecundario } from '../components/fm'
 
 interface Props {
   datos: Datos
@@ -13,16 +15,13 @@ interface Props {
   sesionEnCurso: Sesion | null
   onEmpezar: (tipo: 'A' | 'B', version: Version) => void
   onContinuar: () => void
+  onAjustes: () => void
 }
 
-const TEMP_POR_ESTADO: Record<'completa' | 'corta' | 'no', Temperatura> = {
-  completa: 'prep',
-  corta: 'moderado',
-  no: 'reposo',
-}
+const LETRAS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
-export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onContinuar }: Props) {
-  const { sesiones, settings } = datos
+export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onContinuar, onAjustes }: Props) {
+  const { sesiones, sets, settings } = datos
   const semana = useMemo(() => estadoSemana(sesiones, ahora), [sesiones, ahora])
   const toca = useMemo(() => siguienteSesion(sesiones), [sesiones])
   const tiempo = useMemo(() => estadoTiempo(ahora, settings), [ahora, settings])
@@ -30,119 +29,134 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onContinuar }: Pro
   const cumplidas = useMemo(() => semanasCumplidas(sesiones, ahora), [sesiones, ahora])
   const proponerExtra = tocaProponerSeriesExtra(cumplidas, settings)
   const version = versionInicial(tiempo.estado, semana.bonus)
-
-  useTemperatura(sesionEnCurso ? 'moderado' : TEMP_POR_ESTADO[tiempo.estado])
-
   const [salida, setSalida] = useState('')
+  const [salidaAbierta, setSalidaAbierta] = useState(false)
   const siSalgo = salida ? estadoSiSalgo(salida, settings) : null
 
-  const fechaTexto = `${DIAS_NOMBRE[ahora.getDay()]} ${ahora.getDate()} ${MESES_CORTOS[ahora.getMonth()]}`
+  useTemp(tiempo.estado === 'completa' && !sesionEnCurso ? 'trabajo' : 'reposo')
+
+  // La vez pasada: última sesión de la letra que toca, peso máximo y reps por ejercicio
+  const vezPasada = useMemo(() => {
+    const filas: { nombre: string; dato: string }[] = []
+    for (const e of ejerciciosDe(toca)) {
+      const grupos = porSesion(sets, e.id)
+      const ultima = grupos[grupos.length - 1]
+      if (!ultima) continue
+      const peso = Math.max(...ultima.map((s) => s.pesoKg ?? 0))
+      const reps = Math.max(...ultima.map((s) => s.reps))
+      filas.push({ nombre: e.nombre, dato: e.modo === 'peso' ? `${peso} kg × ${reps}` : e.modo === 'tiempo' ? `${reps} s` : `× ${reps}` })
+    }
+    return filas.slice(0, 5)
+  }, [sets, toca])
+
+  const fechaTexto = `${DIAS_NOMBRE[ahora.getDay()].slice(0, 3)} ${ahora.getDate()} ${MESES_CORTOS[ahora.getMonth()]}`
+  const claveHoy = claveFecha(ahora)
+  const tope = formatoHora(minutosDe(settings.horaTope))
+  const sinPrisa = tiempo.estado === 'completa' && tiempo.minutosParaTope > 180
 
   async function marcarFrida() {
-    const clave = claveFecha(ahora)
     if (semana.fridaHecha) {
       const f = sesiones.find((s) => s.tipo === 'FRIDA' && semana.dias.some((d) => d.fecha === s.fecha))
       if (f) await datos.borrarSesion(f.id)
       return
     }
-    await datos.guardarSesion({
-      id: `frida-${clave}`,
-      fecha: clave,
-      tipo: 'FRIDA',
-      version: 'completa',
-      inicio: ahora.getTime(),
-      fin: ahora.getTime(),
-      terminada: true,
-    })
+    await datos.guardarSesion({ id: `frida-${claveHoy}`, fecha: claveHoy, tipo: 'FRIDA', version: 'completa', inicio: ahora.getTime(), fin: ahora.getTime(), terminada: true })
   }
 
-  function textoEmpezar(): string {
-    if (tiempo.estado === 'no') return 'Empezar de todas formas'
-    if (version === 'bonus') return `Empezar ${toca} (bonus)`
-    if (version === 'corta') return `Empezar ${toca} corta`
-    return `Empezar ${toca}`
-  }
+  const textoEmpezar = sesionEnCurso ? 'Continuar' : tiempo.estado === 'no' ? 'Empezar de todas formas' : version === 'corta' ? 'Empezar la corta' : 'Empezar'
 
   return (
-    <div className="pantalla">
-      <header className="fila-entre">
-        <span className="etiqueta">{fechaTexto}</span>
-        <span className="etiqueta numero">{formatoHora(ahora.getHours() * 60 + ahora.getMinutes())}</span>
+    <div className="fm-pantalla fm-con-barra">
+      <header className="fm-cabecera">
+        <span className="secundario">{fechaTexto}</span>
+        <button className="fm-icono-boton" onClick={onAjustes} aria-label="Ajustes">
+          <svg className="fm-icono" viewBox="0 0 22 22"><circle cx="11" cy="11" r="2.5" /><path d="M11 3v2.5M11 16.5V19M3 11h2.5M16.5 11H19M5.3 5.3l1.8 1.8M14.9 14.9l1.8 1.8M5.3 16.7l1.8-1.8M14.9 7.1l1.8-1.8" /></svg>
+        </button>
       </header>
 
-      {sesionEnCurso ? (
-        <section className="modulo-temp hoy-protagonista hoy-en-curso">
-          <span className="etiqueta hoy-etiqueta">Sesión en curso</span>
-          <div className="hoy-letra">
-            <span className="letra-gigante">{sesionEnCurso.tipo === 'FRIDA' ? 'F' : sesionEnCurso.tipo}</span>
-            <div className="hoy-letra-lado">
-              <h1 className="titulo-2">Vas a la mitad</h1>
-              <p className="hoy-detalle">Empezaste hace {Math.round((ahora.getTime() - sesionEnCurso.inicio) / 60000)} min.</p>
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section className="modulo-temp hoy-protagonista">
-          <span className="etiqueta hoy-etiqueta">{semana.bonus ? 'Bonus · ya van 3' : 'Te toca'}</span>
-          <div className="hoy-letra">
-            <h1 className="letra-gigante" aria-label={`Te toca ${toca}`}>{toca}</h1>
-            <div className="hoy-letra-lado">
-              <p className="hoy-estado">{tiempo.titulo}</p>
-              <p className="hoy-detalle">
-                {tiempo.estado === 'no' ? textoManana(ahora, DIAS_NOMBRE) : tiempo.detalle}
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
+      <div className="fm-hoy-toca">
+        <p className="secundario">{sesionEnCurso ? 'Sesión en curso' : semana.bonus ? 'Bonus, ya van 3' : 'Hoy toca'}</p>
+        <span className="cifra-heroe" aria-label={`Sesión ${sesionEnCurso?.tipo ?? toca}`}>{sesionEnCurso ? (sesionEnCurso.tipo === 'FRIDA' ? 'F' : sesionEnCurso.tipo) : toca}</span>
+        <p className="secundario">{sesionEnCurso ? `Empezaste hace ${Math.max(1, Math.round((ahora.getTime() - sesionEnCurso.inicio) / 60000))} min.` : 'Cuerpo completo'}</p>
+      </div>
 
-      {sesionEnCurso ? (
-        <button className="boton" onClick={onContinuar}>Continuar</button>
-      ) : (
-        <button className="boton" onClick={() => onEmpezar(toca, version)}>{textoEmpezar()}</button>
-      )}
+      <Modulo className="fm-modulo-tiempo">
+        {tiempo.estado === 'no' ? (
+          <>
+            <p className="titulo-fm">Hoy ya no. Descanso.</p>
+            <p className="cuerpo">{textoManana(ahora, DIAS_NOMBRE)} Si entras de todas formas, va en corta.</p>
+          </>
+        ) : sinPrisa ? (
+          <>
+            <div><span className="cifra-grande">{tope.replace(/ (am|pm)$/, '')}</span><span className="unidad">{tope.endsWith('pm') ? 'pm' : 'am'}</span></div>
+            <p className="cuerpo">Última pesa a las {tope}. Sin prisa.</p>
+          </>
+        ) : (
+          <>
+            <div><span className="cifra-grande">{tiempo.minutosParaTope}</span><span className="unidad">min</span></div>
+            <p className="cuerpo">
+              Tienes hasta las {tope}. {tiempo.estado === 'completa' ? 'Alcanza completa.' : 'No alcanza completa, te dejo lo esencial.'}
+            </p>
+          </>
+        )}
+      </Modulo>
 
-      {rescate && (
-        <section className="modulo hoy-rescate">
-          <span className="etiqueta">Domingo de rescate</span>
-          <p className="titulo-2">{rescate}</p>
-        </section>
-      )}
+      {rescate && <p className="cuerpo" style={{ color: 'var(--crema-2)' }}>{rescate}</p>}
 
       {proponerExtra && (
-        <section className="modulo">
-          <span className="etiqueta">4 semanas cumplidas</span>
-          <p className="titulo-2">A1, A2, B1 y B2 pasan de 3 a 4 series.</p>
-          <div className="fila">
-            <button className="boton boton-chico" onClick={() => datos.setSettings({ ...settings, seriesExtra: true })}>Aceptar</button>
-            <button className="boton boton-chico boton-marco" onClick={() => datos.setSettings({ ...settings, reglaPospuestaEn: cumplidas })}>Posponer</button>
+        <div className="fm-aviso-sup">
+          <p className="cuerpo">Cuatro semanas cumplidas. A1, A2, B1 y B2 pasan de 3 a 4 series.</p>
+          <div className="fm-fila">
+            <BotonSecundario capsula onClick={() => datos.setSettings({ ...settings, seriesExtra: true })}>Aceptar</BotonSecundario>
+            <BotonSecundario onClick={() => datos.setSettings({ ...settings, reglaPospuestaEn: cumplidas })}>Posponer</BotonSecundario>
           </div>
-        </section>
+        </div>
       )}
 
-      <section className="modulo">
-        <Semana estado={semana} hoy={ahora} />
-        <button className={`boton boton-capsula ${semana.fridaHecha ? 'boton-secundario' : 'boton-marco'} hoy-frida`} onClick={marcarFrida}>
-          {semana.fridaHecha ? 'Lunes con Frida: hecho ✓' : 'Lunes con Frida: hecho'}
-        </button>
-      </section>
-
-      <section className="modulo">
-        <label className="etiqueta" htmlFor="salida">Salgo de la oficina a las</label>
-        <div className="fila">
-          <input id="salida" type="time" value={salida} onChange={(e) => setSalida(e.target.value)} />
-          {salida && (
-            <button className="boton-texto" onClick={() => setSalida('')}>Quitar</button>
-          )}
+      <div className="fm-filas">
+        <div className="fm-fila-plana">
+          <span className="etiqueta-fm">Esta semana</span>
+          <span className="secundario">{semana.hechas} de {semana.meta}</span>
         </div>
-        {siSalgo ? (
-          <p className="texto-2">
-            Llegas {formatoHora(siSalgo.llegadaMin)}. {siSalgo.estado === 'completa' ? 'Alcanza la completa.' : siSalgo.estado === 'corta' ? 'Alcanza la corta.' : 'Hoy ya no.'}
-          </p>
-        ) : (
-          <p className="texto-3">Suma {settings.minCarretera} min de carretera y {settings.minCasaClub} de casa al club.</p>
+        <div className="fm-dias" aria-label={`${semana.hechas} de ${semana.meta} sesiones`}>
+          {semana.dias.map((d, i) => (
+            <div key={d.fecha} className={`fm-dia ${d.tipos.length ? (d.tipos.includes('FRIDA') && d.tipos.length === 1 ? 'frida' : 'hecho') : ''} ${d.fecha === claveHoy ? 'hoy' : ''}`}>
+              <span className="fm-dia-marca" />
+              <span className="fm-dia-letra">{LETRAS[i]}</span>
+            </div>
+          ))}
+        </div>
+        <div className="fm-fila" style={{ marginTop: 8 }}>
+          <BotonSecundario capsula onClick={marcarFrida}>{semana.fridaHecha ? 'Frida: hecha, quitar' : 'Lunes con Frida: hecho'}</BotonSecundario>
+          <BotonSecundario onClick={() => setSalidaAbierta((v) => !v)}>Salgo de la oficina a las…</BotonSecundario>
+        </div>
+        {salidaAbierta && (
+          <div className="fm-fila">
+            <input type="time" value={salida} onChange={(e) => setSalida(e.target.value)} aria-label="Hora de salida" style={{ maxWidth: 160 }} />
+            <span className="secundario">
+              {siSalgo
+                ? `Llegas ${formatoHora(siSalgo.llegadaMin)}. ${siSalgo.estado === 'completa' ? 'Alcanza completa.' : siSalgo.estado === 'corta' ? 'Alcanza la corta.' : 'Hoy ya no.'}`
+                : `Suma ${settings.minCarretera} de carretera y ${settings.minCasaClub} de casa al club.`}
+            </span>
+          </div>
         )}
-      </section>
+      </div>
+
+      {vezPasada.length > 0 && !sesionEnCurso && (
+        <div className="fm-filas">
+          <span className="etiqueta-fm">La vez pasada</span>
+          {vezPasada.map((f) => (
+            <div key={f.nombre} className="fm-fila-plana">
+              <span className="cuerpo">{f.nombre}</span>
+              <span className="secundario">{f.dato}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="fm-pie fm-con-barra-pie">
+        <BotonPrincipal onClick={sesionEnCurso ? onContinuar : () => onEmpezar(toca, version)}>{textoEmpezar}</BotonPrincipal>
+      </div>
     </div>
   )
 }

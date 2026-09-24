@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Tabs, type Vista } from './components/Tabs'
+import { Barra, type Destino } from './components/fm'
 import { Aviso } from './components/Aviso'
 import { Hoy } from './screens/Hoy'
-import { Progreso } from './screens/Progreso'
-import { Rutina } from './screens/Rutina'
+import { Senal } from './screens/Senal'
+import { Ejercicios } from './screens/Ejercicios'
 import { Ajustes } from './screens/Ajustes'
 import { Sesion } from './screens/Sesion'
 import { Diseno } from './screens/Diseno'
@@ -19,14 +19,11 @@ export default function App() {
   const datos = useDatos()
   const ahora = useReloj()
   const { activa, setActiva } = useSesionActiva()
-  const [vista, setVista] = useState<Vista>('hoy')
+  const [destino, setDestino] = useState<Destino>('hoy')
   // Si hay sesión en curso, la app abre directo en ella (sobrevive cerrar Safari)
   const [enSesion, setEnSesion] = useState(() => activa !== null)
+  const [ajustes, setAjustes] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
-
-  useEffect(() => {
-    document.documentElement.dataset.tema = datos.settings.tema
-  }, [datos.settings.tema])
 
   useEffect(() => {
     if (sessionStorage.getItem(CLAVE_ACTUALIZADA)) {
@@ -38,7 +35,6 @@ export default function App() {
   const sesionEnCurso = activa ? datos.sesiones.find((s) => s.id === activa.sessionId && !s.terminada) ?? null : null
 
   useEffect(() => {
-    // Si la sesión activa ya no existe (se borró o terminó), limpiar
     if (datos.listo && activa && !sesionEnCurso) setActiva(null)
   }, [datos.listo, activa, sesionEnCurso, setActiva])
 
@@ -56,38 +52,35 @@ export default function App() {
   const cerrarAviso = useCallback(() => setAviso(null), [])
 
   if (location.hash === '#diseno') return <Diseno />
-
-  if (!datos.listo) return <div className="app" />
+  if (!datos.listo) return <div />
 
   if (enSesion && sesionEnCurso) {
     return (
-      <div className="app">
-        <Sesion
-          datos={datos}
-          sesion={sesionEnCurso}
-          activa={activa!}
-          setActiva={setActiva}
-          onSalir={() => setEnSesion(false)}
-          onTerminar={() => {
-            setActiva(null)
-            setEnSesion(false)
-            setVista('hoy')
-          }}
-        />
-      </div>
+      <Sesion
+        datos={datos}
+        sesion={sesionEnCurso}
+        activa={activa!}
+        setActiva={setActiva}
+        onSalir={() => setEnSesion(false)}
+        onTerminar={() => {
+          setActiva(null)
+          setEnSesion(false)
+          setDestino('hoy')
+        }}
+      />
     )
   }
 
   return (
-    <div className="app">
-      {vista === 'hoy' && (
-        <Hoy datos={datos} ahora={ahora} sesionEnCurso={sesionEnCurso} onEmpezar={empezar} onContinuar={() => setEnSesion(true)} />
+    <>
+      {destino === 'hoy' && (
+        <Hoy datos={datos} ahora={ahora} sesionEnCurso={sesionEnCurso} onEmpezar={empezar} onContinuar={() => setEnSesion(true)} onAjustes={() => setAjustes(true)} />
       )}
-      {vista === 'progreso' && <Progreso datos={datos} ahora={ahora} />}
-      {vista === 'rutina' && <Rutina datos={datos} />}
-      {vista === 'ajustes' && <Ajustes datos={datos} onAviso={setAviso} />}
-      <Tabs vista={vista} onCambiar={setVista} />
+      {destino === 'senal' && <Senal datos={datos} ahora={ahora} />}
+      {destino === 'ejercicios' && <Ejercicios datos={datos} />}
+      <Barra destino={destino} onCambiar={setDestino} />
+      <Ajustes datos={datos} abierta={ajustes} onCerrar={() => setAjustes(false)} onAviso={setAviso} />
       {aviso && <Aviso texto={aviso} onCerrar={cerrarAviso} />}
-    </div>
+    </>
   )
 }

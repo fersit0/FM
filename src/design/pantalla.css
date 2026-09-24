@@ -1,7 +1,6 @@
 /* Layout base de las pantallas FM (sección 5) */
 .fm-pantalla {
   position: relative;
-  z-index: 1;
   min-height: 100dvh;
   padding: calc(var(--safe-top) + 16px) var(--margen) calc(var(--safe-bottom) + 16px);
   display: flex;
@@ -32,6 +31,7 @@ html, body { overflow-x: clip; }
 .fm-sesion-titulo { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .fm-foto {
   display: block;
+  flex: none;
   width: 100%;
   max-width: 236px;
   aspect-ratio: 4 / 3;
@@ -50,3 +50,72 @@ button.fm-foto:active { transform: scale(0.98); filter: brightness(0.85); }
 .fm-resumen-datos { display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between; gap: 12px; }
 .fm-resumen-datos .cifra-grande { font-size: 44px; }
 .fm-resumen-datos .unidad { display: block; margin: 6px 0 0; }
+
+/* ---------- Pantallas con barra ---------- */
+.fm-con-barra { padding-bottom: calc(var(--safe-bottom) + 96px); }
+.fm-cabecera { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-right: -12px; }
+.fm-pie.fm-con-barra-pie { bottom: calc(var(--safe-bottom) + 76px); }
+
+/* Hoy (8.1) */
+.fm-hoy-toca { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.fm-hoy-toca .cifra-heroe { display: block; }
+.fm-modulo-tiempo { display: flex; flex-direction: column; gap: 8px; }
+.fm-modulo-tiempo .cuerpo { opacity: 0.85; }
+.fm-filas { display: flex; flex-direction: column; gap: 10px; }
+.fm-fila-plana { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.fm-fila-plana .secundario { color: var(--crema); font-variant-numeric: tabular-nums; }
+.fm-dias { display: flex; justify-content: space-between; align-items: flex-end; height: 24px; }
+.fm-dia { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 24px; }
+.fm-dia-marca { width: 1.5px; height: 10px; background: var(--crema-3); border-radius: 1px; }
+.fm-dia.hecho .fm-dia-marca { height: 14px; background: var(--crema); }
+.fm-dia.frida .fm-dia-marca { height: 14px; background: var(--olivo); }
+.fm-dia.hoy .fm-dia-marca { width: 3px; height: 18px; border-radius: 1.5px; }
+.fm-dia-letra { font-size: 11px; color: var(--crema-3); }
+.fm-dia.hoy .fm-dia-letra { color: var(--crema-2); }
+.fm-aviso-sup { background: var(--capa-1); border-radius: var(--r-superficie); padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Señal (8.5) */
+.fm-senal { width: 100%; height: auto; display: block; }
+.fm-senal-banda { stroke: var(--capa-2); stroke-width: 1; }
+.fm-senal-fecha { fill: var(--crema-3); font-size: 10px; font-family: var(--sans); font-weight: 500; }
+.fm-senal-luz { filter: drop-shadow(0 0 3px currentColor); }
+.fm-senal-luz.ambar { fill: var(--ambar); color: var(--ambar); }
+.fm-senal-luz.naranja { fill: var(--naranja); color: var(--naranja); }
+.fm-senal-luz.rojo { fill: var(--rojo); color: var(--rojo); }
+.fm-senal-luz.olivo { fill: var(--olivo); color: var(--olivo); }
+.fm-leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--crema-2); }
+.fm-leyenda i { display: inline-block; width: 12px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.fm-linea { width: 100%; height: auto; display: block; }
+.fm-linea-guia { stroke: var(--linea); stroke-width: 1; }
+.fm-linea-eje { fill: var(--crema-3); font-size: 10px; font-family: var(--sans); font-weight: 500; }
+.fm-linea-trazo { stroke: var(--crema); stroke-width: 1.5; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.fm-linea-trazo.alterna { stroke: var(--crema-3); }
+.fm-linea-punto { fill: var(--crema); }
+.fm-linea-punto.alterna { fill: var(--crema-3); }
+.fm-chips-scroll { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--margen)); padding: 0 var(--margen); }
+.fm-chips-scroll::-webkit-scrollbar { display: none; }
+.fm-chips-scroll .fm-chip { flex: none; }
+.fm-fotos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fm-foto-corporal { background: var(--capa-1); border-radius: var(--r-foto); overflow: hidden; display: flex; flex-direction: column; }
+.fm-foto-corporal img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; display: block; }
+.fm-foto-corporal figcaption { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 6px 14px; }
+.fm-boton-archivo { position: relative; display: inline-flex; }
+
+/* Ejercicios (8.6) */
+.fm-ejercicio-fila { display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 12px 0; width: 100%; color: var(--crema); transition: opacity var(--t-toque); }
+.fm-ejercicio-fila:active { opacity: 0.7; }
+.fm-ejercicio-fila + .fm-ejercicio-fila { border-top: 1px solid var(--linea); }
+.fm-segmento { display: flex; gap: 4px; background: var(--capa-1); border-radius: 999px; padding: 4px; }
+.fm-segmento button { flex: 1; min-height: 40px; border-radius: 999px; color: var(--crema-2); font-size: 15px; font-weight: 500; transition: background-color var(--t-control) var(--ease-luz), color var(--t-control) var(--ease-luz); }
+.fm-segmento button[aria-pressed='true'] { background: var(--capa-2); color: var(--crema); }
+
+/* Ajustes (en hoja) */
+.fm-campo { display: flex; flex-direction: column; gap: 6px; }
+.fm-interruptor { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; width: 100%; text-align: left; color: var(--crema); }
+.fm-interruptor-pista { flex: none; width: 51px; height: 31px; border-radius: 16px; background: var(--capa-2); position: relative; transition: background-color var(--t-control) var(--ease-luz); }
+.fm-interruptor-pista.on { background: var(--crema); }
+.fm-interruptor-bola { position: absolute; top: 3px; left: 3px; width: 25px; height: 25px; border-radius: 13px; background: var(--crema); transition: transform var(--t-control) var(--ease-peso), background-color var(--t-control); }
+.fm-interruptor-pista.on .fm-interruptor-bola { transform: translateX(20px); background: var(--negro-calido); }
+
+/* Aviso discreto (actualizada, respaldo importado) */
+.fm-aviso-flotante { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--safe-bottom) + 96px); background: var(--capa-2); color: var(--crema); padding: 10px 16px; border-radius: 999px; font-size: 15px; font-weight: 500; z-index: 20; }
