@@ -76,7 +76,7 @@ export function Rutina({ datos }: { datos: Datos }) {
                   </button>
                   {abiertoEste && (
                     <div className="columna rutina-detalle">
-                      <Ilustracion id={e.ilustracion} nombre={e.nombre} chica />
+                      <Ilustracion id={e.ilustracion} nombre={e.nombre} />
                       <Detalle item={e} />
                       <span className="etiqueta">Alternativas</span>
                       {e.alternativas.map((a) => (

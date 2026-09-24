@@ -236,7 +236,7 @@ const GRANO = `<pattern id="grano" width="4" height="4" patternUnits="userSpaceO
 export function dibujarIlustracion(id: string, c: Colores): string {
   const il = catalogo[id]
   if (!il) return ''
-  const partes: string[] = [`<defs>${GRANO}</defs>`, `<rect width="200" height="120" fill="url(#grano)" opacity="0.10"/>`]
+  const partes: string[] = [`<defs>${GRANO}</defs>`, `<rect width="200" height="120" fill="url(#grano)" opacity="0.05"/>`]
   if (il.equipo) partes.push(il.equipo(c))
   if (il.inicio) {
     const a = articular(il.inicio)

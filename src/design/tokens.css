@@ -57,8 +57,8 @@ body[data-temp='calentamiento'] { --estado: var(--olivo); }
 body[data-temp='trabajo'] { --estado: var(--ambar); }
 body[data-temp='fuerte'] { --estado: var(--naranja); }
 body[data-temp='ultima'] { --estado: var(--rojo); }
-body[data-temp='descanso'] { --estado: color-mix(in oklch, var(--teal) 70%, var(--capa-2)); }
-body[data-temp='listo'] { --estado: color-mix(in oklch, var(--ambar) 72%, var(--capa-1)); }
+body[data-temp='descanso'] { --estado: color-mix(in srgb, var(--teal) 70%, var(--capa-2)); }
+body[data-temp='listo'] { --estado: color-mix(in srgb, var(--ambar) 72%, var(--capa-1)); }
 
 /* ---------- Tipografía: la personalidad está en la escala ---------- */
 .cifra-heroe { font-size: 96px; line-height: 0.9; font-weight: 700; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
@@ -126,7 +126,7 @@ body[data-temp='reposo'] .fm-modulo-sitio::before {
 body[data-temp='reposo'] .fm-boton { color: var(--negro-calido); }
 
 /* ---------- 7.2 Escala de sintonía ---------- */
-.fm-escala { position: relative; display: flex; align-items: center; height: 28px; width: 100%; }
+.fm-escala { position: relative; display: flex; align-items: center; justify-content: space-between; height: 28px; width: 100%; }
 .fm-escala-grupo { display: flex; align-items: center; gap: 6px; }
 .fm-escala-grupo + .fm-escala-grupo { margin-left: 8px; }
 .fm-marca { width: 1.5px; height: 10px; background: var(--crema-3); border-radius: 1px; flex: none; transition: height var(--t-control) var(--ease-peso), background-color var(--t-control) var(--ease-luz); }

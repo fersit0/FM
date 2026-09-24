@@ -8,12 +8,18 @@ export const TEMPS: Temp[] = ['reposo', 'calentamiento', 'trabajo', 'fuerte', 'u
 export function Diseno() {
   const [temp, setTemp] = useState<Temp>(() => (new URLSearchParams(location.search).get('temp') as Temp) || 'trabajo')
   const [hechas, setHechas] = useState(5)
+  const grupos = [3, 3, 4, 3, 2, 3]
+  // reparte las hechas por grupo para la demo
+  const porGrupo: number[] = []
+  let resto = hechas
+  let actual = 0
+  grupos.forEach((n, i) => { const h = Math.min(n, resto); porGrupo.push(h); resto -= h; if (h >= n && resto > 0) actual = i + 1; else if (h < n && actual === i) actual = i })
+  if (hechas >= grupos.reduce((a, b) => a + b, 0)) actual = grupos.length - 1
   const [peso, setPeso] = useState(32.5)
   const [reps, setReps] = useState(10)
   const [fin, setFin] = useState(() => Date.now() + 90_000)
   const [hoja, setHoja] = useState(false)
   const [destino, setDestino] = useState<Destino>('hoy')
-  const grupos = [3, 3, 4, 3, 2, 3]
 
   useEffect(() => {
     document.body.dataset.temp = temp
@@ -29,7 +35,7 @@ export function Diseno() {
       </div>
 
       <p className="secundario">Escala de sintonía</p>
-      <Escala grupos={grupos} hechas={hechas} />
+      <Escala grupos={grupos} hechas={porGrupo} actual={actual} />
       <div className="fm-fila">
         <BotonSecundario capsula onClick={() => setHechas((h) => Math.min(18, h + 1))}>Serie hecha</BotonSecundario>
         <BotonSecundario onClick={() => setHechas(0)}>Reiniciar</BotonSecundario>

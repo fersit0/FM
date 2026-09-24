@@ -10,6 +10,12 @@ const PX = 14 // píxeles por marca
 export function Dial({ valor, onChange, paso = 2.5, min = 0, max = 200 }: { valor: number; onChange: (v: number) => void; paso?: number; min?: number; max?: number }) {
   const pista = useRef<HTMLDivElement>(null)
   const emitido = useRef(valor)
+  // scroll programático: no se emite ni se hace tick
+  const programatico = useRef(0)
+  const colocar = (p: HTMLDivElement, v: number) => {
+    programatico.current = performance.now()
+    p.scrollLeft = indiceDe(v) * PX
+  }
   const n = Math.round((max - min) / paso)
   const indiceDe = (v: number) => Math.round((v - min) / paso)
 
@@ -19,12 +25,12 @@ export function Dial({ valor, onChange, paso = 2.5, min = 0, max = 200 }: { valo
     if (!p) return
     if (emitido.current === valor) return
     emitido.current = valor
-    p.scrollTo({ left: indiceDe(valor) * PX, behavior: 'auto' })
+    colocar(p, valor)
   }, [valor])
 
   useEffect(() => {
     const p = pista.current
-    if (p) p.scrollLeft = indiceDe(valor) * PX
+    if (p) colocar(p, valor)
     // solo al montar
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -32,6 +38,7 @@ export function Dial({ valor, onChange, paso = 2.5, min = 0, max = 200 }: { valo
   function alScroll() {
     const p = pista.current
     if (!p) return
+    if (performance.now() - programatico.current < 200) return
     const idx = Math.max(0, Math.min(n, Math.round(p.scrollLeft / PX)))
     const v = Math.round((min + idx * paso) * 100) / 100
     if (v !== emitido.current) {
