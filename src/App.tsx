@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Barra, type Destino } from './components/fm'
+import { Barra, BotonPrincipal, BotonSecundario, type Destino } from './components/fm'
 import { Aviso } from './components/Aviso'
 import { Hoy } from './screens/Hoy'
 import { Senal } from './screens/Senal'
@@ -20,8 +20,9 @@ export default function App() {
   const ahora = useReloj()
   const { activa, setActiva } = useSesionActiva()
   const [destino, setDestino] = useState<Destino>('hoy')
-  // Si hay sesión en curso, la app abre directo en ella (sobrevive cerrar Safari)
-  const [enSesion, setEnSesion] = useState(() => activa !== null)
+  // Sesión a medias (9.3): al abrir se pregunta Seguir / Descartar
+  const [enSesion, setEnSesion] = useState(false)
+  const [preguntar, setPreguntar] = useState(() => activa !== null)
   const [ajustes, setAjustes] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
 
@@ -53,6 +54,22 @@ export default function App() {
 
   if (location.hash === '#diseno') return <Diseno />
   if (!datos.listo) return <div />
+
+  if (preguntar && sesionEnCurso) {
+    const minutos = Math.max(1, Math.round((Date.now() - sesionEnCurso.inicio) / 60000))
+    return (
+      <div className="fm-pantalla">
+        <div style={{ marginTop: 'auto' }} className="fm-columna">
+          <h1 className="titulo-fm">Tienes una sesión a medias.</h1>
+          <p className="cuerpo" style={{ color: 'var(--crema-2)' }}>{sesionEnCurso.tipo}, empezó hace {minutos} min. Lo que ya guardaste sigue ahí.</p>
+        </div>
+        <div className="fm-pie fm-columna">
+          <BotonSecundario onClick={async () => { await datos.borrarSesion(sesionEnCurso.id); setActiva(null); setPreguntar(false) }}>Descartar</BotonSecundario>
+          <BotonPrincipal onClick={() => { setPreguntar(false); setEnSesion(true) }}>Seguir</BotonPrincipal>
+        </div>
+      </div>
+    )
+  }
 
   if (enSesion && sesionEnCurso) {
     return (

@@ -4,7 +4,7 @@ Instrucciones para Claude Code en este proyecto. Léelas completas antes de toca
 
 ## Qué es esto
 
-App personal de rutina de gym para un solo usuario. Toda la especificación está en `BRIEF.md`, incluyendo la identidad visual en el Anexo A. `BRIEF.md` manda sobre cualquier suposición tuya. Para todo lo visual (color, tipografía, componentes, movimiento) manda `DISENO-FM.md`; léelo antes de tocar cualquier pantalla. Si algo no está en el brief, pregunta antes de inventarlo.
+App personal de rutina de gym para un solo usuario. Toda la especificación está en `BRIEF.md`, incluyendo la identidad visual en el Anexo A. `BRIEF.md` manda sobre cualquier suposición tuya. Para todo lo visual (color, tipografía, componentes, movimiento) manda `DISENO-FM-v2.md`; léelo antes de tocar cualquier pantalla. Si algo no está en el brief, pregunta antes de inventarlo.
 
 ## Stack (no cambiar)
 

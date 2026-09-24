@@ -4,11 +4,14 @@ import { useCallback, useState } from 'react'
 export interface SesionActiva {
   sessionId: string
   paso: number
-  /** cronómetro de calentamiento/cierre: cuándo empezó (ms) */
-  timerInicio?: number
-  /** descanso en curso: cuándo termina (ms) */
+  /** calentamiento o cierre: cuándo termina (ms). Se calcula por hora de término, nunca sumando segundos. */
+  timerFin?: number
+  timerSeg?: number
+  /** descanso: cuándo termina (ms) */
   descansoFin?: number
   descansoSeg?: number
+  /** se pidió aviso con Atajos para este descanso: no duplicar el sonido */
+  avisado?: boolean
 }
 
 const CLAVE = 'gym-app:sesion-activa'

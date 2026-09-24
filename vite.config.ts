@@ -33,6 +33,6 @@ export default defineConfig({
     }),
   ],
   test: {
-    include: ['src/logic/**/*.test.ts'],
+    include: ['src/**/*.test.ts'],
   },
 })

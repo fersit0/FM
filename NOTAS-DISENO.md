@@ -43,3 +43,12 @@ Pendiente:
 - Fotos duotono de los ejercicios cuando existan; hoy están las ilustraciones SVG.
 - Incremento del dial por ejercicio (hoy 2.5 kg para todo).
 - Fase 5 de CLAUDE.md: repo en GitHub, workflow de Pages y verificación de instalación y offline.
+
+# Pase v2 (DISENO-FM-v2.md)
+
+## Bloque A: funciones críticas
+
+- Todos los temporizadores (descanso, calentamiento, cierre) guardan la hora de término en el estado persistido (`timerFin`, `descansoFin`) y la pantalla calcula lo que falta con `requestAnimationFrame` y al volver a la app (`useCuentaRegresiva`). Si se recarga a media cuenta, sigue exacto; si se vuelve tarde, dice "Terminó hace X".
+- "Avísame" abre `shortcuts://run-shortcut?name=FM%20Descanso&input=text&text=<segundos>` y marca `avisado` para no duplicar el sonido. Falta probar en el iPhone si el nombre con espacio funciona; si no, cambiar `NOMBRE_ATAJO` en `src/lib/atajos.ts` a "FMDescanso".
+- Al abrir la app con una sesión a medias aparece "Tienes una sesión a medias" con Seguir / Descartar (antes entraba directo).
+- Las fotos base de free-exercise-db (licencia Unlicense, dominio público) se descargaron a `public/fotos/` reducidas a 900 px (31 fotos, 3 MB). Fuente: https://github.com/yuhonas/free-exercise-db

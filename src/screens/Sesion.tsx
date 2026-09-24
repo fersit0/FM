@@ -10,6 +10,7 @@ import { useWakeLock } from '../hooks/useWakeLock'
 import { useTemp, tempDeSerie } from '../design/temperatura'
 import { haptico } from '../lib/haptics'
 import { prepararAudio, sonarClic, sonarFinDescanso } from '../lib/sonido'
+import { abrirAtajo } from '../lib/atajos'
 import { Modulo, Escala, Dial, CifraPeso, Stepper, BotonPrincipal, BotonSecundario, Temporizador, Hoja } from '../components/fm'
 import { Ilustracion } from '../components/Ilustracion'
 
@@ -59,7 +60,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
 
   const ir = useCallback(
     (n: number) => {
-      setActiva({ ...activa, paso: Math.max(0, Math.min(pasos.length - 1, n)), timerInicio: undefined, descansoFin: undefined })
+      setActiva({ ...activa, paso: Math.max(0, Math.min(pasos.length - 1, n)), timerFin: undefined, timerSeg: undefined, descansoFin: undefined, descansoSeg: undefined, avisado: undefined })
       window.scrollTo({ top: 0 })
     },
     [activa, pasos.length, setActiva],
@@ -123,7 +124,10 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
           fin={activa.descansoFin}
           total={activa.descansoSeg ?? paso.item.descansoSeg}
           onMas={() => setActiva({ ...activa, descansoFin: (activa.descansoFin ?? Date.now()) + 15_000, descansoSeg: (activa.descansoSeg ?? paso.item.descansoSeg) + 15 })}
-          onSaltar={() => setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined })}
+          onMenos={() => setActiva({ ...activa, descansoFin: Math.max(Date.now(), (activa.descansoFin ?? Date.now()) - 15_000) })}
+          onAvisar={() => { abrirAtajo(((activa.descansoFin ?? Date.now()) - Date.now()) / 1000); setActiva({ ...activa, avisado: true }) }}
+          avisado={!!activa.avisado}
+          onSaltar={() => setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined })}
           onSiguienteEjercicio={() => ir(indice + 1)}
         />
       )}
@@ -174,8 +178,7 @@ function PasoTiempo({ titulo, detalle, nota, minutos, activa, setActiva, onListo
   onListo: () => void
 }) {
   useTemp('calentamiento')
-  const inicio = activa.timerInicio
-  const fin = inicio !== undefined ? inicio + minutos * 60000 : undefined
+  const fin = activa.timerFin
   const [termino, setTermino] = useState(false)
   const alTerminar = useCallback(() => {
     setTermino(true)
@@ -192,7 +195,7 @@ function PasoTiempo({ titulo, detalle, nota, minutos, activa, setActiva, onListo
       <p className="cuerpo" style={{ color: 'var(--crema-2)' }}>{nota}</p>
       <Modulo>
         {fin !== undefined ? (
-          <Temporizador fin={fin} total={minutos * 60} onFin={alTerminar} onMas={() => setActiva({ ...activa, timerInicio: (activa.timerInicio ?? Date.now()) + 15_000 })} onSaltar={onListo} />
+          <Temporizador fin={fin} total={activa.timerSeg ?? minutos * 60} onFin={alTerminar} onMas={() => setActiva({ ...activa, timerFin: (activa.timerFin ?? Date.now()) + 15_000, timerSeg: (activa.timerSeg ?? minutos * 60) + 15 })} onSaltar={onListo} />
         ) : (
           <div className="fm-temporizador">
             <span className="tiempo">{minutos}:00</span>
@@ -202,7 +205,7 @@ function PasoTiempo({ titulo, detalle, nota, minutos, activa, setActiva, onListo
       </Modulo>
       <div className="fm-pie fm-columna">
         {fin === undefined ? (
-          <BotonPrincipal onClick={() => { prepararAudio(); setActiva({ ...activa, timerInicio: Date.now() }) }}>Arrancar</BotonPrincipal>
+          <BotonPrincipal onClick={() => { prepararAudio(); setActiva({ ...activa, timerFin: Date.now() + minutos * 60000, timerSeg: minutos * 60 }) }}>Arrancar</BotonPrincipal>
         ) : (
           <BotonPrincipal onClick={onListo}>{termino ? 'Seguir' : 'Ya, seguir'}</BotonPrincipal>
         )}
@@ -373,13 +376,16 @@ export function Detalle({ item }: { item: Ejercicio | Alternativa }) {
 
 // ---------- Descanso: misma estructura, el módulo se enfría a teal ----------
 
-function PasoDescanso({ paso, sets, sesion, fin, total, onMas, onSaltar, onSiguienteEjercicio }: {
+function PasoDescanso({ paso, sets, sesion, fin, total, onMas, onMenos, onAvisar, avisado, onSaltar, onSiguienteEjercicio }: {
   paso: PasoEj
   sets: SetLog[]
   sesion: SesionTipo
   fin: number
   total: number
   onMas: () => void
+  onMenos: () => void
+  onAvisar: () => void
+  avisado: boolean
   onSaltar: () => void
   onSiguienteEjercicio: () => void
 }) {
@@ -392,9 +398,10 @@ function PasoDescanso({ paso, sets, sesion, fin, total, onMas, onSaltar, onSigui
   const [termino, setTermino] = useState(() => fin <= Date.now())
   const alTerminar = useCallback(() => {
     setTermino(true)
+    if (document.visibilityState !== 'visible') return
     haptico.finDescanso()
-    sonarFinDescanso()
-  }, [])
+    if (!avisado) sonarFinDescanso()
+  }, [avisado])
 
   const sigue = ejercicioCompleto
     ? 'Sigue: el siguiente ejercicio.'
@@ -409,7 +416,7 @@ function PasoDescanso({ paso, sets, sesion, fin, total, onMas, onSaltar, onSigui
       <Ilustracion id={item.ilustracion} nombre={item.nombre} />
       <p className="cuerpo fm-aviso">{sigue}</p>
       <Modulo>
-        <Temporizador fin={fin} total={total} onFin={alTerminar} onMas={onMas} onSaltar={onSaltar} />
+        <Temporizador fin={fin} total={total} onFin={alTerminar} onMas={onMas} onMenos={onMenos} onAvisar={onAvisar} onSaltar={onSaltar} />
       </Modulo>
       <div className="fm-pie fm-columna">
         <BotonPrincipal onClick={ejercicioCompleto ? onSiguienteEjercicio : onSaltar} disabled={!termino}>

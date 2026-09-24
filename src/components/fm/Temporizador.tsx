@@ -1,41 +1,46 @@
-import { useCallback, useEffect, useState } from 'react'
-import { formatoDuracion } from '../../logic/fechas'
+import { useEffect, useRef } from 'react'
+import { useCuentaRegresiva, mmss } from '../../hooks/useCuentaRegresiva'
 import { BotonSecundario } from './Botones'
 
-/** 7.7 Temporizador de descanso: cuenta regresiva mono 64, línea que se vacía, +15 s y Saltar. Va dentro del módulo. */
-export function Temporizador({ fin, total, onFin, onMas, onSaltar }: { fin: number; total: number; onFin: () => void; onMas: () => void; onSaltar: () => void }) {
-  const [restante, setRestante] = useState(() => fin - Date.now())
-  const avisar = useCallback(onFin, [onFin])
-
+/** Temporizador por hora de término (9.1): calcula fin - ahora en cada frame y al volver a la app. */
+export function Temporizador({ fin, total, onFin, onMas, onMenos, onSaltar, onAvisar }: {
+  fin: number
+  total: number
+  onFin: () => void
+  onMas?: () => void
+  onMenos?: () => void
+  onSaltar?: () => void
+  onAvisar?: () => void
+}) {
+  const restante = useCuentaRegresiva(fin)
+  const avisado = useRef(false)
   useEffect(() => {
-    let avisado = false
-    const tick = () => {
-      const r = fin - Date.now()
-      setRestante(r)
-      if (r <= 0 && !avisado) {
-        avisado = true
-        avisar()
-      }
+    avisado.current = false
+  }, [fin])
+  useEffect(() => {
+    if (restante <= 0 && !avisado.current) {
+      avisado.current = true
+      onFin()
     }
-    tick()
-    const id = setInterval(tick, 250)
-    document.addEventListener('visibilitychange', tick)
-    return () => {
-      clearInterval(id)
-      document.removeEventListener('visibilitychange', tick)
-    }
-  }, [fin, avisar])
+  }, [restante, onFin])
 
   const r = Math.max(0, restante)
+  const tarde = restante < -3000
   return (
     <div className="fm-temporizador">
-      <span className="tiempo" aria-live="off">{formatoDuracion(r)}</span>
+      {tarde ? (
+        <span className="cuerpo" style={{ color: 'var(--crema-2)' }}>Terminó hace {mmss(-restante)}.</span>
+      ) : (
+        <span className="cifra-heroe fm-temporizador-cifra">{restante <= 0 ? 'Va' : mmss(r)}</span>
+      )}
       <div className="fm-temporizador-linea" aria-hidden="true">
         <div className="fm-temporizador-restante" style={{ transform: `scaleX(${Math.min(1, r / (total * 1000))})` }} />
       </div>
       <div className="fm-temporizador-botones">
-        <BotonSecundario capsula onClick={onMas}>+15 s</BotonSecundario>
-        <BotonSecundario onClick={onSaltar}>Saltar</BotonSecundario>
+        {onMenos && <BotonSecundario onClick={onMenos}>−15 s</BotonSecundario>}
+        {onMas && <BotonSecundario onClick={onMas}>+15 s</BotonSecundario>}
+        {onAvisar && <BotonSecundario onClick={onAvisar}>Avísame</BotonSecundario>}
+        {onSaltar && <BotonSecundario onClick={onSaltar}>Saltar</BotonSecundario>}
       </div>
     </div>
   )
