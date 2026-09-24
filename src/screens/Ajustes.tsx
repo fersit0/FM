@@ -4,17 +4,18 @@ import type { Settings } from '../data/tipos'
 import { armarRespaldo, leerRespaldo, blobABase64, base64ABlob } from '../logic/respaldo'
 import { borrarTodo, guardarSesion, guardarSet, guardarPeso, guardarFoto } from '../data/db'
 import { DIAS_NOMBRE, claveFecha } from '../logic/fechas'
-import { CON_SERIE_EXTRA } from '../data/ejercicios'
 import { hapticosActivos, setHapticosActivos, haptico } from '../lib/haptics'
 import { sonidoActivo, setSonidoActivo, prepararAudio, sonarFinDescanso } from '../lib/sonido'
-import { Hoja, BotonSecundario } from '../components/fm'
+import { PASOS_ATAJO, NOMBRE_ATAJO } from '../lib/atajos'
+import { Hoja, Grupo, Fila } from '../components/fm'
 
-/** Ajustes: en hoja (7.9). Horas tope, minutos, día de pesaje, series, hápticos, sonido, respaldo. */
+/** 7.8 Ajustes en hoja: lista agrupada. */
 export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; abierta: boolean; onCerrar: () => void; onAviso: (t: string) => void }) {
   const { settings } = datos
   const archivo = useRef<HTMLInputElement>(null)
   const [hapticos, setHapticos] = useState(hapticosActivos)
   const [sonido, setSonido] = useState(sonidoActivo)
+  const [atajo, setAtajo] = useState(false)
 
   function set<K extends keyof Settings>(k: K, v: Settings[K]) {
     datos.setSettings({ ...settings, [k]: v })
@@ -31,7 +32,7 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
         return
       }
     } catch {
-      /* canceló: cae a descarga */
+      /* canceló */
     }
     const url = URL.createObjectURL(file)
     const a = document.createElement('a')
@@ -64,56 +65,58 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
   }
 
   return (
-    <Hoja abierta={abierta} titulo="Ajustes" onCerrar={onCerrar}>
-      <p className="etiqueta-fm">Horario</p>
-      <Campo etiqueta="Última pesa"><input type="time" value={settings.horaTope} onChange={(e) => set('horaTope', e.target.value)} /></Campo>
-      <Campo etiqueta="Alcanza la completa hasta"><input type="time" value={settings.horaCompleta} onChange={(e) => set('horaCompleta', e.target.value)} /></Campo>
-      <Campo etiqueta="Alcanza la corta hasta"><input type="time" value={settings.horaCorta} onChange={(e) => set('horaCorta', e.target.value)} /></Campo>
+    <Hoja abierta={abierta} altura="completa" titulo="Ajustes" onCerrar={onCerrar}>
+      <Grupo titulo="Horario">
+        <Fila texto="Salgo de la oficina a las" detalle={settings.horaSalida ? `Suma ${settings.minCarretera} de carretera y ${settings.minCasaClub} de casa al club` : 'Vacío: se usa la hora actual'}>
+          <input type="time" value={settings.horaSalida ?? ''} onChange={(e) => set('horaSalida', e.target.value || undefined)} aria-label="Hora de salida" />
+        </Fila>
+        <Fila texto="Última pesa"><input type="time" value={settings.horaTope} onChange={(e) => set('horaTope', e.target.value)} aria-label="Última pesa" /></Fila>
+        <Fila texto="Completa hasta"><input type="time" value={settings.horaCompleta} onChange={(e) => set('horaCompleta', e.target.value)} aria-label="Completa hasta" /></Fila>
+        <Fila texto="Corta hasta"><input type="time" value={settings.horaCorta} onChange={(e) => set('horaCorta', e.target.value)} aria-label="Corta hasta" /></Fila>
+        <Fila texto="Minutos de carretera"><input inputMode="numeric" value={settings.minCarretera} onChange={(e) => set('minCarretera', Math.max(0, parseInt(e.target.value || '0', 10)))} aria-label="Minutos de carretera" style={{ width: 60 }} /></Fila>
+        <Fila texto="Minutos de casa al club"><input inputMode="numeric" value={settings.minCasaClub} onChange={(e) => set('minCasaClub', Math.max(0, parseInt(e.target.value || '0', 10)))} aria-label="Minutos de casa al club" style={{ width: 60 }} /></Fila>
+      </Grupo>
 
-      <p className="etiqueta-fm" style={{ marginTop: 8 }}>Salgo de la oficina a las</p>
-      <Campo etiqueta="Minutos de carretera"><input inputMode="numeric" value={settings.minCarretera} onChange={(e) => set('minCarretera', Math.max(0, parseInt(e.target.value || '0', 10)))} /></Campo>
-      <Campo etiqueta="Minutos de casa al club"><input inputMode="numeric" value={settings.minCasaClub} onChange={(e) => set('minCasaClub', Math.max(0, parseInt(e.target.value || '0', 10)))} /></Campo>
+      <Grupo titulo="Sesión">
+        <Fila texto="4 series en A1, A2, B1 y B2" detalle={settings.seriesExtra ? 'Regla de las 4 semanas aceptada' : 'Se propone al acumular 4 semanas cumplidas'}>
+          <Interruptor valor={settings.seriesExtra} onCambiar={(v) => set('seriesExtra', v)} etiqueta="4 series" />
+        </Fila>
+        <Fila texto="Día de pesaje">
+          <select value={settings.diaPesaje} onChange={(e) => set('diaPesaje', parseInt(e.target.value, 10))} aria-label="Día de pesaje">
+            {[1, 2, 3, 4, 5, 6, 0].map((d) => <option key={d} value={d}>{DIAS_NOMBRE[d]}</option>)}
+          </select>
+        </Fila>
+      </Grupo>
 
-      <p className="etiqueta-fm" style={{ marginTop: 8 }}>Peso corporal</p>
-      <Campo etiqueta="Día de pesaje, en ayunas">
-        <select value={settings.diaPesaje} onChange={(e) => set('diaPesaje', parseInt(e.target.value, 10))}>
-          {[1, 2, 3, 4, 5, 6, 0].map((d) => <option key={d} value={d}>{DIAS_NOMBRE[d]}</option>)}
-        </select>
-      </Campo>
+      <Grupo titulo="Avisos">
+        <Fila texto="Sonido" detalle="Dos notas al terminar el descanso, si la app está abierta">
+          <Interruptor valor={sonido} onCambiar={(v) => { setSonidoActivo(v); setSonido(v); if (v) { prepararAudio(); sonarFinDescanso() } }} etiqueta="Sonido" />
+        </Fila>
+        <Fila texto="Hápticos" detalle="Tick del dial, serie hecha, fin de descanso y de sesión">
+          <Interruptor valor={hapticos} onCambiar={(v) => { setHapticosActivos(v); setHapticos(v); if (v) haptico.serieHecha() }} etiqueta="Hápticos" />
+        </Fila>
+        <Fila texto="Aviso de descanso con Atajos" detalle="Para que suene aunque estés en otra app" dato={atajo ? 'Ocultar' : 'Cómo'} onClick={() => setAtajo((v) => !v)} />
+        {atajo && PASOS_ATAJO.map((p, i) => <Fila key={i} num={i + 1} texto={<span style={{ whiteSpace: 'normal' }}>{p}</span>} />)}
+        {atajo && <Fila texto={`El atajo se llama "${NOMBRE_ATAJO}". Si no abre, revisa que el nombre sea exacto.`} />}
+      </Grupo>
 
-      <p className="etiqueta-fm" style={{ marginTop: 8 }}>Sesión</p>
-      <Interruptor etiqueta={`4 series en ${CON_SERIE_EXTRA.join(', ')}`} detalle={settings.seriesExtra ? 'Regla de las 4 semanas aceptada.' : 'Se propone al acumular 4 semanas cumplidas.'} valor={settings.seriesExtra} onCambiar={(v) => set('seriesExtra', v)} />
-      <Interruptor etiqueta="Hápticos" detalle="Un tap al guardar una serie y al cruzar marcas del dial." valor={hapticos} onCambiar={(v) => { setHapticosActivos(v); setHapticos(v); if (v) haptico.serieHecha() }} />
-      <Interruptor etiqueta="Sonido" detalle="Dos notas al terminar el descanso, un clic al guardar." valor={sonido} onCambiar={(v) => { setSonidoActivo(v); setSonido(v); if (v) { prepararAudio(); sonarFinDescanso() } }} />
-
-      <p className="etiqueta-fm" style={{ marginTop: 8 }}>Respaldo</p>
-      <p className="cuerpo">Todo vive en este teléfono. Exporta un JSON de vez en cuando; se puede importar en otro.</p>
-      <div className="fm-fila">
-        <BotonSecundario capsula onClick={exportar}>Exportar</BotonSecundario>
-        <BotonSecundario capsula onClick={() => archivo.current?.click()}>Importar</BotonSecundario>
+      <Grupo titulo="Respaldo">
+        <Fila texto="Exportar respaldo" detalle="Un JSON con todo; se comparte o descarga" onClick={exportar} />
+        <Fila texto="Importar respaldo" detalle="Reemplaza lo que hay en este teléfono" onClick={() => archivo.current?.click()} />
         <input ref={archivo} type="file" accept="application/json,.json" onChange={importar} className="oculto-visual" />
-      </div>
+      </Grupo>
+
+      <Grupo>
+        <Fila texto="Versión" dato={__VERSION__} />
+      </Grupo>
     </Hoja>
   )
 }
 
-function Campo({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
+function Interruptor({ valor, onCambiar, etiqueta }: { valor: boolean; onCambiar: (v: boolean) => void; etiqueta: string }) {
   return (
-    <label className="fm-campo">
-      <span className="secundario">{etiqueta}</span>
-      {children}
-    </label>
-  )
-}
-
-function Interruptor({ etiqueta, detalle, valor, onCambiar }: { etiqueta: string; detalle?: string; valor: boolean; onCambiar: (v: boolean) => void }) {
-  return (
-    <button className="fm-interruptor" role="switch" aria-checked={valor} onClick={() => onCambiar(!valor)}>
-      <span className="fm-columna" style={{ gap: 2 }}>
-        <span className="cuerpo">{etiqueta}</span>
-        {detalle && <span className="secundario">{detalle}</span>}
-      </span>
-      <span className={`fm-interruptor-pista ${valor ? 'on' : ''}`} aria-hidden="true"><span className="fm-interruptor-bola" /></span>
+    <button className="fm-switch" role="switch" aria-checked={valor} aria-label={etiqueta} onClick={() => onCambiar(!valor)}>
+      <span className={`fm-switch-pista ${valor ? 'on' : ''}`}><span className="fm-switch-bola" /></span>
     </button>
   )
 }

@@ -11,8 +11,10 @@ import { useTemp, tempDeSerie } from '../design/temperatura'
 import { haptico } from '../lib/haptics'
 import { prepararAudio, sonarClic, sonarFinDescanso } from '../lib/sonido'
 import { abrirAtajo } from '../lib/atajos'
-import { Modulo, Escala, Dial, CifraPeso, Stepper, BotonPrincipal, BotonSecundario, Temporizador, Hoja } from '../components/fm'
-import { Ilustracion } from '../components/Ilustracion'
+import { useCuentaRegresiva } from '../hooks/useCuentaRegresiva'
+import { Progreso, Peso, Stepper, BotonPrincipal, BotonSecundario, Temporizador, Hoja, Grupo, Fila } from '../components/fm'
+import { Foto } from '../components/Foto'
+import { FichaHoja } from '../components/Ficha'
 
 interface Props {
   datos: Datos
@@ -34,6 +36,11 @@ function minutosCalentamiento(v: Version) {
 function minutosCierre(v: Version) {
   return v === 'corta' ? CIERRE.minCorta : v === 'bonus' ? CIERRE.minBonus : CIERRE.minCompleta
 }
+export function rangoDe(e: Ejercicio | Alternativa): string {
+  if (e.modo === 'tiempo') return `${e.repsMax} s`
+  if (e.repsMax === 0) return 'al tope con 2 guardadas'
+  return e.repsMin === e.repsMax ? `${e.repsMax} reps` : `${e.repsMin} a ${e.repsMax} reps`
+}
 
 export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }: Props) {
   const { settings, sets } = datos
@@ -52,8 +59,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
   }, [sesion.tipo, sesion.cambios, version, settings.seriesExtra, ligera])
 
   const ejercicios = pasos.filter((p): p is PasoEj => p.tipo === 'ejercicio')
-  const grupos = ejercicios.map((e) => e.series)
-  const hechasPorGrupo = ejercicios.map((e) => Math.min(e.series, sets.filter((s) => s.sessionId === sesion.id && s.exerciseId === e.item.id).length))
+  const hechasDe = (e: PasoEj) => sets.filter((s) => s.sessionId === sesion.id && s.exerciseId === e.item.id).length
 
   const indice = Math.min(activa.paso, pasos.length - 1)
   const paso = pasos[indice]
@@ -71,102 +77,76 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
     await datos.guardarSesion({ ...sesion, version: v, ligera: lig })
     setMenu(false)
   }
+  async function descartar() {
+    if (!confirm('¿Borrar esta sesión? Se pierden las series de hoy.')) return
+    await datos.borrarSesion(sesion.id)
+    setMenu(false)
+    onTerminar()
+  }
 
   const descansando = activa.descansoFin !== undefined
-  const encabezado = paso.tipo === 'ejercicio' ? `${paso.indice + 1} de ${ejercicios.length}` : ''
+  const actualIdx = paso.tipo === 'ejercicio' ? paso.indice : paso.tipo === 'calentamiento' ? 0 : ejercicios.length
+  const llenado = paso.tipo === 'ejercicio' ? hechasDe(paso) / paso.series : 0
 
   return (
     <div className="fm-pantalla fm-sesion">
       {paso.tipo !== 'resumen' && (
-        <header className="fm-sesion-cabecera">
-          <button className="fm-icono-boton" onClick={() => setMenu(true)} aria-label="Salir o cambiar la sesión">
-            <svg className="fm-icono" viewBox="0 0 22 22"><path d="M6 6l10 10M16 6L6 16" /></svg>
-          </button>
-          <span className="secundario">{encabezado}</span>
-        </header>
-      )}
-
-      {paso.tipo !== 'resumen' && (
-        <Escala grupos={grupos} hechas={hechasPorGrupo} actual={paso.tipo === 'ejercicio' ? paso.indice : paso.tipo === 'cierre' ? ejercicios.length - 1 : 0} />
+        <>
+          <header className="fm-sesion-cabecera">
+            <button className="fm-icono-boton" onClick={() => setMenu(true)} aria-label="Salir o cambiar la sesión">
+              <svg className="fm-icono" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+            <span className="subtexto">{paso.tipo === 'ejercicio' ? `${paso.indice + 1} de ${ejercicios.length}` : ''}</span>
+          </header>
+          <Progreso total={ejercicios.length} actual={actualIdx} llenado={llenado} />
+        </>
       )}
 
       {paso.tipo === 'calentamiento' && (
-        <PasoTiempo
-          titulo="Calentamiento"
-          detalle={`Elíptica ${minutosCalentamiento(version)} min, ritmo en el que puedes platicar.`}
-          nota={CALENTAMIENTO.siOcupada}
-          minutos={minutosCalentamiento(version)}
-          activa={activa}
-          setActiva={setActiva}
-          onListo={() => ir(indice + 1)}
-        />
+        <PasoTiempo key="cal" titulo="Calentamiento" detalle={`Elíptica ${minutosCalentamiento(version)} min, ritmo en el que puedes platicar.`} nota={CALENTAMIENTO.siOcupada} minutos={minutosCalentamiento(version)} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />
       )}
-
       {paso.tipo === 'ejercicio' && !descansando && (
-        <PasoEjercicio
-          key={paso.item.id}
-          datos={datos}
-          sesion={sesion}
-          paso={paso}
-          sets={sets}
-          activa={activa}
-          setActiva={setActiva}
-          onSiguiente={() => ir(indice + 1)}
-          onAnterior={() => ir(indice - 1)}
-        />
+        <PasoEjercicio key={paso.item.id} datos={datos} sesion={sesion} paso={paso} sets={sets} activa={activa} setActiva={setActiva} onSiguiente={() => ir(indice + 1)} onAnterior={() => ir(indice - 1)} />
       )}
-
       {paso.tipo === 'ejercicio' && descansando && activa.descansoFin !== undefined && (
         <PasoDescanso
+          key={`d${activa.descansoFin}`}
           paso={paso}
           sets={sets}
           sesion={sesion}
           fin={activa.descansoFin}
           total={activa.descansoSeg ?? paso.item.descansoSeg}
+          avisado={!!activa.avisado}
           onMas={() => setActiva({ ...activa, descansoFin: (activa.descansoFin ?? Date.now()) + 15_000, descansoSeg: (activa.descansoSeg ?? paso.item.descansoSeg) + 15 })}
           onMenos={() => setActiva({ ...activa, descansoFin: Math.max(Date.now(), (activa.descansoFin ?? Date.now()) - 15_000) })}
           onAvisar={() => { abrirAtajo(((activa.descansoFin ?? Date.now()) - Date.now()) / 1000); setActiva({ ...activa, avisado: true }) }}
-          avisado={!!activa.avisado}
           onSaltar={() => setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined })}
           onSiguienteEjercicio={() => ir(indice + 1)}
         />
       )}
-
       {paso.tipo === 'cierre' && (
-        <PasoTiempo
-          titulo="Cierre"
-          detalle={`Elíptica o saco, ${minutosCierre(version)} min.`}
-          nota="Saco: 4 rounds de 2 min con 1 de descanso."
-          minutos={minutosCierre(version)}
-          activa={activa}
-          setActiva={setActiva}
-          onListo={() => ir(indice + 1)}
-        />
+        <PasoTiempo key="cierre" titulo="Cierre" detalle={`Elíptica o saco, ${minutosCierre(version)} min.`} nota="Saco: 4 rounds de 2 min con 1 de descanso." minutos={minutosCierre(version)} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />
       )}
-
       {paso.tipo === 'resumen' && <Resumen datos={datos} sesion={sesion} sets={sets} ejercicios={ejercicios} onTerminar={onTerminar} />}
 
       <Hoja abierta={menu} titulo="Esta sesión" onCerrar={() => setMenu(false)}>
-        <div className="fm-columna">
-          <BotonSecundario capsula onClick={() => { setMenu(false); onSalir() }}>Seguir después</BotonSecundario>
-          <BotonSecundario capsula onClick={() => { setMenu(false); ir(pasos.length - 1) }}>Terminar sesión</BotonSecundario>
-        </div>
-        <p className="etiqueta-fm">Versión</p>
-        <div className="fm-fila">
+        <Grupo>
+          <Fila texto="Seguir después" detalle="Se queda guardada donde vas" onClick={() => { setMenu(false); onSalir() }} />
+          <Fila texto="Terminar sesión" detalle="Ir al resumen" onClick={() => { setMenu(false); ir(pasos.length - 1) }} />
+          <Fila texto="Descartar sesión" detalle="Se borran las series de hoy" onClick={descartar} />
+        </Grupo>
+        <Grupo titulo="Versión">
           {(['completa', 'corta', 'bonus'] as Version[]).map((v) => (
-            <button key={v} className={`fm-chip ${version === v && !ligera ? 'activo' : ''}`} onClick={() => cambiarVersion(v, false)}>
-              {v === 'completa' ? 'Completa' : v === 'corta' ? 'Corta' : 'Bonus'}
-            </button>
+            <Fila key={v} texto={v === 'completa' ? 'Completa' : v === 'corta' ? 'Corta, ejercicios 1 a 4 con 2 series' : 'Bonus, cierre de 20 min'} dato={version === v && !ligera ? 'Activa' : ''} onClick={() => cambiarVersion(v, false)} />
           ))}
-          <button className={`fm-chip ${ligera ? 'activo' : ''}`} onClick={() => cambiarVersion(version === 'corta' ? 'completa' : version, !ligera)}>Ligera</button>
-        </div>
-        <p className="secundario">Corta: ejercicios 1 a 4 con 2 series. Ligera: 2 series por ejercicio con el mismo peso, para cuando dos semanas seguidas llegaste muerto.</p>
+          <Fila texto="Ligera, 2 series con el mismo peso" dato={ligera ? 'Activa' : ''} onClick={() => cambiarVersion(version === 'corta' ? 'completa' : version, !ligera)} />
+        </Grupo>
       </Hoja>
     </div>
   )
 }
 
-// ---------- Calentamiento / Cierre: módulo con temporizador en olivo ----------
+// ---------- 7.2 Calentamiento y cierre ----------
 
 function PasoTiempo({ titulo, detalle, nota, minutos, activa, setActiva, onListo }: {
   titulo: string
@@ -182,39 +162,41 @@ function PasoTiempo({ titulo, detalle, nota, minutos, activa, setActiva, onListo
   const [termino, setTermino] = useState(false)
   const alTerminar = useCallback(() => {
     setTermino(true)
+    if (document.visibilityState !== 'visible') return
     haptico.finDescanso()
     sonarFinDescanso()
   }, [])
+  const total = activa.timerSeg ?? minutos * 60
 
   return (
-    <>
+    <div className="fm-panel fm-columna" style={{ flex: 1 }}>
       <div className="fm-sesion-titulo">
-        <h1 className="titulo-fm">{titulo}</h1>
-        <p className="secundario">{detalle}</p>
+        <h1 className="titulo">{titulo}</h1>
+        <p className="subtexto">{detalle}</p>
       </div>
-      <p className="cuerpo" style={{ color: 'var(--crema-2)' }}>{nota}</p>
-      <Modulo>
+      <div className="fm-sesion-tiempo">
         {fin !== undefined ? (
-          <Temporizador fin={fin} total={activa.timerSeg ?? minutos * 60} onFin={alTerminar} onMas={() => setActiva({ ...activa, timerFin: (activa.timerFin ?? Date.now()) + 15_000, timerSeg: (activa.timerSeg ?? minutos * 60) + 15 })} onSaltar={onListo} />
+          <Temporizador fin={fin} total={total} onFin={alTerminar} onMas={() => setActiva({ ...activa, timerFin: (activa.timerFin ?? Date.now()) + 15_000, timerSeg: total + 15 })} onMenos={() => setActiva({ ...activa, timerFin: Math.max(Date.now(), (activa.timerFin ?? Date.now()) - 15_000) })} />
         ) : (
-          <div className="fm-temporizador">
-            <span className="tiempo">{minutos}:00</span>
-            <div className="fm-temporizador-linea" aria-hidden="true"><div className="fm-temporizador-restante" /></div>
-          </div>
+          <span className="cifra-heroe">{minutos}:00</span>
         )}
-      </Modulo>
+        <p className="subtexto" style={{ maxWidth: 300 }}>{nota}</p>
+      </div>
       <div className="fm-pie fm-columna">
+        <div className="fm-secundarios" style={{ justifyContent: 'center' }}>
+          <BotonSecundario onClick={onListo}>Saltar</BotonSecundario>
+        </div>
         {fin === undefined ? (
-          <BotonPrincipal onClick={() => { prepararAudio(); setActiva({ ...activa, timerFin: Date.now() + minutos * 60000, timerSeg: minutos * 60 }) }}>Arrancar</BotonPrincipal>
+          <BotonPrincipal onClick={() => { prepararAudio(); setActiva({ ...activa, timerFin: Date.now() + minutos * 60000, timerSeg: minutos * 60 }) }}>Empezar {titulo.toLowerCase()}</BotonPrincipal>
         ) : (
           <BotonPrincipal onClick={onListo}>{termino ? 'Seguir' : 'Ya, seguir'}</BotonPrincipal>
         )}
       </div>
-    </>
+    </div>
   )
 }
 
-// ---------- Ejercicio ----------
+// ---------- 7.3 Ejercicio ----------
 
 function PasoEjercicio({ datos, sesion, paso, sets, activa, setActiva, onSiguiente, onAnterior }: {
   datos: Datos
@@ -227,11 +209,8 @@ function PasoEjercicio({ datos, sesion, paso, sets, activa, setActiva, onSiguien
   onAnterior: () => void
 }) {
   const { base, item, series } = paso
-  const esAlternativa = item.id !== base.id
-  const hechos = useMemo(
-    () => sets.filter((s) => s.sessionId === sesion.id && s.exerciseId === item.id).sort((a, b) => a.numSerie - b.numSerie),
-    [sets, sesion.id, item.id],
-  )
+  const incremento = base.incrementoKg ?? PASO_KG
+  const hechos = useMemo(() => sets.filter((s) => s.sessionId === sesion.id && s.exerciseId === item.id).sort((a, b) => a.numSerie - b.numSerie), [sets, sesion.id, item.id])
   const historial = useMemo(() => sets.filter((s) => s.sessionId !== sesion.id), [sets, sesion.id])
   const sugerencia = useMemo(() => sugerirPeso(historial, item.id, item.repsMax, item.modo), [historial, item.id, item.repsMax, item.modo])
   const ultimaVez = useMemo(() => porSesion(historial, item.id).slice(-1)[0], [historial, item.id])
@@ -240,17 +219,16 @@ function PasoEjercicio({ datos, sesion, paso, sets, activa, setActiva, onSiguien
   const completo = hechos.length >= series
   const ultimo = hechos[hechos.length - 1]
 
-  const pesoInicial = () => {
-    if (ultimo?.pesoKg != null) return ultimo.pesoKg
-    if (sugerencia.peso === null) return 0
-    if (sugerencia.tipo === 'subir') return sugerencia.peso + PASO_KG
-    if (sugerencia.tipo === 'bajar') return Math.max(0, sugerencia.peso - PASO_KG)
+  const pesoSugerido = (() => {
+    if (sugerencia.peso === null) return null
+    if (sugerencia.tipo === 'subir') return sugerencia.peso + incremento
+    if (sugerencia.tipo === 'bajar') return Math.max(0, sugerencia.peso - incremento)
     return sugerencia.peso
-  }
-  const [peso, setPeso] = useState<number>(pesoInicial)
+  })()
+  const [peso, setPeso] = useState<number>(() => ultimo?.pesoKg ?? pesoSugerido ?? 0)
   const [reps, setReps] = useState<number>(() => ultimo?.reps ?? (item.modo === 'tiempo' ? item.repsMax : item.repsMax || 10))
   const [tecnica, setTecnica] = useState(false)
-  const [cambiar, setCambiar] = useState(false)
+  const [error, setError] = useState(false)
 
   useTemp(completo ? 'ultima' : tempDeSerie(siguienteNum, series))
 
@@ -258,146 +236,88 @@ function PasoEjercicio({ datos, sesion, paso, sets, activa, setActiva, onSiguien
     prepararAudio()
     if (reps <= 0) return
     const ahora = Date.now()
-    await datos.guardarSet({
-      sessionId: sesion.id,
-      exerciseId: item.id,
-      ejercicioBaseId: base.id,
-      numSerie: siguienteNum,
-      pesoKg: item.modo === 'peso' ? peso : null,
-      reps,
-      fecha: claveFecha(new Date(ahora)),
-      hora: ahora,
-    })
+    try {
+      await datos.guardarSet({ sessionId: sesion.id, exerciseId: item.id, ejercicioBaseId: base.id, numSerie: siguienteNum, pesoKg: item.modo === 'peso' ? peso : null, reps, fecha: claveFecha(new Date(ahora)), hora: ahora })
+    } catch {
+      setError(true)
+      return
+    }
+    setError(false)
     sonarClic()
     if (siguienteNum >= series) haptico.finEjercicio()
     else haptico.serieHecha()
-    setActiva({ ...activa, descansoFin: ahora + item.descansoSeg * 1000, descansoSeg: item.descansoSeg })
+    setActiva({ ...activa, descansoFin: ahora + item.descansoSeg * 1000, descansoSeg: item.descansoSeg, avisado: undefined })
   }
 
   async function elegirAlternativa(alt: Alternativa | null) {
     const cambios = (sesion.cambios ?? []).filter((c) => c.ejercicioId !== base.id)
     if (alt) cambios.push({ ejercicioId: base.id, alternativaId: alt.id })
     await datos.guardarSesion({ ...sesion, cambios })
-    setCambiar(false)
+    setTecnica(false)
   }
 
-  // Línea arriba del módulo: solo cuando dice algo
   let aviso: string | null = null
-  if (hechos.length === 0) {
-    if (sugerencia.tipo === 'subir' && ultimaVez) aviso = `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Toca subir.`
-    else if (sugerencia.tipo === 'bajar') aviso = 'Dos veces seguidas bajaron las reps. Baja un escalón.'
-    else if (sugerencia.tipo === 'inicial' && item.modo === 'peso') aviso = 'Primera vez. Elige un peso con el que el tope salga con 2 guardadas.'
-    else if (base.orden === 1) aviso = 'Antes, una serie de aproximación: mitad del peso, 10 reps. No se registra.'
+  if (error) aviso = 'No se guardó la serie. Toca para reintentar.'
+  else if (hechos.length === 0) {
+    if (sugerencia.tipo === 'subir' && ultimaVez && pesoSugerido !== null) aviso = `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Sube a ${pesoSugerido}.`
+    else if (sugerencia.tipo === 'bajar' && pesoSugerido !== null) aviso = `Dos veces seguidas bajaron las reps. Baja a ${pesoSugerido}.`
+    else if (base.orden === 1 && item.modo === 'peso' && peso > 0) aviso = `Antes, una de aproximación con ${Math.round(peso / 2 / 0.5) * 0.5} kg, 10 reps. No se registra.`
+    else if (sugerencia.tipo === 'inicial' && item.modo === 'peso') aviso = 'Primera vez. Empieza ligero: el tope del rango con 2 de sobra.'
   }
-  const rango = item.modo === 'tiempo' ? `${item.repsMax} s` : item.repsMax === 0 ? 'al tope con 2 guardadas' : item.repsMin === item.repsMax ? `${item.repsMax} reps` : `${item.repsMin} a ${item.repsMax} reps`
 
   return (
-    <>
+    <div className="fm-panel fm-columna" style={{ flex: 1, gap: 12 }}>
       <div className="fm-sesion-titulo">
-        <h1 className="titulo-fm">{item.nombre}</h1>
-        <p className="secundario">
-          {completo ? `${series} series hechas` : `Serie ${siguienteNum} de ${series}`}, {rango}{item.porLado ? ' por lado' : ''}{esAlternativa && 'caso' in item ? `. Alternativa: ${item.caso.toLowerCase()}` : ''}
-        </p>
+        <h1 className="titulo">{item.nombre}</h1>
+        <p className="subtexto">{completo ? `${series} series hechas` : `Serie ${siguienteNum} de ${series}`}, {rangoDe(item)}{item.porLado ? ' por lado' : ''}</p>
       </div>
-
-      <Ilustracion id={item.ilustracion} nombre={item.nombre} onClick={() => setTecnica(true)} />
-
-      {aviso && <p className="cuerpo fm-aviso">{aviso}</p>}
-
-      <Modulo>
+      <Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} onClick={() => setTecnica(true)} />
+      <div className="fm-sesion-centro" style={{ gap: 16 }}>
+        {aviso && <p className="subtexto" style={{ textAlign: 'center' }} onClick={error ? serieHecha : undefined}>{aviso}</p>}
         {item.modo === 'peso' ? (
-          <>
-            <CifraPeso valor={peso} onChange={setPeso} />
-            <Dial valor={peso} onChange={setPeso} paso={PASO_KG} />
-            <Stepper valor={reps} onChange={setReps} />
-          </>
-        ) : item.modo === 'tiempo' ? (
-          <div className="fm-columna">
-            <div><span className="cifra-heroe">{reps}</span><span className="unidad">s</span></div>
-            <Stepper valor={reps} onChange={setReps} unidad="s" min={5} max={300} />
-          </div>
+          <Peso valor={peso} onChange={setPeso} paso={incremento} />
         ) : (
-          <div className="fm-columna">
-            <div><span className="cifra-heroe">{reps}</span><span className="unidad">reps</span></div>
-            <Stepper valor={reps} onChange={setReps} />
-          </div>
+          <div className="fm-peso"><span className="cifra-heroe">{reps}</span><span className="unidad" style={{ marginTop: -8 }}>{item.modo === 'tiempo' ? 'segundos' : 'reps'}</span></div>
         )}
-      </Modulo>
-
+        {item.modo === 'peso' ? <Stepper valor={reps} onChange={setReps} /> : <Stepper valor={reps} onChange={setReps} unidad={item.modo === 'tiempo' ? 's' : 'reps'} min={item.modo === 'tiempo' ? 5 : 1} max={item.modo === 'tiempo' ? 300 : 99} />}
+      </div>
       <div className="fm-pie fm-columna">
-        <div className="fm-fila fm-sesion-secundarios">
+        <div className="fm-secundarios">
           <BotonSecundario onClick={onAnterior}>Anterior</BotonSecundario>
-          <BotonSecundario onClick={() => setCambiar(true)}>Cambiar</BotonSecundario>
+          <BotonSecundario onClick={() => setTecnica(true)}>Técnica</BotonSecundario>
           <BotonSecundario onClick={onSiguiente}>{completo ? 'Siguiente' : 'Saltar'}</BotonSecundario>
         </div>
-        {completo ? (
-          <BotonPrincipal onClick={onSiguiente}>Siguiente ejercicio</BotonPrincipal>
-        ) : (
-          <BotonPrincipal onClick={serieHecha}>Serie hecha</BotonPrincipal>
-        )}
+        {completo ? <BotonPrincipal onClick={onSiguiente}>Siguiente ejercicio</BotonPrincipal> : <BotonPrincipal onClick={serieHecha}>Serie hecha</BotonPrincipal>}
       </div>
-
-      <Hoja abierta={tecnica} titulo={item.nombre} onCerrar={() => setTecnica(false)}>
-        <Detalle item={item} />
-      </Hoja>
-
-      <Hoja abierta={cambiar} titulo="Cambiar" onCerrar={() => setCambiar(false)}>
-        <p className="secundario">Primero la que use el mismo equipo, luego mancuernas, luego peso corporal. Cada una guarda su propio peso.</p>
-        <div className="fm-columna">
-          {esAlternativa && (
-            <button className="fm-alternativa" onClick={() => elegirAlternativa(null)}>
-              <span className="etiqueta-fm">Original</span>
-              <span className="cuerpo">{base.nombre}</span>
-            </button>
-          )}
-          {base.alternativas.filter((a) => a.id !== item.id).map((a) => (
-            <button key={a.id} className="fm-alternativa" onClick={() => elegirAlternativa(a)}>
-              <span className="etiqueta-fm">{a.caso}</span>
-              <span className="cuerpo">{a.nombre}</span>
-              <span className="secundario">{a.series} series, {a.modo === 'tiempo' ? `${a.repsMax} s` : a.repsMax === 0 ? 'al tope' : a.repsMin === a.repsMax ? `${a.repsMax} reps` : `${a.repsMin} a ${a.repsMax} reps`}{a.porLado ? ' por lado' : ''}</span>
-            </button>
-          ))}
-        </div>
-      </Hoja>
-    </>
-  )
-}
-
-export function Detalle({ item }: { item: Ejercicio | Alternativa }) {
-  return (
-    <div className="fm-columna" style={{ gap: 16 }}>
-      {item.ubicar && (<div><p className="etiqueta-fm">Ubicar</p><p className="cuerpo">{item.ubicar}</p></div>)}
-      {item.colocacion && (<div><p className="etiqueta-fm">Colocación</p><p className="cuerpo">{item.colocacion}</p></div>)}
-      {item.tecnica.length > 0 && (<div><p className="etiqueta-fm">Técnica</p><ol className="fm-lista">{item.tecnica.map((t, i) => <li key={i} className="cuerpo">{t}</li>)}</ol></div>)}
-      {item.errores.length > 0 && (<div><p className="etiqueta-fm">Errores</p><ul className="fm-lista">{item.errores.map((t, i) => <li key={i} className="cuerpo">{t}</li>)}</ul></div>)}
+      <FichaHoja abierta={tecnica} onCerrar={() => setTecnica(false)} base={base} item={item} datos={datos} series={series} onElegirAlternativa={elegirAlternativa} />
     </div>
   )
 }
 
-// ---------- Descanso: misma estructura, el módulo se enfría a teal ----------
+// ---------- 7.4 Descanso ----------
 
-function PasoDescanso({ paso, sets, sesion, fin, total, onMas, onMenos, onAvisar, avisado, onSaltar, onSiguienteEjercicio }: {
+function PasoDescanso({ paso, sets, sesion, fin, total, avisado, onMas, onMenos, onAvisar, onSaltar, onSiguienteEjercicio }: {
   paso: PasoEj
   sets: SetLog[]
   sesion: SesionTipo
   fin: number
   total: number
+  avisado: boolean
   onMas: () => void
   onMenos: () => void
   onAvisar: () => void
-  avisado: boolean
   onSaltar: () => void
   onSiguienteEjercicio: () => void
 }) {
-  useTemp('descanso')
   const { item, series } = paso
-  const hechos = sets.filter((s) => s.sessionId === sesion.id && s.exerciseId === item.id)
-  const ultimo = hechos.sort((a, b) => a.numSerie - b.numSerie)[hechos.length - 1]
+  const hechos = sets.filter((s) => s.sessionId === sesion.id && s.exerciseId === item.id).sort((a, b) => a.numSerie - b.numSerie)
+  const ultimo = hechos[hechos.length - 1]
   const siguiente = hechos.length + 1
   const ejercicioCompleto = hechos.length >= series
-  const [termino, setTermino] = useState(() => fin <= Date.now())
+  const restante = useCuentaRegresiva(fin)
+  const termino = restante <= 0
+  useTemp(termino ? (ejercicioCompleto ? 'trabajo' : tempDeSerie(siguiente, series)) : 'descanso')
   const alTerminar = useCallback(() => {
-    setTermino(true)
     if (document.visibilityState !== 'visible') return
     haptico.finDescanso()
     if (!avisado) sonarFinDescanso()
@@ -405,29 +325,29 @@ function PasoDescanso({ paso, sets, sesion, fin, total, onMas, onMenos, onAvisar
 
   const sigue = ejercicioCompleto
     ? 'Sigue: el siguiente ejercicio.'
-    : `Sigue: serie ${siguiente}${ultimo?.pesoKg != null ? `, ${ultimo.pesoKg} kg` : ''}.`
+    : `Sigue: serie ${siguiente}${ultimo?.pesoKg != null ? `, ${ultimo.pesoKg} kg` : ''}, ${rangoDe(item)}`
 
   return (
-    <>
+    <div className="fm-panel fm-columna" style={{ flex: 1 }}>
       <div className="fm-sesion-titulo">
-        <h1 className="titulo-fm">{item.nombre}</h1>
-        <p className="secundario">Descanso, {item.descansoSeg} s</p>
+        <h1 className="titulo">Descanso</h1>
+        <p className="subtexto">{sigue}</p>
       </div>
-      <Ilustracion id={item.ilustracion} nombre={item.nombre} />
-      <p className="cuerpo fm-aviso">{sigue}</p>
-      <Modulo>
-        <Temporizador fin={fin} total={total} onFin={alTerminar} onMas={onMas} onMenos={onMenos} onAvisar={onAvisar} onSaltar={onSaltar} />
-      </Modulo>
+      <div className="fm-sesion-tiempo">
+        <Temporizador fin={fin} total={total} onFin={alTerminar} onMas={onMas} onMenos={onMenos} onAvisar={onAvisar} />
+      </div>
       <div className="fm-pie fm-columna">
-        <BotonPrincipal onClick={ejercicioCompleto ? onSiguienteEjercicio : onSaltar} disabled={!termino}>
-          {ejercicioCompleto ? 'Siguiente ejercicio' : 'Siguiente serie'}
-        </BotonPrincipal>
+        {termino ? (
+          <BotonPrincipal onClick={ejercicioCompleto ? onSiguienteEjercicio : onSaltar}>{ejercicioCompleto ? 'Siguiente ejercicio' : 'Siguiente serie'}</BotonPrincipal>
+        ) : (
+          <BotonPrincipal onClick={ejercicioCompleto ? onSiguienteEjercicio : onSaltar}>Saltar descanso</BotonPrincipal>
+        )}
       </div>
-    </>
+    </div>
   )
 }
 
-// ---------- Resumen (8.4) ----------
+// ---------- 7.5 Resumen ----------
 
 function Resumen({ datos, sesion, sets, ejercicios, onTerminar }: { datos: Datos; sesion: SesionTipo; sets: SetLog[]; ejercicios: PasoEj[]; onTerminar: () => void }) {
   useTemp('listo')
@@ -441,47 +361,39 @@ function Resumen({ datos, sesion, sets, ejercicios, onTerminar }: { datos: Datos
       const i = grupos.findIndex((g) => g[0].sessionId === sesion.id)
       const max = (g: SetLog[]) => Math.max(...g.map((s) => s.pesoKg ?? 0))
       const delta = i > 0 ? max(grupos[i]) - max(grupos[i - 1]) : 0
-      return `${buscarCualquiera(id)?.item.nombre.toLowerCase() ?? id} (+${Math.round(delta * 10) / 10} kg)`
+      return { nombre: buscarCualquiera(id)?.item.nombre ?? id, delta: Math.round(delta * 10) / 10 }
     })
-  const alternativas = (sesion.cambios ?? []).map((c) => buscarCualquiera(c.alternativaId)?.item.nombre.toLowerCase() ?? c.alternativaId)
   const minutos = Math.max(1, Math.round((fin - sesion.inicio) / 60000))
-  const cumpleSemana = estadoSemana([...datos.sesiones.filter((s) => s.id !== sesion.id), { ...sesion, terminada: true }], new Date(fin)).hechas === 3
   const hechosEj = ejercicios.filter((e) => propios.some((s) => s.exerciseId === e.item.id)).length
+  const cumpleSemana = estadoSemana([...datos.sesiones.filter((s) => s.id !== sesion.id), { ...sesion, terminada: true }], new Date(fin)).hechas === 3
 
   async function terminar() {
     await datos.guardarSesion({ ...sesion, fin, terminada: true })
     haptico.finSesion()
     onTerminar()
   }
-  async function descartar() {
-    if (!confirm('¿Borrar esta sesión? Se pierden las series de hoy.')) return
-    await datos.borrarSesion(sesion.id)
-    onTerminar()
-  }
 
   return (
-    <>
-      <div className="fm-sesion-titulo" style={{ marginTop: 24 }}>
-        <h1 className="cifra-grande" style={{ fontSize: 44 }}>Listo.</h1>
-        <p className="cuerpo">{sesion.tipo} hecha. {cumpleSemana ? 'Con esta, semana cumplida.' : 'Mañana te vas a acordar.'}</p>
+    <div className="fm-panel fm-columna fm-resumen" style={{ flex: 1 }}>
+      <div className="fm-resumen-titulo">
+        <h1 className="titulo-grande">Listo.</h1>
+        <p className="cuerpo tenue">{sesion.tipo} hecha. {cumpleSemana ? 'Con esta, semana cumplida.' : 'Mañana te vas a acordar.'}</p>
       </div>
-      <Modulo>
-        <div className="fm-resumen-datos">
-          <div><span className="cifra-grande">{minutos}</span><span className="unidad">min</span></div>
-          <div><span className="cifra-grande">{hechosEj}</span><span className="unidad">{hechosEj === 1 ? 'ejercicio' : 'ejercicios'}</span></div>
-          <div><span className="cifra-grande">{propios.length}</span><span className="unidad">series</span></div>
-        </div>
-        <p className="cuerpo" style={{ marginTop: 16 }}>
-          {subieron.length ? `Subiste en ${subieron.join(', ')}.` : 'Hoy no subiste de peso. Está bien.'}
-          {alternativas.length ? ` Cambiaste a ${alternativas.join(', ')}.` : ''}
-        </p>
-      </Modulo>
-      <div className="fm-pie fm-columna">
-        <div className="fm-fila fm-sesion-secundarios">
-          <BotonSecundario onClick={descartar}>Descartar sesión</BotonSecundario>
-        </div>
+      <div className="fm-stats">
+        <div className="fm-stat"><span className="cifra-media">{minutos}</span><span className="nota">min</span></div>
+        <div className="fm-stat"><span className="cifra-media">{hechosEj}</span><span className="nota">{hechosEj === 1 ? 'ejercicio' : 'ejercicios'}</span></div>
+        <div className="fm-stat"><span className="cifra-media">{propios.length}</span><span className="nota">series</span></div>
+      </div>
+      {subieron.length ? (
+        <Grupo>
+          {subieron.map((s) => <Fila key={s.nombre} texto={`Subiste en ${s.nombre.toLowerCase()}`} dato={`+${s.delta} kg`} />)}
+        </Grupo>
+      ) : (
+        <p className="cuerpo tenue">Hoy sostuviste los pesos.</p>
+      )}
+      <div className="fm-pie">
         <BotonPrincipal onClick={terminar}>Cerrar</BotonPrincipal>
       </div>
-    </>
+    </div>
   )
 }

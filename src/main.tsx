@@ -18,11 +18,6 @@ if ('serviceWorker' in navigator) {
 }
 registerSW({ immediate: true })
 
-// Grano fijo sobre el fondo, detrás de todo
-const grano = document.createElement('div')
-grano.className = 'grano'
-grano.setAttribute('aria-hidden', 'true')
-document.body.prepend(grano)
 document.body.dataset.temp = 'reposo'
 
 sembrarSiToca().then(() => {
