@@ -35,11 +35,12 @@
   --temp: var(--cobalto);
   --temp-texto: var(--crema);
   --temp-suave: #1b2a52;
-  --temp-nombre: 'reposo';
+  /* fondo de toda la interfaz según temperatura: se entibia, no cambia de golpe */
+  --fondo-estado: var(--noche);
 
   /* Tipografía */
-  --fuente: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
-  --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --fuente: 'Manrope', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
   /* Medidas */
   --radio: 22px;
@@ -59,26 +60,31 @@
   --temp: var(--cobalto);
   --temp-suave: #1b2a52;
   --temp-texto: var(--crema);
+  --fondo-estado: #0f1626;
 }
 :root[data-temp='prep'] {
   --temp: var(--olivo);
   --temp-suave: #3b4430;
   --temp-texto: var(--crema-tinta);
+  --fondo-estado: #121a1e;
 }
 :root[data-temp='moderado'] {
   --temp: var(--ambar);
   --temp-suave: #4a3a1c;
   --temp-texto: var(--crema-tinta);
+  --fondo-estado: #17171c;
 }
 :root[data-temp='fuerte'] {
   --temp: var(--naranja);
   --temp-suave: #4b2412;
   --temp-texto: var(--crema-tinta);
+  --fondo-estado: #1a1418;
 }
 :root[data-temp='pico'] {
   --temp: var(--rojo-naranja);
   --temp-suave: #4d1c12;
   --temp-texto: var(--crema);
+  --fondo-estado: #1d1214;
 }
 
 /* Tema claro en crema (opcional desde Ajustes) */
@@ -95,4 +101,10 @@
   --crema-tinta: #1a1614;
   --cobalto: #3352a3;
   --temp-suave: #d8cdb4;
+  --fondo-estado: #efe5d2;
 }
+:root[data-tema='claro'][data-temp='reposo'] { --temp-suave: #d8cdb4; --fondo-estado: #efe5d2; --temp-texto: #f3e9d6; }
+:root[data-tema='claro'][data-temp='prep'] { --temp-suave: #dcdcc0; --fondo-estado: #ece7d2; }
+:root[data-tema='claro'][data-temp='moderado'] { --temp-suave: #efd9b0; --fondo-estado: #f1e2c8; }
+:root[data-tema='claro'][data-temp='fuerte'] { --temp-suave: #f5cdb0; --fondo-estado: #f3dfc9; }
+:root[data-tema='claro'][data-temp='pico'] { --temp-suave: #f3c2b0; --fondo-estado: #f3dccb; --temp-texto: #f3e9d6; }

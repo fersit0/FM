@@ -71,19 +71,28 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onContinuar }: Pro
       </header>
 
       {sesionEnCurso ? (
-        <section className="modulo-temp hoy-protagonista">
+        <section className="modulo-temp hoy-protagonista hoy-en-curso">
           <span className="etiqueta hoy-etiqueta">Sesión en curso</span>
-          <h1 className="titulo">Vas en {sesionEnCurso.tipo}</h1>
-          <p className="hoy-detalle">Empezaste hace {Math.round((ahora.getTime() - sesionEnCurso.inicio) / 60000)} min.</p>
+          <div className="hoy-letra">
+            <span className="letra-gigante">{sesionEnCurso.tipo === 'FRIDA' ? 'F' : sesionEnCurso.tipo}</span>
+            <div className="hoy-letra-lado">
+              <h1 className="titulo-2">Vas a la mitad</h1>
+              <p className="hoy-detalle">Empezaste hace {Math.round((ahora.getTime() - sesionEnCurso.inicio) / 60000)} min.</p>
+            </div>
+          </div>
         </section>
       ) : (
         <section className="modulo-temp hoy-protagonista">
-          <span className="etiqueta hoy-etiqueta">{semana.bonus ? 'Bonus · ya van 3' : 'Hoy'}</span>
-          <h1 className="titulo">Te toca {toca}</h1>
-          <p className="hoy-estado">{tiempo.titulo}</p>
-          <p className="hoy-detalle">
-            {tiempo.estado === 'no' ? textoManana(ahora, DIAS_NOMBRE) : tiempo.detalle}
-          </p>
+          <span className="etiqueta hoy-etiqueta">{semana.bonus ? 'Bonus · ya van 3' : 'Te toca'}</span>
+          <div className="hoy-letra">
+            <h1 className="letra-gigante" aria-label={`Te toca ${toca}`}>{toca}</h1>
+            <div className="hoy-letra-lado">
+              <p className="hoy-estado">{tiempo.titulo}</p>
+              <p className="hoy-detalle">
+                {tiempo.estado === 'no' ? textoManana(ahora, DIAS_NOMBRE) : tiempo.detalle}
+              </p>
+            </div>
+          </div>
         </section>
       )}
 

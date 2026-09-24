@@ -1,12 +1,24 @@
-/** Marco de ilustración. En la fase 4 se llena con los SVG por ejercicio. */
+import { useMemo } from 'react'
+import { dibujarIlustracion, existe } from '../assets/ilustraciones/poses.ts'
+import type { Colores } from '../assets/ilustraciones/figura.ts'
+
+/** Colores tomados de los tokens: el acento es el estado de temperatura actual */
+const COLORES: Colores = {
+  acento: 'var(--temp)',
+  linea: 'var(--marco)',
+  fantasma: 'var(--crema-2)',
+  equipo: 'var(--navy-alto)',
+  equipoLinea: 'var(--marco)',
+  metal: 'var(--crema-2)',
+  cable: 'var(--crema-3)',
+}
+
+/** Ilustración plana por ejercicio: posición inicial en fantasma, final en el color de estado. */
 export function Ilustracion({ id, nombre, chica = false }: { id: string; nombre: string; chica?: boolean }) {
+  const svg = useMemo(() => (existe(id) ? dibujarIlustracion(id, COLORES) : ''), [id])
   return (
-    <div className={`ilustracion ${chica ? 'chica' : ''}`} data-ilustracion={id} role="img" aria-label={nombre}>
-      <svg viewBox="0 0 200 120" className="ilustracion-svg" aria-hidden="true">
-        <rect x="20" y="96" width="160" height="6" rx="3" fill="var(--marco)" />
-        <circle cx="100" cy="40" r="14" fill="none" stroke="var(--temp)" strokeWidth="6" />
-        <path d="M100 54 v34 M100 62 l-26 14 M100 62 l26 14 M100 88 l-16 8 M100 88 l16 8" fill="none" stroke="var(--temp)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+    <div className={`ilustracion ${chica ? 'chica' : ''}`} role="img" aria-label={nombre}>
+      <svg viewBox={chica ? '20 10 160 110' : '0 0 200 120'} className="ilustracion-svg" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svg }} />
     </div>
   )
 }

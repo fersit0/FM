@@ -12,6 +12,9 @@ import { vibrar, beep, prepararAudio } from '../logic/senales'
 import { Hoja } from '../components/Hoja'
 import { CuentaRegresiva, Transcurrido } from '../components/Cronometro'
 import { Ilustracion } from '../components/Ilustracion'
+import { Calor } from '../components/Calor'
+import { PezConTenis } from '../components/Anomalia'
+import { estadoSemana } from '../logic/semana'
 
 interface Props {
   datos: Datos
@@ -84,8 +87,8 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
     <div className="pantalla-llena sesion">
       <header className="fila-entre sesion-cabecera">
         <button className="boton-texto" onClick={onSalir}>‹ Hoy</button>
-        <span className="etiqueta">
-          Sesión {sesion.tipo} · {ligera ? 'ligera' : version} · <Transcurrido desde={sesion.inicio} />
+        <span className="sesion-estado">
+          {sesion.tipo} · {ligera ? 'ligera' : version} · <Transcurrido desde={sesion.inicio} />
         </span>
         <button className="boton-texto" onClick={() => setMenu(true)} aria-label="Opciones de la sesión">···</button>
       </header>
@@ -296,6 +299,8 @@ function PasoEjercicio({ datos, sesion, paso, sets, series, activa, setActiva, o
 
       <Ilustracion id={item.ilustracion} nombre={item.nombre} />
 
+      <Calor total={series} hechas={hechos.length} />
+
       <h1 className="titulo sesion-nombre">{item.nombre}</h1>
 
       {base.orden === 1 && hechos.length === 0 && (
@@ -453,6 +458,8 @@ function Resumen({ datos, sesion, sets, onTerminar, onAtras }: { datos: Datos; s
   const ids = [...new Set(propios.map((s) => s.exerciseId))]
   const subieron = ids.filter((id) => subioDePeso(sets, id, sesion.id)).map((id) => buscarCualquiera(id)?.item.nombre ?? id)
   const alternativas = (sesion.cambios ?? []).map((c) => buscarCualquiera(c.alternativaId)?.item.nombre ?? c.alternativaId)
+  // Con esta sesión se cumple la semana: el único momento con anomalía
+  const cumpleSemana = estadoSemana([...datos.sesiones.filter((s) => s.id !== sesion.id), { ...sesion, terminada: true }], new Date(fin)).hechas === 3
 
   async function terminar() {
     await datos.guardarSesion({ ...sesion, fin, terminada: true })
@@ -468,7 +475,14 @@ function Resumen({ datos, sesion, sets, onTerminar, onAtras }: { datos: Datos; s
   return (
     <div className="resumen">
       <span className="etiqueta">Sesión {sesion.tipo} · {sesion.ligera ? 'ligera' : sesion.version}</span>
-      <h1 className="titulo">Listo por hoy.</h1>
+      {cumpleSemana ? (
+        <div className="columna">
+          <PezConTenis />
+          <h1 className="titulo">Semana cumplida.</h1>
+        </div>
+      ) : (
+        <h1 className="titulo">Listo por hoy.</h1>
+      )}
       <div className="resumen-datos">
         <div className="modulo">
           <span className="etiqueta">Tiempo</span>

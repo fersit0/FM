@@ -1,11 +1,12 @@
 @import './tokens.css';
+@import './fuentes.css';
 
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body { margin: 0; padding: 0; }
 
 html {
-  background: var(--noche);
+  background: var(--fondo-estado);
   color: var(--crema);
   font-family: var(--fuente);
   font-size: 16px;
@@ -17,9 +18,10 @@ html {
 
 body {
   min-height: 100dvh;
-  background: var(--noche);
-  transition: background-color var(--medio) var(--inercia);
+  background: var(--fondo-estado);
+  transition: background-color 400ms var(--inercia);
 }
+html { transition: background-color 400ms var(--inercia); }
 
 #root { min-height: 100dvh; display: flex; flex-direction: column; }
 
@@ -84,10 +86,11 @@ h1, h2, h3, p { margin: 0; }
   color: var(--crema-3);
   font-weight: 600;
 }
-.titulo { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+.titulo { font-size: 34px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.02; }
+.letra-gigante { font-size: 132px; font-weight: 800; letter-spacing: -0.06em; line-height: 0.85; }
 .titulo-2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
 .numero { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-.numero-grande { font-family: var(--mono); font-size: 56px; font-weight: 600; line-height: 1; letter-spacing: -0.03em; }
+.numero-grande { font-family: var(--mono); font-size: 56px; font-weight: 500; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .texto-2 { color: var(--crema-2); }
 .texto-3 { color: var(--crema-3); }
 
@@ -147,7 +150,7 @@ h1, h2, h3, p { margin: 0; }
   position: fixed;
   left: 0; right: 0; bottom: 0;
   padding: 10px var(--lado) calc(var(--safe-bottom) + 10px);
-  background: linear-gradient(to top, var(--noche) 70%, transparent);
+  background: linear-gradient(to top, var(--fondo-estado) 70%, transparent);
   display: flex;
   justify-content: center;
   z-index: 10;
@@ -204,8 +207,8 @@ h1, h2, h3, p { margin: 0; }
   background: var(--marco);
   transition: background-color var(--medio) var(--inercia);
 }
-.semana-dia.hecho .semana-luz { background: var(--naranja); }
-.semana-dia.frida .semana-luz { background: var(--olivo); }
+.semana-dia.hecho .semana-luz { background: var(--naranja); box-shadow: 0 0 10px 0 color-mix(in srgb, var(--naranja) 45%, transparent); }
+.semana-dia.frida .semana-luz { background: var(--olivo); box-shadow: none; }
 
 /* Hoy */
 .hoy-protagonista { display: flex; flex-direction: column; gap: 6px; min-height: 200px; justify-content: flex-end; }
@@ -301,6 +304,7 @@ h1, h2, h3, p { margin: 0; }
 .descanso {
   position: fixed; inset: 0; z-index: 25;
   background: var(--noche);
+  animation: encender 220ms var(--inercia);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
   padding: var(--lado);
 }
@@ -371,3 +375,40 @@ h1, h2, h3, p { margin: 0; }
 .interruptor-pista.on { background: var(--naranja); }
 .interruptor-bola { position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 12px; background: var(--crema); transition: transform var(--medio) var(--inercia); }
 .interruptor-pista.on .interruptor-bola { transform: translateX(22px); }
+
+
+/* Hoy: la letra es el protagonista */
+.hoy-letra { display: flex; align-items: flex-end; gap: 14px; }
+.hoy-letra .letra-gigante { font-family: var(--fuente); }
+.hoy-letra-lado { display: flex; flex-direction: column; gap: 2px; padding-bottom: 10px; }
+.hoy-en-curso .letra-gigante { font-size: 96px; }
+
+/* Superficie de calor */
+.calor { display: flex; gap: 4px; height: 10px; }
+.calor-franja { flex: 1; border-radius: 5px; background: var(--marco); transition: background-color var(--medio) var(--inercia), box-shadow var(--medio) var(--inercia); }
+.calor-franja.encendida { background: var(--temp); box-shadow: 0 0 12px 0 color-mix(in srgb, var(--temp) 55%, transparent); }
+.calor-franja.siguiente { background: var(--temp-suave); }
+
+/* Movimiento: paneles con inercia, luces que se encienden */
+@keyframes entrar { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes encender { from { opacity: 0; } to { opacity: 1; } }
+.paso-tiempo, .paso-ejercicio, .resumen, .pantalla > .modulo, .pantalla > .modulo-temp, .pantalla > .modulo-marco { animation: entrar 220ms var(--inercia) both; }
+.serie.hecha { animation: encender 200ms var(--inercia) both; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
+}
+
+/* Tráfico nocturno: halo en las luces */
+.trafico-luz { filter: drop-shadow(0 0 3px currentColor); }
+.trafico-luz.luz-naranja { color: var(--naranja); }
+.trafico-luz.luz-ambar { color: var(--ambar); }
+.trafico-luz.luz-pico { color: var(--rojo-naranja); }
+.trafico-luz.luz-olivo { color: var(--olivo); }
+.trafico-carril { stroke-dasharray: 2 4; }
+
+/* Anomalía reservada */
+.anomalia { width: 120px; height: 60px; align-self: flex-start; }
+
+/* Sesión: la cabecera es una cápsula con el estado */
+.sesion-estado { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: var(--radio-capsula); background: var(--temp-suave); color: var(--crema); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+.sesion-estado .numero { font-size: 13px; letter-spacing: 0; }
