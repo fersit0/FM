@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { haptico } from '../../lib/haptics'
 
-const PX = 21 // ventana de 40 kg en 0.86 W ≈ 21 px por marca de 2.5
+const PX = 21 // ventana de 16 marcas en 0.86 W ≈ 21 px por marca
 
 /** 5. Dial de peso: regla que se desliza bajo una aguja fija. Tick háptico por marca. */
 export function Dial({ valor, onChange, paso = 2.5, min = 0, max = 200 }: { valor: number; onChange: (v: number) => void; paso?: number; min?: number; max?: number }) {
@@ -12,7 +12,7 @@ export function Dial({ valor, onChange, paso = 2.5, min = 0, max = 200 }: { valo
   const indiceDe = (v: number) => Math.round((v - min) / paso)
   const colocar = (p: HTMLDivElement, v: number) => {
     programatico.current = performance.now()
-    p.scrollLeft = indiceDe(v) * PX
+    p.scrollLeft = indiceDe(v) * PX + PX
   }
   useEffect(() => {
     const p = pista.current
@@ -28,7 +28,7 @@ export function Dial({ valor, onChange, paso = 2.5, min = 0, max = 200 }: { valo
   function alScroll() {
     const p = pista.current
     if (!p || performance.now() - programatico.current < 200) return
-    const idx = Math.max(0, Math.min(n, Math.round(p.scrollLeft / PX)))
+    const idx = Math.max(0, Math.min(n, Math.round(p.scrollLeft / PX) - 1))
     const v = Math.round((min + idx * paso) * 100) / 100
     if (v !== emitido.current) {
       emitido.current = v

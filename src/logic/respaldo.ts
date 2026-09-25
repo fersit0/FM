@@ -11,7 +11,7 @@ export interface Respaldo {
   sets: SetLog[]
   peso: Bodyweight[]
   fotos: { fecha: string; tipo: string; base64: string }[]
-  fotosEjercicio?: { ejercicioId: string; fecha: string; tipo: string; base64: string }[]
+  fotosEjercicio?: { ejercicioId: string; fecha: string; tipo: string; base64: string; base64b?: string }[]
 }
 
 export function armarRespaldo(datos: {
@@ -20,7 +20,7 @@ export function armarRespaldo(datos: {
   sets: SetLog[]
   peso: Bodyweight[]
   fotos: { fecha: string; tipo: string; base64: string }[]
-  fotosEjercicio?: { ejercicioId: string; fecha: string; tipo: string; base64: string }[]
+  fotosEjercicio?: { ejercicioId: string; fecha: string; tipo: string; base64: string; base64b?: string }[]
 }): Respaldo {
   return { app: 'gym-app', version: 1, exportado: new Date().toISOString(), ...datos }
 }

@@ -68,7 +68,11 @@ export interface SetLog {
   /** id del ejercicio base de la rutina (para agrupar en Progreso) */
   ejercicioBaseId: string
   numSerie: number
+  /** en kilos, para comparar; puede tener redondeo */
   pesoKg: number | null
+  /** valor exacto tal cual se registró y su unidad */
+  peso?: number
+  unidad?: 'kg' | 'lb'
   reps: number
   fecha: string
   hora: number
@@ -87,7 +91,10 @@ export interface Photo {
 /** Foto propia de un ejercicio (la máquina real del gym), tomada desde la ficha */
 export interface FotoEjercicio {
   ejercicioId: string
+  /** posición inicial */
   blob: Blob
+  /** posición final, opcional */
+  blob2?: Blob
   fecha: string
 }
 
@@ -107,6 +114,8 @@ export interface Settings {
   horaSalida?: string
   /** alternativas que sustituyen a un ejercicio en la rutina ("Usar siempre esta") */
   reemplazos?: Record<string, string>
+  /** unidad principal por ejercicio (kg o lb) */
+  unidades?: Record<string, 'kg' | 'lb'>
 }
 
 export const SETTINGS_DEFAULT: Settings = {

@@ -21,7 +21,7 @@
 }
 /* derivados: se resuelven en body, donde vive --texto de cada pantalla */
 body, .hoja {
-  --texto-2: color-mix(in srgb, var(--texto) 60%, transparent);
+  --texto-2: color-mix(in srgb, var(--texto) var(--texto-2-pct, 60%), transparent);
   --texto-3: color-mix(in srgb, var(--texto) 40%, transparent);
   --texto-4: color-mix(in srgb, var(--texto) 25%, transparent);
   --separador: color-mix(in srgb, var(--texto) 12%, transparent);
@@ -33,6 +33,7 @@ body[data-pantalla='calentamiento'] {
   --fondo: var(--piedra); --texto: var(--tinta); --circulo: var(--rojo); --circulo-texto: var(--tinta); --boton-fondo: var(--tinta); --boton-texto: var(--piedra);
 }
 body[data-pantalla='serie'] {
+  --texto-2-pct: 80%;
   --fondo: var(--rojo); --texto: var(--tinta); --circulo: var(--tinta); --circulo-texto: var(--piedra); --boton-fondo: var(--tinta); --boton-texto: var(--piedra);
 }
 body[data-pantalla='descanso'] {
@@ -71,7 +72,8 @@ h1, h2, h3, p, figure, ul, ol { margin: 0; }
 
 /* ---------- 4. El círculo ---------- */
 .circulo {
-  position: absolute;
+  position: relative;
+  flex: none;
   border-radius: 50%;
   background: var(--circulo);
   color: var(--circulo-texto);
@@ -79,12 +81,11 @@ h1, h2, h3, p, figure, ul, ol { margin: 0; }
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  transform: translate(-50%, -50%);
   transition: width 500ms var(--curva), height 500ms var(--curva), top 500ms var(--curva), left 500ms var(--curva), background-color 350ms var(--curva), color 350ms var(--curva);
   pointer-events: none;
 }
 .circulo.sin-transicion { transition: background-color 350ms var(--curva), color 350ms var(--curva); }
-.circulo-cifra { display: flex; align-items: baseline; font-weight: 700; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; pointer-events: auto; background: none; border: 0; color: inherit; padding: 0; white-space: nowrap; }
+.circulo-cifra { display: inline-flex; align-items: baseline; font-weight: 700; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; pointer-events: auto; background: none; border: 0; color: inherit; padding: 0; white-space: nowrap; }
 .circulo-cifra .kg { font-weight: 700; letter-spacing: -0.02em; margin-left: 0.04em; }
 .circulo-timer { font-weight: 500; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
@@ -93,7 +94,8 @@ h1, h2, h3, p, figure, ul, ol { margin: 0; }
 .dial { position: relative; width: 86%; margin: 0 auto; height: 84px; }
 .dial-pista { height: 100%; overflow-x: auto; overflow-y: hidden; display: flex; align-items: flex-start; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; padding-top: 6px; }
 .dial-pista::-webkit-scrollbar { display: none; }
-.dial-relleno { flex: none; width: calc(50% - 10.5px); }
+.dial-relleno { flex: none; width: calc(50% - 10.5px + 21px); }
+.dial-pista { padding-left: 0; }
 .dial-marca { flex: none; width: 21px; height: 74px; display: flex; flex-direction: column; align-items: center; scroll-snap-align: center; position: relative; }
 .dial-marca::before { content: ''; width: 4px; height: 20px; border-radius: 2px; background: var(--texto); }
 .dial-marca.diez::before { height: 44px; }
@@ -163,10 +165,14 @@ h1, h2, h3, p, figure, ul, ol { margin: 0; }
 
 /* Fotos: blanco y negro, contraste +10%, radio 0 */
 .foto { display: block; flex: none; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: color-mix(in srgb, var(--piedra) 8%, transparent); }
-.foto img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(1) contrast(1.1); }
+.foto { position: relative; }
+.foto img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(1) contrast(1.1); transition: opacity 250ms var(--curva); }
+.foto .foto-b { position: absolute; inset: 0; }
+.foto-etiqueta { position: absolute; left: 12px; bottom: 12px; background: var(--tinta); color: var(--piedra); font-size: 13px; padding: 4px 10px; border-radius: 999px; }
+button.foto { padding: 0; border: 0; cursor: pointer; }
 
 /* Miniatura */
-.foto-chica { width: 64px; height: 48px; flex: none; overflow: hidden; display: block; }
+.foto-chica { width: 64px; height: 48px; flex: none; overflow: hidden; display: block; position: relative; border-radius: 6px; margin-top: 4px; }
 .foto-chica img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(1) contrast(1.1); }
 
 /* Puntos de semana */
@@ -181,6 +187,6 @@ button.punto { padding: 0; }
 .aviso-flotante { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--safe-bottom) + 84px); background: var(--piedra); color: var(--tinta); padding: 12px 20px; border-radius: 999px; font-size: 15px; font-weight: 600; z-index: 20; }
 
 /* Cambio de ejercicio: entra desde la derecha */
-.panel { position: absolute; inset: 0; z-index: 1; animation: panel-entra 380ms var(--curva) both; }
+.panel { position: relative; animation: panel-entra 380ms var(--curva) both; }
 @keyframes panel-entra { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { @keyframes panel-entra { from { opacity: 0; } to { opacity: 1; } } }

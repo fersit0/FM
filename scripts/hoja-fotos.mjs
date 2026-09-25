@@ -4,7 +4,7 @@ import { readdirSync, mkdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 const dir = process.env.CAPTURAS_DIR ?? 'capturas'
 mkdirSync(dir, { recursive: true })
-const fotos = readdirSync('public/fotos').filter((f) => f.endsWith('.jpg')).sort()
+const fotos = readdirSync('public/fotos').filter((f) => f.endsWith('-2.jpg')).sort()
 const porHoja = 8
 const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 1200, height: 900 } })

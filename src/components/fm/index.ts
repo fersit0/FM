@@ -1,4 +1,6 @@
-export { Circulo, medidas } from './Circulo'
+export { Circulo } from './Circulo'
+export { TituloAjustable } from './Titulo'
+export { Deshacer } from './Deshacer'
 export { Dial, CifraPeso } from './Dial'
 export { Stepper } from './Stepper'
 export { BotonPrincipal, BotonContorno, BotonTexto } from './Botones'

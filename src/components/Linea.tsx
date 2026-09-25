@@ -1,5 +1,5 @@
 /** Gráfica de línea de 3 pt en piedra del peso en el tiempo; último punto como círculo rojo de 12 pt. */
-export function Linea({ puntos, alto = 140 }: { puntos: { etiqueta: string; valor: number }[]; alto?: number }) {
+export function Linea({ puntos, alto = 140, unidad = 'kg' }: { puntos: { etiqueta: string; valor: number }[]; alto?: number; unidad?: string }) {
   const ancho = 342
   const izq = 8, der = 8, arriba = 24, abajo = 24
   if (puntos.length === 0) return null
@@ -17,7 +17,7 @@ export function Linea({ puntos, alto = 140 }: { puntos: { etiqueta: string; valo
       <circle cx={px(n - 1)} cy={py(u.valor)} r="6" fill="var(--rojo)" />
       <text x={px(0)} y={alto - 4} textAnchor="start" className="linea-eje">{puntos[0].etiqueta}</text>
       {n > 1 && <text x={px(n - 1)} y={alto - 4} textAnchor="end" className="linea-eje">{u.etiqueta}</text>}
-      <text x={px(n - 1)} y={py(u.valor) - 12} textAnchor={n > 1 ? 'end' : 'middle'} className="linea-eje" style={{ fill: 'var(--piedra)' }}>{u.valor} kg</text>
+      <text x={px(n - 1)} y={py(u.valor) - 12} textAnchor={n > 1 ? 'end' : 'middle'} className="linea-eje" style={{ fill: 'var(--piedra)' }}>{u.valor} {unidad}</text>
     </svg>
   )
 }

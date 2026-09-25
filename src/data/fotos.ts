@@ -1,39 +1,42 @@
-// Fotos base por ejercicio (clave = campo `ilustracion` del ejercicio o alternativa).
-// Fuente: yuhonas/free-exercise-db (Unlicense, dominio público), reducidas a 900 px en public/fotos/.
-// Revisadas una por una (tabla en NOTAS-DISENO.md): sin foto es mejor que una incorrecta.
-export const FOTOS_BASE: Record<string, string> = {
-  'press-banca': 'Dumbbell_Bench_Press',
-  'press-piso': 'Dumbbell_Floor_Press',
-  'press-maquina': 'Leverage_Chest_Press',
-  'lagartijas-banco': 'Push-Ups_With_Feet_Elevated',
-  jalon: 'Wide-Grip_Lat_Pulldown',
-  'remo-mancuerna': 'One-Arm_Dumbbell_Row',
-  dominadas: 'Band_Assisted_Pull-Up',
-  goblet: 'Goblet_Squat',
-  prensa: 'Leg_Press',
-  'sentadilla-mancuernas': 'Dumbbell_Squat',
-  'sentadilla-banco': 'Bodyweight_Squat',
-  militar: 'Dumbbell_Shoulder_Press',
-  'militar-neutro': 'Dumbbell_Shoulder_Press',
-  'hombro-maquina': 'Machine_Shoulder_Military_Press',
-  'curl-z': 'EZ-Bar_Curl',
-  'curl-alternado': 'Dumbbell_Alternate_Bicep_Curl',
-  'curl-polea': 'Standing_Biceps_Cable_Curl',
-  'triceps-polea': 'Triceps_Pushdown',
-  'triceps-cabeza': 'Seated_Triceps_Press',
-  'fondos-banco': 'Bench_Dips',
-  'dead-bug': 'Dead_Bug',
-  'press-inclinado': 'Incline_Dumbbell_Press',
-  'remo-polea': 'Seated_Cable_Rows',
-  'remo-pecho': 'Leverage_Iso_Row',
-  laterales: 'Side_Lateral_Raise',
-  'laterales-sentado': 'Seated_Side_Lateral_Raise',
-  martillo: 'Hammer_Curls',
-  'curl-cuerda': 'Cable_Hammer_Curls_-_Rope_Attachment',
-  piernas: 'Flat_Bench_Lying_Leg_Raise',
+// Fotos base por ejercicio (clave = campo `ilustracion`). Dos posiciones: a = inicio, b = final.
+// Fuente: yuhonas/free-exercise-db (Unlicense). Revisadas una por una (tabla en NOTAS-DISENO.md).
+type Par = { a: string; b?: string }
+const par = (id: string): Par => ({ a: id, b: `${id}-2` })
+export const FOTOS_BASE: Record<string, Par> = {
+  'press-banca': par('Dumbbell_Bench_Press'),
+  'press-piso': par('Dumbbell_Floor_Press'),
+  'press-maquina': par('Leverage_Chest_Press'),
+  'lagartijas-banco': par('Push-Ups_With_Feet_Elevated'),
+  jalon: par('Wide-Grip_Lat_Pulldown'),
+  'remo-mancuerna': par('One-Arm_Dumbbell_Row'),
+  dominadas: par('Band_Assisted_Pull-Up'),
+  goblet: par('Goblet_Squat'),
+  prensa: par('Leg_Press'),
+  'sentadilla-mancuernas': par('Dumbbell_Squat'),
+  'sentadilla-banco': par('Bodyweight_Squat'),
+  militar: par('Dumbbell_Shoulder_Press'),
+  'militar-neutro': par('Dumbbell_Shoulder_Press'),
+  'hombro-maquina': par('Machine_Shoulder_Military_Press'),
+  'curl-z': par('EZ-Bar_Curl'),
+  'curl-alternado': par('Dumbbell_Alternate_Bicep_Curl'),
+  'curl-polea': par('Standing_Biceps_Cable_Curl'),
+  'triceps-polea': par('Triceps_Pushdown'),
+  'triceps-cabeza': par('Seated_Triceps_Press'),
+  'fondos-banco': par('Bench_Dips'),
+  plancha: { a: 'Plank-2' },
+  'plancha-rodillas': { a: 'Plank-2' },
+  'dead-bug': par('Dead_Bug'),
+  'press-inclinado': par('Incline_Dumbbell_Press'),
+  'remo-polea': par('Seated_Cable_Rows'),
+  'remo-pecho': par('Leverage_Iso_Row'),
+  laterales: par('Side_Lateral_Raise'),
+  'laterales-sentado': par('Seated_Side_Lateral_Raise'),
+  martillo: par('Hammer_Curls'),
+  'curl-cuerda': par('Cable_Hammer_Curls_-_Rope_Attachment'),
+  piernas: par('Flat_Bench_Lying_Leg_Raise'),
 }
-
-export function urlFotoBase(clave: string): string | null {
+export function urlsFotoBase(clave: string): { a: string; b?: string } | null {
   const f = FOTOS_BASE[clave]
-  return f ? `${import.meta.env.BASE_URL}fotos/${f}.jpg` : null
+  if (!f) return null
+  return { a: `${import.meta.env.BASE_URL}fotos/${f.a}.jpg`, b: f.b ? `${import.meta.env.BASE_URL}fotos/${f.b}.jpg` : undefined }
 }

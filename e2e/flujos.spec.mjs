@@ -64,12 +64,12 @@ test('saltar todos los ejercicios', async ({ page }) => {
 
 test('cambiar por alternativa y usarla siempre', async ({ page }) => {
   await empezarSesion(page)
-  const original = await page.locator('.sesion-titulo h1').innerText()
+  const original = await page.locator('.sesion-titulo-fila h1').innerText()
   await menu(page, 'Cambiar por alternativa')
   const primera = page.locator('.hoja-fondo.abierta .fila').first()
   const nombre = await primera.locator('button.t-cuerpo').innerText()
   await primera.locator('button.t-cuerpo').click()
-  await expect(page.locator('.sesion-titulo h1')).toHaveText(nombre)
+  await expect(page.locator('.sesion-titulo-fila h1')).toHaveText(nombre)
   expect(nombre).not.toBe(original)
   await page.getByRole('button', { name: 'Serie hecha' }).click()
   await expect(page.locator('h1', { hasText: 'Descanso' })).toBeVisible()
@@ -93,14 +93,14 @@ test('salir a medio descanso, recargar y seguir', async ({ page }) => {
 
 test('cerrar la app a media sesión y retomar', async ({ page }) => {
   await empezarSesion(page)
-  const titulo = await page.locator('.sesion-titulo h1').innerText()
+  const titulo = await page.locator('.sesion-titulo-fila h1').innerText()
   await page.getByRole('button', { name: 'Serie hecha' }).click()
   await page.getByRole('button', { name: 'Saltar' }).click()
   await expect(page.getByText(/Serie 2 de/)).toBeVisible()
   await page.goto('')
   await expect(page.getByText('Sesión a medias')).toBeVisible()
   await page.getByRole('button', { name: 'Seguir sesión' }).click()
-  await expect(page.locator('.sesion-titulo h1')).toHaveText(titulo)
+  await expect(page.locator('.sesion-titulo-fila h1')).toHaveText(titulo)
   await expect(page.getByText(/Serie 2 de/)).toBeVisible()
 })
 

@@ -175,3 +175,30 @@ Pendiente: probar en el iPhone el atajo "FM Descanso", el háptico del switch, l
 - `ErrorBoundary` en la raíz: "Algo falló. Tu sesión está guardada." con "Volver al inicio"; los errores se guardan en `localStorage['gym-app:errores']` (últimos 20).
 - Al cargar, los registros dañados o de versiones viejas se filtran sin borrar el resto; los ajustes se completan con los valores por defecto.
 - Pruebas de punta a punta en `e2e/flujos.spec.mjs` (`npm run e2e`, contra el servidor de desarrollo): sesión completa, saltar todo, alternativa y "usar siempre", recargar a medio descanso, retomar sesión a medias, terminar con 0 series, lunes con Frida, registrar un día pasado, exportar e importar, actualizar versión. Las 10 pasan.
+
+# Uso real en el iPhone: layout, unidades, fotos, deshacer
+
+## Layout
+- Serie, Descanso, Calentamiento y Resumen son columnas flexibles de 100dvh con safe areas: arriba encabezado y avisos, en medio el círculo (diámetro del spec acotado al espacio disponible, medido con ResizeObserver), abajo dial, stepper y botón. Nada se posiciona con coordenadas fijas; Inicio conserva su círculo cortado arriba a la derecha.
+- Título del ejercicio: baja de 34 a 26 pt de uno en uno hasta caber en dos líneas.
+- Textos secundarios sobre rojo al 80% (`--texto-2-pct`).
+- `e2e/layout.spec.mjs` abre calentamiento, serie 1, descanso, serie 2, serie completa y resumen en 375×667, 390×844, 393×852 y 430×932 con el nombre más largo (A1) y aviso activo, y comprueba que ninguna caja se cruza, nada sale de la pantalla, nada se corta y la pantalla no hace scroll.
+
+## Kilos y libras
+- Unidad principal por ejercicio: poleas, máquinas, prensa, jalón y dominadas en lb; mancuernas, barras y peso corporal en kg. Se cambia tocando la unidad dentro del círculo y se guarda en `settings.unidades`.
+- El círculo muestra la cifra en la unidad principal y debajo, al 70%, la equivalencia. Incrementos: lb 5, kg 2.5, laterales 1.
+- Cada serie guarda `peso` y `unidad` exactos además de `pesoKg` (solo para comparar). Historial, listas y gráficas muestran la unidad principal de cada ejercicio.
+
+## Peso inicial y dial
+- Sin registro previo, el peso arranca en un valor razonable por ejercicio (`src/logic/unidades.ts`, tabla `INICIAL_KG`) redondeado a la rejilla del dial, con "Primera vez: empieza con este y ajusta."
+- La regla lleva una marca de relleno extra a cada lado para que el 0 y el último número nunca se corten.
+
+## Fotos y técnica
+- Cada foto base ahora tiene inicio y final (archivos `X.jpg` y `X-2.jpg`); alternan cada segundo con fundido; tocar pausa y etiqueta "Inicio" / "Final". Las segundas imágenes se revisaron una por una: todas coinciden con su ejercicio. `Plank-2` sí es una plancha, así que plancha usa esa sola imagen. Sin foto siguen press militar de pie, laterales en polea y las elevaciones en piso o con rodillas.
+- Fotos propias: "Tomar foto de mi máquina (inicio)" y "Tomar foto de final"; se animan igual y viajan en el respaldo.
+- "Ver videos" abre YouTube con "<ejercicio> técnica". La foto animada chica va junto al título en Serie y abre la técnica.
+
+## Deshacer
+- "Serie guardada. Deshacer" (5 s) borra la serie y regresa con los mismos valores; "Descanso saltado" y "Ejercicio saltado" también se deshacen 5 s.
+- Menú ✕ → "Series de hoy": editar peso y reps o borrar. Historial: cada serie de una sesión se edita o borra, y "Borrar sesión".
+- "Terminar sesión" y "Descartar sesión" piden confirmación. Pruebas en `e2e/deshacer.spec.mjs`.

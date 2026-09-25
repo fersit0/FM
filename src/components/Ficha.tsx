@@ -2,7 +2,8 @@ import { useMemo, useRef } from 'react'
 import type { Ejercicio, Alternativa } from '../data/tipos'
 import type { Datos } from '../hooks/useDatos'
 import { FICHAS } from '../data/fichas'
-import { maximosPorSesion } from '../logic/progresion'
+import { porSesion } from '../logic/progresion'
+import { unidadDe, pesoDeSet } from '../logic/unidades'
 import { fechaCorta } from '../logic/fechas'
 import { comprimirFoto } from '../lib/fotos'
 import { Foto } from './Foto'
@@ -20,20 +21,25 @@ export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onEleg
   abierta: boolean; onCerrar: () => void; base: Ejercicio; item: Ejercicio | Alternativa; datos: Datos; series?: number; onElegirAlternativa?: (a: Alternativa | null) => void; conGrafica?: boolean; onVerAlternativa?: (a: Alternativa) => void
 }) {
   const ficha = FICHAS[item.id] ?? FICHAS[base.id]
-  const archivo = useRef<HTMLInputElement>(null)
-  const historial = useMemo(() => maximosPorSesion(datos.sets, item.id, 12).filter((m) => m.peso > 0), [datos.sets, item.id])
+  const archivoA = useRef<HTMLInputElement>(null)
+  const archivoB = useRef<HTMLInputElement>(null)
+  const unidad = unidadDe(item, datos.settings.unidades)
+  const historial = useMemo(() => porSesion(datos.sets, item.id).slice(-12).map((g) => ({ fecha: g[0].fecha, peso: Math.max(...g.map((s) => pesoDeSet(s, unidad) ?? 0)) })).filter((m) => m.peso > 0), [datos.sets, item.id, unidad])
   const esAlternativa = item.id !== base.id
   const propia = datos.fotosEjercicio.find((f) => f.ejercicioId === item.id)
-  async function tomarFoto(e: React.ChangeEvent<HTMLInputElement>) {
+  async function tomarFoto(cual: 'a' | 'b', e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     e.target.value = ''
     if (!f) return
     const blob = await comprimirFoto(f)
-    await datos.guardarFotoEjercicio({ ejercicioId: item.id, blob, fecha: new Date().toISOString().slice(0, 10) })
+    if (cual === 'a') await datos.guardarFotoEjercicio({ ejercicioId: item.id, blob, blob2: propia?.blob2, fecha: new Date().toISOString().slice(0, 10) })
+    else if (propia) await datos.guardarFotoEjercicio({ ...propia, blob2: blob })
+    else await datos.guardarFotoEjercicio({ ejercicioId: item.id, blob, fecha: new Date().toISOString().slice(0, 10) })
   }
+  const videos = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${item.nombre} técnica`)}`
   return (
     <Hoja abierta={abierta} altura="completa" onCerrar={onCerrar}>
-      {conGrafica && historial.length > 0 && <Linea puntos={historial.map((m) => ({ etiqueta: fechaCorta(m.fecha), valor: m.peso }))} />}
+      {conGrafica && historial.length > 0 && <Linea puntos={historial.map((m) => ({ etiqueta: fechaCorta(m.fecha), valor: m.peso }))} unidad={unidad} />}
       {abierta && <Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} />}
       <div className="columna" style={{ gap: 4 }}>
         <h2 className="t-ejercicio">{item.nombre}</h2>
@@ -66,9 +72,12 @@ export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onEleg
         </Grupo>
       </Seccion>
       <div className="columna" style={{ alignItems: 'flex-start', gap: 0, paddingTop: 8 }}>
-        <BotonTexto onClick={() => archivo.current?.click()}>{propia ? 'Cambiar la foto de mi máquina' : 'Tomar foto de mi máquina'}</BotonTexto>
-        {propia && <BotonTexto onClick={() => confirm('¿Quitar tu foto y volver a la de base?') && datos.borrarFotoEjercicio(item.id)}>Quitar mi foto</BotonTexto>}
-        <input ref={archivo} type="file" accept="image/*" capture="environment" onChange={tomarFoto} className="oculto-visual" />
+        <BotonTexto onClick={() => archivoA.current?.click()}>{propia ? 'Cambiar mi foto de inicio' : 'Tomar foto de mi máquina (inicio)'}</BotonTexto>
+        <BotonTexto onClick={() => archivoB.current?.click()}>{propia?.blob2 ? 'Cambiar mi foto de final' : 'Tomar foto de final'}</BotonTexto>
+        {propia && <BotonTexto onClick={() => confirm('¿Quitar tus fotos y volver a las de base?') && datos.borrarFotoEjercicio(item.id)}>Quitar mis fotos</BotonTexto>}
+        <a className="secundario" href={videos} target="_blank" rel="noreferrer">Ver videos</a>
+        <input ref={archivoA} type="file" accept="image/*" capture="environment" onChange={(e) => tomarFoto('a', e)} className="oculto-visual" />
+        <input ref={archivoB} type="file" accept="image/*" capture="environment" onChange={(e) => tomarFoto('b', e)} className="oculto-visual" />
       </div>
     </Hoja>
   )

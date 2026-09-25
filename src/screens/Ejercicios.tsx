@@ -3,6 +3,7 @@ import type { Datos } from '../hooks/useDatos'
 import type { Ejercicio, Alternativa } from '../data/tipos'
 import { ejerciciosDe, CALENTAMIENTO, CIERRE, REGLAS_GLOBALES, VERSION_CORTA_TEXTO, REGLA_ALTERNATIVA } from '../data/ejercicios'
 import { porSesion } from '../logic/progresion'
+import { unidadDe, pesoDeSet, formatoPeso } from '../logic/unidades'
 import { usePantalla } from '../design/pantallaActiva'
 import { Grupo, Fila, Hoja } from '../components/fm'
 import { FichaHoja } from '../components/Ficha'
@@ -17,9 +18,10 @@ export function Ejercicios({ datos }: { datos: Datos }) {
     const grupos = porSesion(datos.sets, e.id)
     const u = grupos[grupos.length - 1]
     if (!u) return ''
-    const peso = Math.max(...u.map((s) => s.pesoKg ?? 0))
+    const un = unidadDe(e, datos.settings.unidades)
+    const peso = Math.max(...u.map((s) => pesoDeSet(s, un) ?? 0))
     const reps = Math.max(...u.map((s) => s.reps))
-    return e.modo === 'peso' ? `${peso} kg` : e.modo === 'tiempo' ? `${reps} s` : `${reps} reps`
+    return e.modo === 'peso' ? formatoPeso(peso, un) : e.modo === 'tiempo' ? `${reps} s` : `${reps} reps`
   }
   return (
     <div className="pantalla con-barra">

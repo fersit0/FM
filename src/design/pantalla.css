@@ -5,21 +5,6 @@
 .pie { position: sticky; bottom: calc(var(--safe-bottom) + 20px); margin-top: auto; padding-top: 12px; display: flex; flex-direction: column; gap: 12px; z-index: 2; }
 .pie.con-barra-pie { bottom: calc(var(--safe-bottom) + 72px); }
 
-/* Sesión: composición absoluta, nunca hace scroll */
-.sesion { position: relative; height: 100dvh; overflow: hidden; padding: 0; max-width: none; }
-.sesion-cabecera { position: absolute; z-index: 3; top: calc(var(--safe-top) + 8px); left: var(--margen); right: var(--margen); display: flex; justify-content: space-between; align-items: center; height: 32px; }
-.sesion-titulo { position: absolute; top: calc(var(--safe-top) + 52px); left: var(--margen); right: var(--margen); display: flex; flex-direction: column; gap: 2px; }
-.sesion-titulo-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.sesion-dial { position: absolute; top: 63.5%; left: 0; right: 0; }
-.sesion-stepper { position: absolute; top: 76%; left: 0; right: 0; }
-.sesion-pie { position: absolute; left: 0; right: 0; bottom: calc(var(--safe-bottom) + 20px); display: flex; flex-direction: column; gap: 12px; }
-.sesion-aviso { position: absolute; left: var(--margen); right: var(--margen); top: calc(var(--safe-top) + 132px); }
-.sesion-centro-texto { position: absolute; left: var(--margen); right: var(--margen); }
-.descanso-sigue { top: 74%; display: flex; flex-direction: column; gap: 6px; }
-.resumen-cifras { position: absolute; left: var(--margen); right: var(--margen); top: 72%; display: flex; justify-content: space-between; }
-.resumen-cifra { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.resumen-titulo { position: absolute; top: calc(var(--safe-top) + 44px); left: var(--margen); right: var(--margen); display: flex; flex-direction: column; gap: 8px; }
-.cal-nota { position: absolute; left: var(--margen); right: var(--margen); top: 72%; text-align: center; }
 
 /* Inicio */
 .inicio { position: relative; height: 100dvh; overflow: hidden; padding: 0; max-width: none; }
@@ -43,3 +28,22 @@
 .fotos-grid figcaption { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
 .vacio { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; padding-top: 24px; }
 .vacio img { width: 120px; height: 120px; }
+
+/* Sesión: columna flexible, nunca hace scroll. Arriba texto, abajo controles, el círculo toma lo que sobra. */
+.sesion { display: flex; flex-direction: column; height: 100dvh; min-height: 100dvh; overflow: hidden; padding: calc(var(--safe-top) + 8px) var(--margen) calc(var(--safe-bottom) + 20px); gap: 0; max-width: none; }
+.sesion-cabecera { display: flex; justify-content: space-between; align-items: center; height: 36px; flex: none; margin-left: -10px; position: relative; z-index: 3; }
+.panel { display: flex; flex-direction: column; flex: 1; min-height: 0; z-index: 1; animation: panel-entra 380ms var(--curva) both; }
+.sesion-arriba { display: flex; flex-direction: column; gap: 4px; flex: none; padding-top: 8px; }
+.sesion-titulo-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.sesion-titulo-fila h1 { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.sesion-aviso { padding-top: 4px; }
+.sesion-medio { flex: 1; min-height: 120px; display: flex; align-items: center; justify-content: center; padding: 8px 0; }
+.sesion-abajo { display: flex; flex-direction: column; gap: 14px; flex: none; padding-top: 8px; }
+.circulo-sitio { position: relative; flex: none; }
+.circulo-contenido { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.circulo-equivalencia { opacity: 0.7; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.resumen-cifras { display: flex; justify-content: space-between; }
+.resumen-cifra { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.deshacer { position: fixed; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 96px); z-index: 25; background: var(--tinta); color: var(--piedra); padding: 14px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--piedra); }
+.deshacer button { color: var(--rojo); font-weight: 700; font-size: 17px; min-height: 32px; }
+body[data-pantalla='descanso'] .deshacer { background: var(--piedra); color: var(--cobalto); box-shadow: none; }

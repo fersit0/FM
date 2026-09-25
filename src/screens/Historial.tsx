@@ -4,8 +4,9 @@ import type { Sesion } from '../data/tipos'
 import { usePantalla } from '../design/pantallaActiva'
 import { semanasHistorial, tocaPesarse, tocaFoto, type SemanaHistorial } from '../logic/progreso'
 import { claveFecha, fechaCorta, DIAS_NOMBRE, desdeClave, sumarDias, inicioSemana } from '../logic/fechas'
-import { buscarCualquiera, ejerciciosDe } from '../data/ejercicios'
+import { ejerciciosDe } from '../data/ejercicios'
 import { Grupo, Fila, Hoja, BotonTexto, Pez } from '../components/fm'
+import { SerieEditable } from './Sesion'
 import { Linea } from '../components/Linea'
 import { haptico } from '../lib/haptics'
 
@@ -69,7 +70,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
         ))}
       </Hoja>
       <Hoja abierta={sesion !== null} altura="completa" titulo={sesion ? `${sesion.tipo}, ${fechaCorta(sesion.fecha)}` : ''} onCerrar={() => setSesion(null)}>
-        {sesion && <DetalleSesion datos={datos} sesion={sesion} />}
+        {sesion && <DetalleSesion datos={datos} sesion={sesion} onBorrada={() => { setSesion(null); setSemana(null) }} />}
       </Hoja>
       <Hoja abierta={agregar} titulo="Fui este día" onCerrar={() => setAgregar(false)}>
         <Grupo>
@@ -95,20 +96,17 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
   )
 }
 
-function DetalleSesion({ datos, sesion }: { datos: Datos; sesion: Sesion }) {
+function DetalleSesion({ datos, sesion, onBorrada }: { datos: Datos; sesion: Sesion; onBorrada: () => void }) {
   const propios = datos.sets.filter((s) => s.sessionId === sesion.id)
   const orden = ejerciciosDe(sesion.tipo as 'A' | 'B').map((e) => e.id)
-  const ids = [...new Set(propios.map((s) => s.exerciseId))].sort((a, b) => orden.indexOf(a.split('-')[0]) - orden.indexOf(b.split('-')[0]))
-  if (ids.length === 0) return <p className="t-cuerpo tenue">Sin series registradas.</p>
+  const ordenados = [...propios].sort((a, b) => orden.indexOf(a.exerciseId.split('-')[0]) - orden.indexOf(b.exerciseId.split('-')[0]) || a.numSerie - b.numSerie)
   return (
-    <Grupo>
-      {ids.map((id) => {
-        const sets = propios.filter((s) => s.exerciseId === id).sort((a, b) => a.numSerie - b.numSerie)
-        const peso = sets[0].pesoKg
-        const reps = sets.map((s) => s.reps).join(', ')
-        return <Fila key={id} texto={buscarCualquiera(id)?.item.nombre ?? id} dato={peso != null ? `${peso} kg × ${reps}` : `× ${reps}`} />
-      })}
-    </Grupo>
+    <>
+      {ordenados.length === 0 ? <p className="t-cuerpo tenue">Sin series registradas. Toca los valores para editar.</p> : (
+        <Grupo>{ordenados.map((s) => <SerieEditable key={s.id} set={s} datos={datos} />)}</Grupo>
+      )}
+      <BotonTexto onClick={async () => { if (!confirm('¿Borrar esta sesión y sus series?')) return; await datos.borrarSesion(sesion.id); onBorrada() }}>Borrar sesión</BotonTexto>
+    </>
   )
 }
 

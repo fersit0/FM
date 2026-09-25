@@ -23,7 +23,7 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
 
   async function exportar() {
     const fotos = await Promise.all(datos.fotos.map(async (f) => ({ fecha: f.fecha, tipo: f.blob.type, base64: await blobABase64(f.blob) })))
-    const fotosEjercicio = await Promise.all(datos.fotosEjercicio.map(async (f) => ({ ejercicioId: f.ejercicioId, fecha: f.fecha, tipo: f.blob.type, base64: await blobABase64(f.blob) })))
+    const fotosEjercicio = await Promise.all(datos.fotosEjercicio.map(async (f) => ({ ejercicioId: f.ejercicioId, fecha: f.fecha, tipo: f.blob.type, base64: await blobABase64(f.blob), base64b: f.blob2 ? await blobABase64(f.blob2) : undefined })))
     const r = armarRespaldo({ settings, sesiones: datos.sesiones, sets: datos.sets, peso: datos.peso, fotos, fotosEjercicio })
     const nombre = `gym-respaldo-${claveFecha(new Date())}.json`
     const file = new File([JSON.stringify(r)], nombre, { type: 'application/json' })
@@ -56,7 +56,7 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
       for (const s of r.sets) await guardarSet(s)
       for (const p of r.peso) await guardarPeso(p)
       for (const foto of r.fotos) await guardarFoto({ fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo) })
-      for (const foto of r.fotosEjercicio ?? []) await guardarFotoEjercicio({ ejercicioId: foto.ejercicioId, fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo) })
+      for (const foto of r.fotosEjercicio ?? []) await guardarFotoEjercicio({ ejercicioId: foto.ejercicioId, fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo), blob2: foto.base64b ? base64ABlob(foto.base64b, foto.tipo) : undefined })
       datos.setSettings(r.settings)
       await datos.recargar()
       onAviso('Respaldo importado')

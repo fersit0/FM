@@ -5,6 +5,7 @@ import { usePantalla, useMedidas } from '../design/pantallaActiva'
 import { estadoSemana, siguienteSesion, avisoRescate, semanasCumplidas, tocaProponerSeriesExtra, entraEnVersion } from '../logic/semana'
 import { estadoTiempo, estadoSiSalgo, versionInicial, textoManana } from '../logic/horario'
 import { porSesion } from '../logic/progresion'
+import { unidadDe, pesoDeSet, formatoPeso } from '../logic/unidades'
 import { ejerciciosDe, itemDeRutina } from '../data/ejercicios'
 import { claveFecha, DIAS_NOMBRE, formatoHora, minutosDe } from '../logic/fechas'
 import { Circulo, BotonPrincipal, BotonTexto, Hoja, Grupo, Fila, Pez } from '../components/fm'
@@ -49,9 +50,10 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     const u = grupos[grupos.length - 1]
     let dato = ''
     if (u) {
-      const peso = Math.max(...u.map((s) => s.pesoKg ?? 0))
+      const un = unidadDe(e, settings.unidades)
+      const peso = Math.max(...u.map((s) => pesoDeSet(s, un) ?? 0))
       const reps = Math.max(...u.map((s) => s.reps))
-      dato = e.modo === 'peso' ? `${peso} kg` : e.modo === 'tiempo' ? `${reps} s` : `${reps} reps`
+      dato = e.modo === 'peso' ? formatoPeso(peso, un) : e.modo === 'tiempo' ? `${reps} s` : `${reps} reps`
     }
     return { id: e.id, nombre: e.nombre, dato }
   }), [lista, sets, settings.reemplazos])
@@ -79,7 +81,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
 
   return (
     <div className="pantalla inicio">
-      <Circulo d={0.62 * W} cx={0.83 * W} cy={0.11 * H} />
+      <Circulo d={0.62 * W} style={{ position: 'absolute', left: 0.83 * W, top: 0.11 * H, transform: 'translate(-50%, -50%)' }} />
       <div className="inicio-arriba">
         <div className="puntos" aria-label={`Esta semana ${semana.hechas} de ${semana.meta}`}>
           {semana.dias.map((d, i) => {
