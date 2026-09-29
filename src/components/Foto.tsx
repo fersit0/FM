@@ -25,7 +25,8 @@ export function Foto({ clave, ejercicioId, propias, nombre, modo = 'toque', onCl
   const img = (src: string, alt: string, lazy = true) => <img src={src} alt={alt} width={720} height={540} loading={lazy ? 'lazy' : 'eager'} style={{ objectPosition: pos }} />
   const ref = urls.referencia && <span className="foto-etiqueta">Referencia</span>
   if (modo === 'chica') {
-    return <button className="foto foto-chica" onClick={onClick} aria-label={onClick ? `${nombre}: ver técnica` : nombre}>{img(urls.a, `${nombre}, inicio`)}</button>
+    if (!onClick) return <span className="foto foto-chica" role="img" aria-label={nombre}>{img(urls.a, `${nombre}, inicio`)}</span>
+    return <button className="foto foto-chica" onClick={onClick} aria-label={`${nombre}: ver técnica`}>{img(urls.a, `${nombre}, inicio`)}</button>
   }
   if (modo === 'par' && urls.b) {
     return (
