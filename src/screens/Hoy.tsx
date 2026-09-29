@@ -98,12 +98,12 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
 
       <div className="inicio-texto">
         <p className="t-sub">{sesionEnCurso ? 'Sesión a medias' : semana.bonus ? 'Bonus, ya van 3' : 'Hoy toca'}</p>
+        {recortada && !sesionEnCurso && <Pez expresion="picaro" tamano={72} style={{ right: 0, top: -30 }} />}
         <h1 className="t-inicio">{sesionEnCurso?.tipo === 'CASA' ? 'Casa' : `${sesionEnCurso?.tipo ?? toca}: ${NOMBRE_SESION[(sesionEnCurso?.tipo === 'FRIDA' ? toca : (sesionEnCurso?.tipo as Letra | undefined)) ?? toca]}`}</h1>
         <div style={{ position: 'relative' }}>
           <button className="t-unidad tenue" style={{ fontSize: 20, fontWeight: 400, textAlign: 'left', lineHeight: 1.3 }} onClick={() => setHojaLista(true)}>
             {sesionEnCurso ? `Empezaste hace ${Math.max(1, Math.round((ahora.getTime() - sesionEnCurso.inicio) / 60000))} min.` : `${filas.length} ejercicios, unos ${minutos} min${pierna === 3 ? ', pierna a 3 series' : ''}${linea ? `. ${linea}` : ''}${rescate ? ` ${rescate}` : ''}`}
           </button>
-          {recortada && !sesionEnCurso && <Pez expresion="picaro" tamano={72} style={{ right: 0, top: -84 }} />}
         </div>
       </div>
 

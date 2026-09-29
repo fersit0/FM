@@ -7,10 +7,10 @@
 
 
 /* Inicio */
-.inicio { position: relative; height: 100dvh; overflow: hidden; padding: 0; max-width: none; }
-.inicio-arriba { position: absolute; top: calc(var(--safe-top) + 14px); left: var(--margen); right: var(--margen); display: flex; justify-content: space-between; align-items: center; z-index: 2; }
-.inicio-texto { position: absolute; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 176px); display: flex; flex-direction: column; gap: 10px; }
-.inicio-pie { position: absolute; left: 0; right: 0; bottom: calc(var(--safe-bottom) + 76px); display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.inicio { position: relative; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; padding: calc(var(--safe-top) + 14px) var(--margen) calc(var(--safe-bottom) + 76px); max-width: none; gap: 16px; }
+.inicio-arriba { display: flex; justify-content: space-between; align-items: center; z-index: 2; flex: none; }
+.inicio-texto { position: relative; margin-top: auto; display: flex; flex-direction: column; gap: 10px; z-index: 1; }
+.inicio-pie { display: flex; flex-direction: column; gap: 14px; align-items: center; margin: 0 calc(-1 * var(--margen)); z-index: 1; flex: none; }
 .inicio-linea-roja { color: var(--rojo); font-size: 17px; }
 
 /* Ficha */
