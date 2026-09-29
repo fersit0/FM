@@ -23,7 +23,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
   const [fotos, setFotos] = useState(false)
   const [agregar, setAgregar] = useState(false)
   const [fechaNueva, setFechaNueva] = useState(() => claveFecha(ahora))
-  const [tipoNuevo, setTipoNuevo] = useState<'A' | 'B' | 'FRIDA'>('A')
+  const [tipoNuevo, setTipoNuevo] = useState<'A' | 'B' | 'FRIDA' | 'CASA'>('A')
   const hayAlgo = datos.sesiones.some((s) => s.terminada)
   return (
     <div className="pantalla con-barra">
@@ -64,7 +64,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
         {semana && (semana.sesiones.length === 0 ? <p className="t-cuerpo tenue">Sin sesiones esa semana.</p> : (
           <Grupo>
             {semana.sesiones.map((s) => (
-              <Fila key={s.id} texto={`${DIAS_NOMBRE[desdeClave(s.fecha).getDay()]} ${desdeClave(s.fecha).getDate()}, ${s.tipo === 'FRIDA' ? 'lunes con Frida' : `${s.tipo} ${s.ligera ? 'ligera' : s.version}`}`} dato={s.fin ? `${Math.max(1, Math.round((s.fin - s.inicio) / 60000))} min` : ''} onClick={s.tipo === 'FRIDA' ? undefined : () => setSesion(s)} />
+              <Fila key={s.id} texto={`${DIAS_NOMBRE[desdeClave(s.fecha).getDay()]} ${desdeClave(s.fecha).getDate()}, ${s.tipo === 'FRIDA' ? 'lunes con Frida' : s.tipo === 'CASA' ? 'casa' : `${s.tipo} ${s.ligera ? 'ligera' : s.version}`}`} dato={s.fin ? `${Math.max(1, Math.round((s.fin - s.inicio) / 60000))} min` : ''} onClick={s.tipo === 'FRIDA' ? undefined : () => setSesion(s)} />
             ))}
           </Grupo>
         ))}
@@ -76,10 +76,11 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
         <Grupo>
           <Fila texto="Fecha"><input type="date" value={fechaNueva} max={claveFecha(ahora)} onChange={(e) => setFechaNueva(e.target.value)} aria-label="Fecha" /></Fila>
           <Fila texto="Qué hice">
-            <select value={tipoNuevo} onChange={(e) => setTipoNuevo(e.target.value as 'A' | 'B' | 'FRIDA')} aria-label="Qué hice">
+            <select value={tipoNuevo} onChange={(e) => setTipoNuevo(e.target.value as 'A' | 'B' | 'FRIDA' | 'CASA')} aria-label="Qué hice">
               <option value="A">Cuerpo completo A</option>
               <option value="B">Cuerpo completo B</option>
               <option value="FRIDA">Lunes con Frida</option>
+              <option value="CASA">Casa</option>
             </select>
           </Fila>
         </Grupo>
@@ -98,7 +99,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
 
 function DetalleSesion({ datos, sesion, onBorrada }: { datos: Datos; sesion: Sesion; onBorrada: () => void }) {
   const propios = datos.sets.filter((s) => s.sessionId === sesion.id)
-  const orden = ejerciciosDe(sesion.tipo as 'A' | 'B').map((e) => e.id)
+  const orden = ejerciciosDe(sesion.tipo as 'A' | 'B' | 'CASA').map((e) => e.id)
   const ordenados = [...propios].sort((a, b) => orden.indexOf(a.exerciseId.split('-')[0]) - orden.indexOf(b.exerciseId.split('-')[0]) || a.numSerie - b.numSerie)
   return (
     <>

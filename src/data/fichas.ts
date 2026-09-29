@@ -13,7 +13,43 @@ export interface Ficha {
 const REGLA = 'Si terminas la última serie con más de 2 reps de sobra, sube. Si no llegas al mínimo del rango, baja.'
 
 export const FICHAS: Record<string, Ficha> = {
-  A1: {
+  'remo-mancuerna': {
+    trabaja: 'Dorsal y espalda media.',
+    sentir: 'El jalón en el costado de la espalda, no en el bíceps.',
+    preparacion: ['Rodilla y mano del mismo lado en el banco, espalda plana y casi paralela al piso.', 'La mancuerna colgando bajo el hombro.', 'Sin banco: mano libre en el mancuernero o un rack, torso a 45°.'],
+    ejecucion: ['Jala el codo hacia la cadera, pegado al cuerpo, hasta que pase la línea de la espalda.', 'Baja lento hasta estirar.'],
+    errores: [{ error: 'Girar el torso para subir más.', correccion: 'Baja el peso y deja el pecho viendo al piso.' }, { error: 'Jalar hacia el hombro.', correccion: 'Lleva el codo hacia la bolsa del pantalón.' }],
+    peso: 'El que te deje 12 limpias con 2 en reserva; para empezar, 20 kg. Si la primera serie pasó del número alto con 3 o más en reserva, sube 2 kg para la siguiente; si no llegó al número bajo, baja 2.',
+    alternativa: 'Mancuernas ocupadas: remo sentado a una mano en polea.',
+  },
+  'remo-pecho-apoyado': {
+    trabaja: 'Espalda alta y la parte de atrás del hombro; ayuda a la postura.',
+    sentir: 'Entre los omóplatos.',
+    preparacion: ['Banco inclinado a 30 o 45°, boca abajo con el pecho apoyado y la barbilla por fuera del respaldo.', 'Mancuernas colgando.'],
+    ejecucion: ['Jala abriendo los codos hacia los lados, doblados a unos 90°, hasta que queden a la altura de la espalda.', 'Aprieta los omóplatos un segundo y baja lento.'],
+    errores: [{ error: 'Despegar el pecho del banco.', correccion: 'Baja el peso.' }, { error: 'Encoger los hombros hacia las orejas.', correccion: 'Hombros abajo.' }],
+    peso: 'Ligero para empezar, de 4 a 8 kg por mano. Si la primera serie pasó del número alto con 3 o más en reserva, sube 2 kg; si no llegó al número bajo, baja 2.',
+    alternativa: 'Banco inclinado ocupado: remo alto en máquina. Si tampoco: remo en máquina con pecho apoyado, codos abiertos.',
+  },
+  lagartijas: {
+    trabaja: 'Pecho, tríceps y hombro de enfrente.',
+    sentir: 'El pecho.',
+    preparacion: ['Manos un poco más abiertas que los hombros.', 'Cuerpo recto de la cabeza a los talones.'],
+    ejecucion: ['Baja hasta que el pecho quede a un puño del piso, con los codos a unos 45° del cuerpo.', 'Sube empujando el piso.'],
+    errores: [{ error: 'Cadera caída.', correccion: 'Aprieta glúteo y abdomen.' }, { error: 'Codos abiertos en T.', correccion: 'Llévalos a 45°.' }],
+    peso: 'Sin peso: registra las repeticiones de cada serie, al tope dejando 2 en reserva. Si cuestan, manos en la cama o una mesa firme; si ya haces más de 20, pies en el banco.',
+    alternativa: 'Si cuestan: lagartijas inclinadas con las manos en la cama. Si ya haces más de 20: pies en el banco.',
+  },
+  'remo-liga': {
+    trabaja: 'Espalda media y dorsal.',
+    sentir: 'Entre los omóplatos.',
+    preparacion: ['Liga anclada en la puerta a la altura del pecho, con la puerta cerrada con seguro.', 'Sentado en el piso con las piernas estiradas, o de pie con las rodillas un poco dobladas, a la distancia en que la liga quede tensa con los brazos estirados.'],
+    ejecucion: ['Jala los codos hacia atrás pegados al cuerpo.', 'Aprieta los omóplatos un segundo y regresa lento.'],
+    errores: [{ error: 'Echarte para atrás con el cuerpo.', correccion: 'Mueve solo los brazos.' }, { error: 'Dejar que la liga regrese de golpe.', correccion: 'Controla la vuelta.' }],
+    peso: 'Sin peso: cuando salgan 15 fácil, un paso más atrás o una liga más dura.',
+    alternativa: 'Sin liga: remo a una mano apoyado en la cama o una silla.',
+  },
+  'press-plano': {
     trabaja: 'Pecho, sobre todo la parte media. Ayudan hombro frontal y tríceps.',
     sentir: 'El pecho estirándose abajo y apretándose arriba. Si lo sientes en el hombro de frente o te punza, los codos van muy abiertos o bajas de más.',
     preparacion: [
@@ -36,7 +72,7 @@ export const FICHAS: Record<string, Ficha> = {
     peso: `Primera vez: un par con el que 10 reps salgan con 2 de sobra, unos 12 a 14 kg por mano. ${REGLA}`,
     alternativa: 'Banco ocupado: press en el piso con mancuernas. Sin mancuernas suficientes: lagartijas con los pies sobre el banco. Máquina de press de pecho si está libre.',
   },
-  A2: {
+  'jalon': {
     trabaja: 'Dorsal ancho y espalda alta. Ayudan bíceps y antebrazo.',
     sentir: 'Los costados de la espalda jalando, como si metieras los codos en las bolsas del pantalón. Si arden los bíceps o el antebrazo primero, estás jalando con las manos.',
     preparacion: [
@@ -59,7 +95,7 @@ export const FICHAS: Record<string, Ficha> = {
     peso: `Primera vez: una placa con la que 12 reps salgan con 2 de sobra, más o menos la mitad de tu peso corporal. ${REGLA}`,
     alternativa: 'Torre ocupada: dominadas asistidas si hay máquina; si no, remo con mancuerna a una mano apoyado en el banco.',
   },
-  A3: {
+  'goblet': {
     trabaja: 'Cuádriceps y glúteo. Ayudan abdomen y espalda baja para sostener el tronco.',
     sentir: 'Los muslos al bajar y el glúteo al empujar para subir. Si te arde la espalda baja, te encorvaste o el peso te jaló hacia adelante.',
     preparacion: [
@@ -82,7 +118,7 @@ export const FICHAS: Record<string, Ficha> = {
     peso: `Primera vez: 12 a 16 kg. Sube rápido: aquí se aguanta más de lo que parece. ${REGLA} Cuando la mancuerna más pesada ya sale fácil, pásate a prensa o a dos mancuernas a los costados.`,
     alternativa: 'Sin mancuernas libres: sentadilla a un banco con peso corporal, 3 × 15. Rodilla molesta: prensa con recorrido corto.',
   },
-  A4: {
+  'press-militar': {
     trabaja: 'Hombro, sobre todo la parte frontal y media. Ayuda el tríceps.',
     sentir: 'El hombro trabajando arriba y a los lados. Si punza adelante o arde el cuello, estás empujando hacia adelante o encogiendo los hombros.',
     preparacion: [
@@ -103,7 +139,7 @@ export const FICHAS: Record<string, Ficha> = {
     peso: `Primera vez: 8 a 10 kg por mano, con 10 reps y 2 de sobra. ${REGLA}`,
     alternativa: 'Sin banco con respaldo: de pie, con un poco menos de peso y glúteos apretados. Banco ocupado: máquina de press de hombro. Hombro molesto: agarre neutro, palmas mirándose.',
   },
-  A5: {
+  'curl-z': {
     trabaja: 'Bíceps. Ayuda el antebrazo.',
     sentir: 'El bíceps apretando arriba y estirándose abajo. Si lo sientes en la espalda baja o en los hombros, te estás balanceando.',
     preparacion: [
@@ -123,7 +159,7 @@ export const FICHAS: Record<string, Ficha> = {
     peso: `Primera vez: la barra fija de 10 a 15 kg. ${REGLA}`,
     alternativa: 'Sin barra: curl alternado con mancuernas. Barra ocupada: curl en polea baja con barra recta.',
   },
-  A6: {
+  'triceps-polea': {
     trabaja: 'Tríceps, las tres cabezas.',
     sentir: 'La parte de atrás del brazo apretando al estirar. Si lo sientes en el hombro o el pecho, te estás inclinando y empujando con el cuerpo.',
     preparacion: [
@@ -143,7 +179,7 @@ export const FICHAS: Record<string, Ficha> = {
     peso: `Primera vez: dos o tres placas ligeras, 12 reps limpias con 2 de sobra. ${REGLA}`,
     alternativa: 'Sin polea: extensión sobre la cabeza con una mancuerna a dos manos, sentado. Polea ocupada: fondos en banco.',
   },
-  A7: {
+  'plancha': {
     trabaja: 'Abdomen profundo y recto abdominal. Ayudan glúteos y hombros para sostener.',
     sentir: 'El abdomen apretado como si esperaras un golpe, y los glúteos firmes. Si arde la espalda baja, la cadera se cayó.',
     preparacion: [
@@ -163,7 +199,7 @@ export const FICHAS: Record<string, Ficha> = {
     peso: 'No lleva peso. Empieza con 40 segundos por serie; si terminas con más de 10 segundos de sobra, sube a 50.',
     alternativa: 'Si no se sostiene: plancha con rodillas apoyadas, misma duración. Piso ocupado o sucio: dead bug, 3 × 10 por lado.',
   },
-  B1: {
+  'press-inclinado': {
     trabaja: 'Pecho, sobre todo la parte alta. Ayudan hombro frontal y tríceps.',
     sentir: 'La parte alta del pecho estirándose abajo y apretando arriba. Si punza el hombro, el banco está muy inclinado o los codos muy abiertos.',
     preparacion: [
@@ -184,7 +220,7 @@ export const FICHAS: Record<string, Ficha> = {
     peso: `Primera vez: un par más ligero que el del press plano, unos 10 a 12 kg por mano. ${REGLA}`,
     alternativa: 'Sin banco ajustable: press plano ese día. Banco ocupado: máquina de press inclinado o lagartijas con los pies en el banco.',
   },
-  B2: {
+  'remo-polea': {
     trabaja: 'Espalda media y dorsal. Ayudan bíceps y hombro posterior.',
     sentir: 'Los omóplatos juntándose y la espalda media apretando. Si lo sientes en la espalda baja, te estás meciendo con el torso.',
     preparacion: [
@@ -206,7 +242,7 @@ export const FICHAS: Record<string, Ficha> = {
     peso: `Primera vez: parecido al jalón o un poco menos. ${REGLA} Si la polea ya no alcanza, agrega una pausa de 2 segundos atrás.`,
     alternativa: 'Sin polea: remo con mancuerna a una mano apoyado en banco. Ocupada: máquina de remo con pecho apoyado.',
   },
-  B3: {
+  'prensa': {
     trabaja: 'Cuádriceps y glúteo. Ayudan isquiotibiales.',
     sentir: 'Los muslos llenándose al bajar y el glúteo al empujar. Si duele la rodilla por delante, estás trabando arriba o bajando de más.',
     preparacion: [
@@ -226,10 +262,10 @@ export const FICHAS: Record<string, Ficha> = {
       { error: 'Bajar poco.', correccion: 'Menos peso, más recorrido.' },
       { error: 'No poner los seguros al terminar.', correccion: 'Seguros primero, luego sales.' },
     ],
-    peso: `Primera vez: la máquina sola más 20 kg por lado; sube por 10. ${REGLA}`,
+    peso: 'Sin sugerencia automática: tantea. Empieza con 20 kg por lado y 10 repeticiones; si fue fácil, 40 por lado, y de ahí de 10 en 10 hasta que 12 cuesten.',
     alternativa: 'No se ubica u ocupada: sentadilla goblet. Sin nada libre: sentadilla a un banco con peso corporal, 3 × 15 a 20.',
   },
-  B4: {
+  laterales: {
     trabaja: 'Hombro medio, el que da anchura.',
     sentir: 'Un ardor a los lados del hombro al pasar de 10 reps. Si lo sientes en el cuello, estás encogiendo los hombros.',
     preparacion: [
@@ -249,7 +285,7 @@ export const FICHAS: Record<string, Ficha> = {
     peso: `Primera vez: 4 a 6 kg por mano. Aquí se sube de a 1 kg. ${REGLA}`,
     alternativa: 'Sin mancuernas chicas: en polea baja a una mano, cruzando el cable frente al cuerpo.',
   },
-  B5: {
+  'curl-martillo': {
     trabaja: 'Bíceps y braquial, el músculo debajo del bíceps. Ayuda el antebrazo.',
     sentir: 'El brazo entero apretando, más hacia afuera que en el curl normal. Si arde la muñeca, la estás doblando.',
     preparacion: [
@@ -268,7 +304,7 @@ export const FICHAS: Record<string, Ficha> = {
     peso: `Primera vez: 8 a 10 kg por mano. ${REGLA}`,
     alternativa: 'Mancuernas ocupadas: curl con cuerda en polea baja. Sin polea: curl alternado con mancuernas.',
   },
-  B6: {
+  'elevacion-piernas': {
     trabaja: 'Abdomen bajo y flexores de cadera.',
     sentir: 'La parte baja del abdomen apretando al subir. Si arde la espalda baja, se despegó del banco.',
     preparacion: [
@@ -288,3 +324,6 @@ export const FICHAS: Record<string, Ficha> = {
     alternativa: 'Sin banco: en el piso con las manos bajo los glúteos. Si cuesta: rodillas dobladas. Sin banco ni piso limpio: dead bug.',
   },
 }
+
+FICHAS['laterales-casa'] = { ...FICHAS.laterales, peso: 'Mancuernas de 4 a 5 kg; si salen 20 fáciles, sube 1 kg.' }
+FICHAS['plancha-casa'] = FICHAS.plancha

@@ -4,16 +4,32 @@ import { claveFecha, inicioSemana, sumarDias, minutosAhora, minutosDe } from './
 
 export const META = 3
 
-/** Sesiones terminadas dentro de la semana (lunes a domingo) que contiene `fecha` */
+/** Sesiones terminadas dentro de la semana (lunes a domingo) que contiene `fecha`. CASA no cuenta. */
 export function sesionesDeSemana(sesiones: Sesion[], fecha: Date): Sesion[] {
   const ini = claveFecha(inicioSemana(fecha))
   const fin = claveFecha(sumarDias(inicioSemana(fecha), 6))
   return sesiones
-    .filter((s) => s.terminada && s.fecha >= ini && s.fecha <= fin)
+    .filter((s) => s.terminada && s.tipo !== 'CASA' && s.fecha >= ini && s.fecha <= fin)
     .sort((a, b) => a.inicio - b.inicio)
 }
 
-/** La siguiente sesión propia es la que NO se hizo la última vez. Frida no afecta. */
+export const CASA_MAX = 2
+/** Sesiones CASA de la semana (máximo 2, no cuentan para la meta) */
+export function casaDeSemana(sesiones: Sesion[], fecha: Date): number {
+  const ini = claveFecha(inicioSemana(fecha))
+  const fin = claveFecha(sumarDias(inicioSemana(fecha), 6))
+  return sesiones.filter((s) => s.terminada && s.tipo === 'CASA' && s.fecha >= ini && s.fecha <= fin).length
+}
+export function casaDisponible(sesiones: Sesion[], fecha: Date): boolean {
+  return casaDeSemana(sesiones, fecha) < CASA_MAX
+}
+
+/** Pierna según Frida: goblet y prensa a 3 series si en la semana no hay FRIDA, 2 si la hay */
+export function seriesPierna(sesiones: Sesion[], fecha: Date): number {
+  return sesionesDeSemana(sesiones, fecha).some((s) => s.tipo === 'FRIDA') ? 2 : 3
+}
+
+/** La siguiente sesión propia es la que NO se hizo la última vez. Frida y CASA no afectan. */
 export function siguienteSesion(sesiones: Sesion[]): Letra {
   const propias = sesiones
     .filter((s) => s.terminada && (s.tipo === 'A' || s.tipo === 'B'))
@@ -102,10 +118,13 @@ export function seriesPara(
   version: 'completa' | 'corta' | 'bonus',
   seriesExtra: boolean,
   ligera = false,
-  extraIds: string[] = ['A1', 'A2', 'B1', 'B2'],
+  extraIds: string[] = ['press-inclinado', 'jalon', 'press-plano', 'remo-polea'],
+  /** series de pierna según Frida (goblet y prensa) */
+  pierna?: number,
 ): number {
   if (version === 'corta' || ligera) return 2
   if (seriesExtra && extraIds.includes(ejercicioId)) return 4
+  if (pierna !== undefined && (ejercicioId === 'goblet' || ejercicioId === 'prensa')) return pierna
   return seriesBase
 }
 

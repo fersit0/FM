@@ -2,9 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import type { Sesion, SetLog, Bodyweight, Photo, Settings, FotoEjercicio } from '../data/tipos'
 import * as db from '../data/db'
 import { leerSettings, escribirSettings } from '../data/settings'
+import { hayIdsViejos } from '../logic/migracion'
 
 export interface Datos {
   listo: boolean
+  /** hay ids viejos (A1, B4...) y la migración de RUTINA-FINAL no ha corrido */
+  necesitaMigracion: boolean
   sesiones: Sesion[]
   sets: SetLog[]
   peso: Bodyweight[]
@@ -61,8 +64,9 @@ export function useDatos(): Datos {
       return r
     }
 
+  const necesitaMigracion = listo && !settings.migracionRutinaFinal && hayIdsViejos(sets, sesiones, fotosEjercicio)
   return {
-    listo, sesiones, sets, peso, fotos, fotosEjercicio, settings, recargar, setSettings,
+    listo, necesitaMigracion, sesiones, sets, peso, fotos, fotosEjercicio, settings, recargar, setSettings,
     guardarSesion: envuelve(db.guardarSesion),
     borrarSesion: envuelve(db.borrarSesion),
     guardarSet: envuelve(db.guardarSet),

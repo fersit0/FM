@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import type { Sesion, Version } from '../data/tipos'
+import type { Sesion, Version, Letra } from '../data/tipos'
 import { usePantalla, useMedidas } from '../design/pantallaActiva'
-import { estadoSemana, siguienteSesion, avisoRescate, semanasCumplidas, tocaProponerSeriesExtra, entraEnVersion } from '../logic/semana'
+import { estadoSemana, siguienteSesion, avisoRescate, semanasCumplidas, tocaProponerSeriesExtra, entraEnVersion, seriesPierna, casaDeSemana, casaDisponible, CASA_MAX } from '../logic/semana'
 import { estadoTiempo, estadoSiSalgo, versionInicial, textoManana } from '../logic/horario'
 import { porSesion } from '../logic/progresion'
 import { unidadDe, pesoDeSet, formatoPeso } from '../logic/unidades'
-import { ejerciciosDe, itemDeRutina } from '../data/ejercicios'
+import { ejerciciosDe, itemDeRutina, NOMBRE_SESION } from '../data/ejercicios'
 import { claveFecha, DIAS_NOMBRE, formatoHora, minutosDe } from '../logic/fechas'
 import { Circulo, BotonPrincipal, BotonTexto, Hoja, Grupo, Fila, Pez } from '../components/fm'
 
@@ -14,7 +14,7 @@ interface Props {
   datos: Datos
   ahora: Date
   sesionEnCurso: Sesion | null
-  onEmpezar: (tipo: 'A' | 'B', version: Version) => void
+  onEmpezar: (tipo: Letra, version: Version) => void
   onSeguir: () => void
   onDescartar: () => void
   onAjustes: () => void
@@ -42,6 +42,9 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     return () => window.removeEventListener('fm:version-nueva', f)
   }, [])
   const esLunes = ahora.getDay() === 1
+  const casaHechas = casaDeSemana(sesiones, ahora)
+  const sinGym = ahora.getDay() === 5 || ahora.getDay() === 6
+  const ofrecerCasa = !sesionEnCurso && casaDisponible(sesiones, ahora) && (estado === 'no' || sinGym)
   const [hojaExtra, setHojaExtra] = useState(false)
   const lista = useMemo(() => ejerciciosDe(toca).filter((e) => entraEnVersion(e.orden, version)), [toca, version])
   const filas = useMemo(() => lista.map((base) => {
@@ -57,6 +60,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     }
     return { id: e.id, nombre: e.nombre, dato }
   }), [lista, sets, settings.reemplazos])
+  const pierna = seriesPierna(sesiones, ahora)
   const minutos = version === 'corta' ? 45 : version === 'bonus' ? 75 : 65
   const tope = formatoHora(minutosDe(settings.horaTope))
   const claveHoy = claveFecha(ahora)
@@ -94,10 +98,10 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
 
       <div className="inicio-texto">
         <p className="t-sub">{sesionEnCurso ? 'Sesión a medias' : semana.bonus ? 'Bonus, ya van 3' : 'Hoy toca'}</p>
-        <h1 className="t-inicio">Cuerpo completo {sesionEnCurso?.tipo ?? toca}</h1>
+        <h1 className="t-inicio">{sesionEnCurso?.tipo === 'CASA' ? 'Casa' : `${sesionEnCurso?.tipo ?? toca}: ${NOMBRE_SESION[(sesionEnCurso?.tipo === 'FRIDA' ? toca : (sesionEnCurso?.tipo as Letra | undefined)) ?? toca]}`}</h1>
         <div style={{ position: 'relative' }}>
           <button className="t-unidad tenue" style={{ fontSize: 20, fontWeight: 400, textAlign: 'left', lineHeight: 1.3 }} onClick={() => setHojaLista(true)}>
-            {sesionEnCurso ? `Empezaste hace ${Math.max(1, Math.round((ahora.getTime() - sesionEnCurso.inicio) / 60000))} min.` : `${filas.length} ejercicios, unos ${minutos} min${linea ? `. ${linea}` : ''}${rescate ? ` ${rescate}` : ''}`}
+            {sesionEnCurso ? `Empezaste hace ${Math.max(1, Math.round((ahora.getTime() - sesionEnCurso.inicio) / 60000))} min.` : `${filas.length} ejercicios, unos ${minutos} min${pierna === 3 ? ', pierna a 3 series' : ''}${linea ? `. ${linea}` : ''}${rescate ? ` ${rescate}` : ''}`}
           </button>
           {recortada && !sesionEnCurso && <Pez expresion="picaro" tamano={72} style={{ right: 0, top: -84 }} />}
         </div>
@@ -112,6 +116,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
           </div>
         )}
         {proponerExtra && !sesionEnCurso && <button className="inicio-linea-roja" onClick={() => setHojaExtra(true)}>Ya toca pasar a 4 series.</button>}
+        {ofrecerCasa && <BotonTexto onClick={() => onEmpezar('CASA', 'completa')}>Casa, 12 minutos. Llevas {casaHechas} de {CASA_MAX}.</BotonTexto>}
         {sesionEnCurso ? (
           <>
             <BotonPrincipal onClick={onSeguir}>Seguir sesión</BotonPrincipal>
@@ -122,7 +127,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
         )}
       </div>
 
-      <Hoja abierta={hojaLista} titulo={`Cuerpo completo ${toca}`} onCerrar={() => setHojaLista(false)}>
+      <Hoja abierta={hojaLista} titulo={`${toca}: ${NOMBRE_SESION[toca]}`} onCerrar={() => setHojaLista(false)}>
         <Grupo>{filas.map((f, i) => <Fila key={f.id} num={i + 1} texto={f.nombre} dato={f.dato} />)}</Grupo>
       </Hoja>
       <Hoja abierta={hojaExtra} titulo="Cuatro semanas cumplidas" onCerrar={() => setHojaExtra(false)}>

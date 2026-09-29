@@ -8,6 +8,7 @@ import { hapticosActivos, setHapticosActivos, haptico } from '../lib/haptics'
 import { sonidoActivo, setSonidoActivo, prepararAudio, sonarFinDescanso } from '../lib/sonido'
 import { PASOS_ATAJO, NOMBRE_ATAJO } from '../lib/atajos'
 import { Hoja, Grupo, Fila, Pez } from '../components/fm'
+import { migrarSet, migrarSesion, migrarSettings, migrarFoto } from '../logic/migracion'
 
 /** 7.8 Ajustes en hoja: lista agrupada. */
 export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; abierta: boolean; onCerrar: () => void; onAviso: (t: string) => void }) {
@@ -52,14 +53,15 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
       const resumen = `${r.sesiones.length} sesiones, ${r.sets.length} series, ${r.peso.length} pesajes, ${r.fotos.length} fotos`
       if (!confirm(`Importar reemplaza todo lo que hay en el teléfono.\n\nEl archivo trae: ${resumen}.\n\n¿Seguimos?`)) return
       await borrarTodo()
-      for (const s of r.sesiones) await guardarSesion(s)
-      for (const s of r.sets) await guardarSet(s)
+      const desconocidos = new Set<string>()
+      for (const s of r.sesiones) await guardarSesion(migrarSesion(s, desconocidos))
+      for (const s of r.sets) await guardarSet(migrarSet(s, desconocidos))
       for (const p of r.peso) await guardarPeso(p)
       for (const foto of r.fotos) await guardarFoto({ fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo) })
-      for (const foto of r.fotosEjercicio ?? []) await guardarFotoEjercicio({ ejercicioId: foto.ejercicioId, fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo), blob2: foto.base64b ? base64ABlob(foto.base64b, foto.tipo) : undefined })
-      datos.setSettings(r.settings)
+      for (const foto of r.fotosEjercicio ?? []) await guardarFotoEjercicio({ ejercicioId: migrarFoto({ ejercicioId: foto.ejercicioId, blob: new Blob(), fecha: foto.fecha }, desconocidos).ejercicioId, fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo), blob2: foto.base64b ? base64ABlob(foto.base64b, foto.tipo) : undefined })
+      datos.setSettings({ ...migrarSettings(r.settings, desconocidos), idsDesconocidos: [...desconocidos] })
       await datos.recargar()
-      onAviso('Respaldo importado')
+      onAviso(desconocidos.size ? `Respaldo importado; ids sin mapa: ${[...desconocidos].join(', ')}` : 'Respaldo importado')
       onCerrar()
     } catch (err) {
       alert(err instanceof Error ? err.message : 'No se pudo importar.')

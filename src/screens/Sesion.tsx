@@ -3,7 +3,7 @@ import type { Datos } from '../hooks/useDatos'
 import type { Sesion as SesionTipo, Ejercicio, Alternativa, SetLog, Version } from '../data/tipos'
 import type { SesionActiva } from '../hooks/useSesionActiva'
 import { ejerciciosDe, CALENTAMIENTO, CIERRE, buscarCualquiera, itemDeRutina } from '../data/ejercicios'
-import { seriesPara, entraEnVersion, estadoSemana } from '../logic/semana'
+import { seriesPara, entraEnVersion, estadoSemana, seriesPierna } from '../logic/semana'
 import { sugerirPeso, subioDePeso, porSesion } from '../logic/progresion'
 import { claveFecha } from '../logic/fechas'
 import { unidadDe, incrementoDe, pesoDeSet, pesoInicial, aKg, convertir, formatoPeso, type Unidad } from '../logic/unidades'
@@ -40,14 +40,17 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
   const ligera = !!sesion.ligera
   useWakeLock(true)
   const pasos = useMemo<Paso[]>(() => {
-    const lista = ejerciciosDe(sesion.tipo as 'A' | 'B').filter((e) => entraEnVersion(e.orden, version))
+    const casa = sesion.tipo === 'CASA'
+    const lista = ejerciciosDe(sesion.tipo as 'A' | 'B' | 'CASA').filter((e) => casa || entraEnVersion(e.orden, version))
+    const pierna = seriesPierna(datos.sesiones.filter((x) => x.id !== sesion.id), new Date(sesion.inicio))
     const ejercicios: Paso[] = lista.map((base, i) => {
       const cambio = sesion.cambios?.find((c) => c.ejercicioId === base.id)
       const item = cambio ? (cambio.alternativaId === base.id ? base : base.alternativas.find((a) => a.id === cambio.alternativaId) ?? base) : itemDeRutina(base, settings.reemplazos)
-      return { tipo: 'ejercicio', base, item, indice: i, series: seriesPara(base.id, item.series, version, settings.seriesExtra, ligera) }
+      const series = casa ? item.series : seriesPara(base.id, item.series, version, settings.seriesExtra, ligera, undefined, item.id === base.id ? pierna : undefined)
+      return { tipo: 'ejercicio', base, item, indice: i, series }
     })
-    return [{ tipo: 'calentamiento' }, ...ejercicios, { tipo: 'cierre' }, { tipo: 'resumen' }]
-  }, [sesion.tipo, sesion.cambios, version, settings.seriesExtra, settings.reemplazos, ligera])
+    return casa ? [...ejercicios, { tipo: 'resumen' }] : [{ tipo: 'calentamiento' }, ...ejercicios, { tipo: 'cierre' }, { tipo: 'resumen' }]
+  }, [sesion.tipo, sesion.inicio, sesion.cambios, version, settings.seriesExtra, settings.reemplazos, ligera, datos.sesiones])
   const ejercicios = pasos.filter((p): p is PasoEj => p.tipo === 'ejercicio')
   const indice = Math.min(activa.paso, pasos.length - 1)
   const paso = pasos[indice]
@@ -201,7 +204,7 @@ export function SerieEditable({ set, datos }: { set: SetLog; datos: Datos }) {
         {set.pesoKg !== null && <input inputMode="decimal" value={peso} onChange={(e) => setPeso(e.target.value)} onBlur={guardar} aria-label="Peso" style={{ width: 64, textAlign: 'right', borderBottom: '1px solid var(--separador)' }} />}
         {set.pesoKg !== null && <span className="t-nota tenue">{unidad}</span>}
         <input inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} onBlur={guardar} aria-label="Reps" style={{ width: 44, textAlign: 'right', borderBottom: '1px solid var(--separador)' }} />
-        <span className="t-nota tenue">{set.exerciseId.startsWith('A7') ? 's' : 'reps'}</span>
+        <span className="t-nota tenue">{set.exerciseId.startsWith('plancha') ? 's' : 'reps'}</span>
         <BotonTexto onClick={() => confirm('¿Borrar esta serie?') && set.id !== undefined && datos.borrarSet(set.id)}>Borrar</BotonTexto>
       </span>
     </div>
@@ -266,7 +269,9 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, previo, onTec
     const pesos = ultimaVez.map((s) => pesoDeSet(s, unidad)).filter((x): x is number => x !== null)
     return pesos.length ? Math.max(...pesos) : null
   })()
-  const pesoSugerido = pesoBase === null ? null : sugerencia.tipo === 'subir' ? pesoBase + incremento : sugerencia.tipo === 'bajar' ? Math.max(0, pesoBase - incremento) : pesoBase
+  const invertida = 'invertida' in item && !!item.invertida
+  const signo = invertida ? -1 : 1
+  const pesoSugerido = pesoBase === null ? null : sugerencia.tipo === 'subir' ? Math.max(0, pesoBase + signo * incremento) : sugerencia.tipo === 'bajar' ? Math.max(0, pesoBase - signo * incremento) : pesoBase
   const [peso, setPeso] = useState<number>(() => {
     if (previo && previo.itemId === item.id) return convertir(previo.peso, previo.unidad, unidad)
     const ult = ultimo ? pesoDeSet(ultimo, unidad) : null
@@ -312,10 +317,10 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, previo, onTec
   let aviso: string | null = null
   if (error) aviso = 'No se guardó la serie. Toca para reintentar.'
   else if (hechos.length === 0) {
-    if (sugerencia.tipo === 'subir' && ultimaVez && pesoSugerido !== null) aviso = `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Sube a ${formatoPeso(pesoSugerido, unidad)}.`
+    if (sugerencia.tipo === 'subir' && ultimaVez && pesoSugerido !== null) aviso = invertida ? `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Menos ayuda: ${formatoPeso(pesoSugerido, unidad)}.` : `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Sube a ${formatoPeso(pesoSugerido, unidad)}.`
     else if (sugerencia.tipo === 'bajar' && pesoSugerido !== null) aviso = `Dos veces seguidas bajaron las reps. Baja a ${formatoPeso(pesoSugerido, unidad)}.`
     else if (sugerencia.tipo === 'quedarse' && pesoBase !== null) aviso = `La vez pasada no llegaste al mínimo. Quédate en ${formatoPeso(pesoBase, unidad)} o baja.`
-    else if (primeraVez && item.modo === 'peso') aviso = 'Primera vez: empieza con este y ajusta.'
+    else if (primeraVez && item.modo === 'peso') aviso = item.id.startsWith('prensa') ? 'Primera vez: tantea. 20 kg por lado y 10 reps; si fue fácil, 40 por lado, y de ahí de 10 en 10.' : 'Primera vez: empieza con este y ajusta.'
     else if (base.orden === 1 && item.modo === 'peso' && peso > 0) aviso = `Antes, una de aproximación con ${formatoPeso(Math.round(peso / 2 / incremento) * incremento || incremento, unidad)}, 10 reps. No se registra.`
   }
 
@@ -428,8 +433,9 @@ function Resumen({ datos, sesion, sets, ejercicios, onTerminar }: { datos: Datos
   })
   const minutos = Math.max(1, Math.round((fin - sesion.inicio) / 60000))
   const hechosEj = ejercicios.filter((e) => propios.some((s) => s.exerciseId === e.item.id)).length
-  const cumpleSemana = estadoSemana([...datos.sesiones.filter((s) => s.id !== sesion.id), { ...sesion, terminada: true }], new Date(fin)).hechas === 3
-  const frase = subieron.length ? `Subiste en ${subieron.map((s) => `${s.nombre}, +${s.delta} ${s.unidad}`).join('; ')}.` : cumpleSemana ? `${sesion.tipo} hecha. Con esta, semana cumplida.` : `${sesion.tipo} hecha. Mañana te vas a acordar.`
+  const cumpleSemana = sesion.tipo !== 'CASA' && estadoSemana([...datos.sesiones.filter((s) => s.id !== sesion.id), { ...sesion, terminada: true }], new Date(fin)).hechas === 3
+  const etiqueta = sesion.tipo === 'CASA' ? 'Casa hecha. No cuenta para la meta, pero cuenta.' : cumpleSemana ? `${sesion.tipo} hecha. Con esta, semana cumplida.` : `${sesion.tipo} hecha. Mañana te vas a acordar.`
+  const frase = subieron.length ? `Subiste en ${subieron.map((s) => `${s.nombre}, +${s.delta} ${s.unidad}`).join('; ')}.` : etiqueta
   const d = acotar(0.91 * W, alto, ancho)
   async function terminar() {
     await datos.guardarSesion({ ...sesion, fin, terminada: true })
