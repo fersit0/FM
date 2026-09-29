@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { semanasHistorial, tocaPesarse, tocaFoto, pesoPorSemana } from './progreso'
+import { semanasHistorial, tocaPesarse, tocaFoto, pesoPorSemana, promedioSemanal } from './progreso'
 import type { Sesion } from '../data/tipos'
 
 const s = (fecha: string, tipo: Sesion['tipo']): Sesion => {
@@ -33,5 +33,16 @@ describe('pesaje y foto', () => {
     const p = [{ fecha: '2026-09-14', kg: 81 }, { fecha: '2026-09-20', kg: 80.4 }]
     const r = pesoPorSemana(p, new Date('2026-09-24T10:00:00'), 2)
     expect(r.map((x) => x.kg)).toEqual([80.4, null])
+  })
+})
+
+describe('peso diario', () => {
+  it('promedio de 7 días y cambio contra la semana anterior', () => {
+    const p = [{ fecha: '2026-09-15', kg: 82 }, { fecha: '2026-09-17', kg: 81 }, { fecha: '2026-09-22', kg: 80.5 }, { fecha: '2026-09-24', kg: 80 }]
+    const r = promedioSemanal(p, new Date('2026-09-24T10:00:00'))
+    expect(r.promedio).toBe(80.3)
+    expect(r.cambio).toBe(-1.2)
+    expect(r.hoy).toBe(80)
+    expect(promedioSemanal([], new Date()).promedio).toBeNull()
   })
 })

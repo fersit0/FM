@@ -169,7 +169,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
               const siempre = a.id === paso.base.id ? !settings.reemplazos?.[paso.base.id] : settings.reemplazos?.[paso.base.id] === a.id
               return (
                 <div key={a.id} className="fila" style={{ alignItems: 'flex-start' }}>
-                  <Foto clave={a.ilustracion} ejercicioId={a.id} propias={datos.fotosEjercicio} nombre={a.nombre} chica />
+                  <Foto clave={a.ilustracion} ejercicioId={a.id} propias={datos.fotosEjercicio} nombre={a.nombre} modo="chica" />
                   <span className="fila-texto" style={{ gap: 6 }}>
                     <button className="t-cuerpo" style={{ textAlign: 'left', whiteSpace: 'normal' }} onClick={() => elegirAlternativa(a.id === paso.base.id ? null : (a as Alternativa))}>{a.nombre}</button>
                     <span className="t-nota tenue">{'caso' in a ? `${a.caso}. ` : 'Original. '}{ultimoPesoDe(a)}</span>
@@ -329,7 +329,7 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, previo, onTec
       <div className="sesion-arriba">
         <div className="sesion-titulo-fila" style={{ alignItems: 'flex-start' }}>
           <TituloAjustable texto={item.nombre} />
-          <Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} chica onClick={onTecnica} />
+          <Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="chica" onClick={onTecnica} />
         </div>
         <div className="sesion-titulo-fila">
           <p className="t-sub">{completo ? `${series} series hechas` : `Serie ${serieActual} de ${series}`}</p>

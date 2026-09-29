@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Sesion } from '../data/tipos'
 import { usePantalla } from '../design/pantallaActiva'
-import { semanasHistorial, tocaPesarse, tocaFoto, type SemanaHistorial } from '../logic/progreso'
+import { semanasHistorial, tocaPesarse, tocaFoto, promedioSemanal, type SemanaHistorial } from '../logic/progreso'
 import { claveFecha, fechaCorta, DIAS_NOMBRE, desdeClave, sumarDias, inicioSemana } from '../logic/fechas'
 import { ejerciciosDe } from '../data/ejercicios'
 import { Grupo, Fila, Hoja, BotonTexto, Pez } from '../components/fm'
@@ -21,6 +21,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
   const [sesion, setSesion] = useState<Sesion | null>(null)
   const [peso, setPeso] = useState(false)
   const [fotos, setFotos] = useState(false)
+  const [cinturaAbierta, setCinturaAbierta] = useState(false)
   const [agregar, setAgregar] = useState(false)
   const [fechaNueva, setFechaNueva] = useState(() => claveFecha(ahora))
   const [tipoNuevo, setTipoNuevo] = useState<'A' | 'B' | 'FRIDA' | 'CASA'>('A')
@@ -57,6 +58,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
       </Grupo>
       <Grupo titulo="Cuerpo">
         <Fila texto="Peso corporal" dato={datos.peso.length ? `${datos.peso[datos.peso.length - 1].kg} kg` : 'Sin registro'} onClick={() => setPeso(true)} />
+        <Fila texto="Cintura" detalle="Cada lunes, en cm" dato={datos.cintura.length ? `${datos.cintura[datos.cintura.length - 1].cm} cm` : 'Sin registro'} onClick={() => setCinturaAbierta(true)} />
         <Fila texto="Fotos" dato={datos.fotos.length ? `${datos.fotos.length}` : 'Ninguna'} onClick={() => setFotos(true)} />
       </Grupo>
 
@@ -93,6 +95,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
       </Hoja>
       <PesoHoja datos={datos} ahora={ahora} abierta={peso} onCerrar={() => setPeso(false)} />
       <FotosHoja datos={datos} ahora={ahora} abierta={fotos} onCerrar={() => setFotos(false)} />
+      <CinturaHoja datos={datos} ahora={ahora} abierta={cinturaAbierta} onCerrar={() => setCinturaAbierta(false)} />
     </div>
   )
 }
@@ -125,7 +128,13 @@ function PesoHoja({ datos, ahora, abierta, onCerrar }: { datos: Datos; ahora: Da
   }
   return (
     <Hoja abierta={abierta} altura="completa" titulo="Peso corporal" onCerrar={onCerrar}>
-      <p className="t-cuerpo tenue">{toca ? 'Hoy toca pesarte, en ayunas.' : estaSemana ? 'Ya te pesaste esta semana.' : `Cada ${DIAS_NOMBRE[datos.settings.diaPesaje]}, en ayunas.`}</p>
+      {(() => { const r = promedioSemanal(datos.peso, ahora); return r.promedio !== null ? (
+        <div className="columna" style={{ gap: 4 }}>
+          <div><span className="t-cifra">{r.promedio}</span><span className="t-unidad tenue"> kg, promedio de 7 días</span></div>
+          <p className="t-nota tenue">{r.cambio !== null ? `${r.cambio > 0 ? '+' : ''}${r.cambio} kg contra la semana anterior` : 'Todavía sin semana anterior para comparar'}{r.hoy !== null ? `. Hoy: ${r.hoy} kg` : ''}</p>
+        </div>
+      ) : null })()}
+      <p className="t-cuerpo tenue">{toca ? 'Hoy toca pesarte, en ayunas.' : estaSemana ? 'Ya te pesaste esta semana. Puedes pesarte diario; se promedia.' : `Cada ${DIAS_NOMBRE[datos.settings.diaPesaje]}, en ayunas. Diario también sirve; se promedia.`}</p>
       <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
         <input inputMode="decimal" placeholder="kg" value={kg} onChange={(e) => setKg(e.target.value)} aria-label="Peso corporal en kilos" className="t-cifra" style={{ width: 140, textAlign: 'left', borderBottom: '2px solid var(--separador)' }} />
         <BotonTexto onClick={guardar}>Guardar</BotonTexto>
@@ -166,6 +175,30 @@ function FotosHoja({ datos, ahora, abierta, onCerrar }: { datos: Datos; ahora: D
           ))}
         </div>
       )}
+    </Hoja>
+  )
+}
+
+function CinturaHoja({ datos, ahora, abierta, onCerrar }: { datos: Datos; ahora: Date; abierta: boolean; onCerrar: () => void }) {
+  const [cm, setCm] = useState('')
+  const lunes = ahora.getDay() === 1
+  const ultimo = datos.cintura[datos.cintura.length - 1]
+  async function guardar() {
+    const v = parseFloat(cm.replace(',', '.'))
+    if (Number.isNaN(v) || v <= 0) return
+    await datos.guardarCintura({ fecha: claveFecha(ahora), cm: Math.round(v * 10) / 10 })
+    haptico.serieHecha()
+    setCm('')
+  }
+  return (
+    <Hoja abierta={abierta} altura="completa" titulo="Cintura" onCerrar={onCerrar}>
+      <p className="t-cuerpo tenue">{lunes ? 'Hoy es lunes: mide la cintura a la altura del ombligo, sin apretar.' : 'Cada lunes, a la altura del ombligo, sin apretar.'}</p>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+        <input inputMode="decimal" placeholder="cm" value={cm} onChange={(e) => setCm(e.target.value)} aria-label="Cintura en centímetros" className="t-cifra" style={{ width: 140, textAlign: 'left', borderBottom: '2px solid var(--separador)' }} />
+        <BotonTexto onClick={guardar}>Guardar</BotonTexto>
+      </div>
+      {datos.cintura.length > 0 && <Linea puntos={datos.cintura.slice(-12).map((c) => ({ etiqueta: fechaCorta(c.fecha), valor: c.cm }))} unidad="cm" />}
+      {ultimo && <Grupo>{[...datos.cintura].reverse().slice(0, 8).map((c) => <Fila key={c.fecha} texto={fechaCorta(c.fecha)} dato={`${c.cm} cm`} onClick={() => confirm(`¿Borrar la cintura del ${fechaCorta(c.fecha)}?`) && datos.borrarCintura(c.fecha)} />)}</Grupo>}
     </Hoja>
   )
 }
