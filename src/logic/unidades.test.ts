@@ -10,24 +10,25 @@ describe('unidades', () => {
     expect(convertir(10, 'kg', 'kg')).toBe(10)
   })
   it('máquinas y poleas en lb, mancuernas en kg', () => {
-    expect(unidadPorDefecto(buscarEjercicio('A2')!)).toBe('lb')
-    expect(unidadPorDefecto(buscarEjercicio('B3')!)).toBe('lb')
-    expect(unidadPorDefecto(buscarEjercicio('A1')!)).toBe('kg')
-    expect(unidadPorDefecto(buscarEjercicio('A5')!)).toBe('kg')
+    expect(unidadPorDefecto(buscarEjercicio('jalon')!)).toBe('lb')
+    expect(unidadPorDefecto(buscarEjercicio('prensa')!)).toBe('lb')
+    expect(unidadPorDefecto(buscarEjercicio('press-plano')!)).toBe('kg')
+    expect(unidadPorDefecto(buscarEjercicio('curl-z')!)).toBe('kg')
   })
   it('incrementos: 5 lb, 2.5 kg, 1 kg en laterales', () => {
-    expect(incrementoDe(buscarEjercicio('A2')!, 'lb')).toBe(5)
-    expect(incrementoDe(buscarEjercicio('A1')!, 'kg')).toBe(2.5)
-    expect(incrementoDe(buscarEjercicio('B4')!, 'kg')).toBe(1)
+    expect(incrementoDe(buscarEjercicio('jalon')!, 'lb')).toBe(5)
+    expect(incrementoDe(buscarEjercicio('press-plano')!, 'kg')).toBe(2.5)
+    expect(incrementoDe(buscarEjercicio('laterales')!, 'kg')).toBe(1)
   })
   it('el valor exacto se conserva en su unidad', () => {
-    const s = { sessionId: 's', exerciseId: 'A2', ejercicioBaseId: 'A2', numSerie: 1, pesoKg: aKg(72.5, 'lb'), reps: 10, fecha: '2026-09-21', hora: 1, peso: 72.5, unidad: 'lb' as const }
+    const s = { sessionId: 's', exerciseId: 'jalon', ejercicioBaseId: 'jalon', numSerie: 1, pesoKg: aKg(72.5, 'lb'), reps: 10, fecha: '2026-09-21', hora: 1, peso: 72.5, unidad: 'lb' as const }
     expect(pesoDeSet(s, 'lb')).toBe(72.5)
     expect(pesoDeSet(s, 'kg')).toBe(33)
   })
   it('peso inicial razonable y en la rejilla del dial', () => {
-    expect(pesoInicial(buscarEjercicio('A1')!, 'kg')).toBe(12.5)
-    expect(pesoInicial(buscarEjercicio('B3')!, 'lb')).toBe(135)
-    expect(pesoInicial(buscarCualquiera('A6-cabeza')!.item, 'kg')).toBe(10)
+    expect(pesoInicial(buscarEjercicio('press-plano')!, 'kg')).toBe(15)
+    expect(pesoInicial(buscarEjercicio('jalon')!, 'lb')).toBe(90)
+    expect(pesoInicial(buscarEjercicio('prensa')!, 'lb')).toBe(0)
+    expect(pesoInicial(buscarCualquiera('triceps-cabeza')!.item, 'kg')).toBe(10)
   })
 })

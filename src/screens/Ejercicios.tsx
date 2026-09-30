@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Ejercicio, Alternativa } from '../data/tipos'
-import { ejerciciosDe, CALENTAMIENTO, CIERRE, REGLAS_GLOBALES, VERSION_CORTA_TEXTO, REGLA_ALTERNATIVA } from '../data/ejercicios'
+import { ejerciciosDe, CALENTAMIENTO, CIERRE, REGLAS_GLOBALES, VERSION_CORTA_TEXTO, REGLA_ALTERNATIVA, NOMBRE_SESION } from '../data/ejercicios'
 import { porSesion } from '../logic/progresion'
 import { unidadDe, pesoDeSet, formatoPeso } from '../logic/unidades'
 import { usePantalla } from '../design/pantallaActiva'
@@ -26,9 +26,9 @@ export function Ejercicios({ datos }: { datos: Datos }) {
   return (
     <div className="pantalla con-barra">
       <h1 className="t-titulo">Ejercicios</h1>
-      {(['A', 'B'] as const).map((letra) => (
-        <Grupo key={letra} titulo={`Cuerpo completo ${letra}`}>
-          {ejerciciosDe(letra).map((e) => <Fila key={e.id} num={e.id} texto={e.nombre} dato={ultimoPeso(e)} onClick={() => setAbierto(e)} />)}
+      {(['A', 'B', 'CASA'] as const).map((letra) => (
+        <Grupo key={letra} titulo={letra === 'CASA' ? NOMBRE_SESION.CASA : `${letra}: ${NOMBRE_SESION[letra]}`}>
+          {ejerciciosDe(letra).map((e, i) => <Fila key={e.id} num={i + 1} texto={e.nombre} dato={ultimoPeso(e)} onClick={() => setAbierto(e)} />)}
         </Grupo>
       ))}
       <Grupo titulo="Reglas"><Fila texto="Calentamiento, cierre y reglas de cada serie" onClick={() => setReglas(true)} /></Grupo>

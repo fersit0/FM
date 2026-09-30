@@ -1,8 +1,8 @@
 // Modelo de datos (sección 12 del brief)
 
-export type SesionTipo = 'A' | 'B' | 'FRIDA'
+export type SesionTipo = 'A' | 'B' | 'FRIDA' | 'CASA'
 export type Version = 'completa' | 'corta' | 'bonus'
-export type Letra = 'A' | 'B'
+export type Letra = 'A' | 'B' | 'CASA'
 
 /** Cómo se cuenta una serie: reps con peso, segundos sostenidos, o al tope con peso corporal */
 export type Modo = 'peso' | 'tiempo' | 'corporal'
@@ -26,6 +26,8 @@ export interface Alternativa extends Detalle {
   modo: Modo
   porLado?: boolean
   ilustracion: string
+  /** en máquina asistida más peso es más ayuda: la progresión baja el contrapeso */
+  invertida?: boolean
 }
 
 export interface Ejercicio extends Detalle {
@@ -116,6 +118,15 @@ export interface Settings {
   reemplazos?: Record<string, string>
   /** unidad principal por ejercicio (kg o lb) */
   unidades?: Record<string, 'kg' | 'lb'>
+  /** migración de ids viejos a ids por movimiento ya corrida */
+  migracionRutinaFinal?: boolean
+  /** ids viejos que no estaban en la tabla de migración */
+  idsDesconocidos?: string[]
+}
+
+export interface Cintura {
+  fecha: string
+  cm: number
 }
 
 export const SETTINGS_DEFAULT: Settings = {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { siguienteSesion, estadoSemana, avisoRescate, semanasCumplidas, tocaProponerSeriesExtra, seriesPara, entraEnVersion } from './semana'
+import { siguienteSesion, estadoSemana, avisoRescate, semanasCumplidas, tocaProponerSeriesExtra, seriesPara, entraEnVersion, casaDeSemana, casaDisponible, seriesPierna } from './semana'
 import { SETTINGS_DEFAULT, type Sesion } from '../data/tipos'
 import { inicioSemana, claveFecha } from './fechas'
 
@@ -90,12 +90,30 @@ describe('regla de 4 semanas', () => {
     expect(tocaProponerSeriesExtra(5, { ...SETTINGS_DEFAULT, reglaPospuestaEn: 4 })).toBe(true)
     expect(tocaProponerSeriesExtra(6, { ...SETTINGS_DEFAULT, seriesExtra: true })).toBe(false)
   })
-  it('series extra solo en A1, A2, B1, B2 y nunca en corta', () => {
-    expect(seriesPara('A1', 3, 'completa', true)).toBe(4)
-    expect(seriesPara('A3', 3, 'completa', true)).toBe(3)
-    expect(seriesPara('A1', 3, 'corta', true)).toBe(2)
-    expect(seriesPara('A1', 3, 'completa', false, true)).toBe(2)
-    expect(seriesPara('B2', 3, 'bonus', true)).toBe(4)
+  it('series extra solo en press-inclinado, jalon, press-plano y remo-polea, nunca en corta', () => {
+    expect(seriesPara('press-inclinado', 3, 'completa', true)).toBe(4)
+    expect(seriesPara('goblet', 2, 'completa', true)).toBe(2)
+    expect(seriesPara('press-inclinado', 3, 'corta', true)).toBe(2)
+    expect(seriesPara('press-inclinado', 3, 'completa', false, true)).toBe(2)
+    expect(seriesPara('remo-polea', 3, 'bonus', true)).toBe(4)
+  })
+  it('goblet y prensa a 3 series sin Frida y a 2 con Frida', () => {
+    const sin = [sesion('2026-09-22', 'A')]
+    const con = [sesion('2026-09-21', 'FRIDA'), sesion('2026-09-22', 'A')]
+    const jueves = new Date('2026-09-24T20:00:00')
+    expect(seriesPierna(sin, jueves)).toBe(3)
+    expect(seriesPierna(con, jueves)).toBe(2)
+    expect(seriesPara('goblet', 2, 'completa', false, false, undefined, seriesPierna(sin, jueves))).toBe(3)
+    expect(seriesPara('prensa', 2, 'completa', false, false, undefined, seriesPierna(con, jueves))).toBe(2)
+  })
+  it('CASA no cuenta para la meta, no mueve la alternancia y se topa en 2', () => {
+    const s = [sesion('2026-09-22', 'A'), sesion('2026-09-23', 'CASA'), sesion('2026-09-24', 'CASA')]
+    const d = new Date('2026-09-25T20:00:00')
+    expect(estadoSemana(s, d).hechas).toBe(1)
+    expect(siguienteSesion(s)).toBe('B')
+    expect(casaDeSemana(s, d)).toBe(2)
+    expect(casaDisponible(s, d)).toBe(false)
+    expect(casaDisponible([s[0]], d)).toBe(true)
   })
   it('la corta solo lleva ejercicios 1 a 4', () => {
     expect(entraEnVersion(4, 'corta')).toBe(true)

@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Sesion, SetLog, Bodyweight, Photo, Settings, FotoEjercicio } from '../data/tipos'
+import type { Sesion, SetLog, Bodyweight, Photo, Settings, FotoEjercicio, Cintura } from '../data/tipos'
 import * as db from '../data/db'
 import { leerSettings, escribirSettings } from '../data/settings'
+import { hayIdsViejos } from '../logic/migracion'
 
 export interface Datos {
   listo: boolean
+  /** hay ids viejos (A1, B4...) y la migración de RUTINA-FINAL no ha corrido */
+  necesitaMigracion: boolean
   sesiones: Sesion[]
   sets: SetLog[]
   peso: Bodyweight[]
   fotos: Photo[]
   fotosEjercicio: FotoEjercicio[]
+  cintura: Cintura[]
   settings: Settings
   recargar: () => Promise<void>
   guardarSesion: (s: Sesion) => Promise<void>
@@ -22,6 +26,8 @@ export interface Datos {
   borrarFoto: (fecha: string) => Promise<void>
   guardarFotoEjercicio: (f: FotoEjercicio) => Promise<void>
   borrarFotoEjercicio: (id: string) => Promise<void>
+  guardarCintura: (c: Cintura) => Promise<void>
+  borrarCintura: (fecha: string) => Promise<void>
   setSettings: (s: Settings) => void
 }
 
@@ -32,12 +38,14 @@ export function useDatos(): Datos {
   const [peso, setPeso] = useState<Bodyweight[]>([])
   const [fotos, setFotos] = useState<Photo[]>([])
   const [fotosEjercicio, setFotosEjercicio] = useState<FotoEjercicio[]>([])
+  const [cintura, setCintura] = useState<Cintura[]>([])
   const [settings, setSettingsState] = useState<Settings>(() => leerSettings())
 
   const recargar = useCallback(async () => {
-    const [s, l, p, f, fe] = await Promise.all([db.todasLasSesiones(), db.todosLosSets(), db.todoElPeso(), db.todasLasFotos(), db.todasLasFotosEjercicio()])
+    const [s, l, p, f, fe, ci] = await Promise.all([db.todasLasSesiones(), db.todosLosSets(), db.todoElPeso(), db.todasLasFotos(), db.todasLasFotosEjercicio(), db.todaLaCintura()])
+    setCintura(ci)
     // Datos dañados o de versiones viejas: se ignoran sin borrar lo demás
-    setSesiones(s.filter((x) => x && typeof x.id === 'string' && typeof x.fecha === 'string' && typeof x.inicio === 'number' && ['A', 'B', 'FRIDA'].includes(x.tipo)).map((x) => ({ ...x, version: x.version ?? 'completa', terminada: !!x.terminada })))
+    setSesiones(s.filter((x) => x && typeof x.id === 'string' && typeof x.fecha === 'string' && typeof x.inicio === 'number' && ['A', 'B', 'FRIDA', 'CASA'].includes(x.tipo)).map((x) => ({ ...x, version: x.version ?? 'completa', terminada: !!x.terminada })))
     setSets(l.filter((x) => x && typeof x.sessionId === 'string' && typeof x.exerciseId === 'string' && typeof x.reps === 'number'))
     setPeso(p.filter((x) => x && typeof x.fecha === 'string' && typeof x.kg === 'number'))
     setFotos(f)
@@ -61,8 +69,9 @@ export function useDatos(): Datos {
       return r
     }
 
+  const necesitaMigracion = listo && !settings.migracionRutinaFinal && hayIdsViejos(sets, sesiones, fotosEjercicio)
   return {
-    listo, sesiones, sets, peso, fotos, fotosEjercicio, settings, recargar, setSettings,
+    listo, necesitaMigracion, sesiones, sets, peso, fotos, fotosEjercicio, cintura, settings, recargar, setSettings,
     guardarSesion: envuelve(db.guardarSesion),
     borrarSesion: envuelve(db.borrarSesion),
     guardarSet: envuelve(db.guardarSet),
@@ -73,5 +82,7 @@ export function useDatos(): Datos {
     borrarFoto: envuelve(db.borrarFoto),
     guardarFotoEjercicio: envuelve(db.guardarFotoEjercicio),
     borrarFotoEjercicio: envuelve(db.borrarFotoEjercicio),
+    guardarCintura: envuelve(db.guardarCintura),
+    borrarCintura: envuelve(db.borrarCintura),
   }
 }

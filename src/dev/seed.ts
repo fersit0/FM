@@ -20,7 +20,7 @@ async function sembrar(): Promise<void> {
   const dow = lunesActual.getDay()
   lunesActual.setDate(lunesActual.getDate() - (dow === 0 ? 6 : dow - 1))
 
-  const pesoBase: Record<string, number> = { A1: 14, A2: 40, A3: 16, A4: 10, A5: 15, A6: 20, B1: 12, B2: 35, B3: 80, B4: 6, B5: 10 }
+  const pesoBase: Record<string, number> = { 'press-inclinado': 12, jalon: 40, 'press-militar': 10, laterales: 6, goblet: 16, 'curl-z': 15, 'triceps-polea': 20, 'press-plano': 14, 'remo-polea': 35, 'remo-mancuerna': 16, 'remo-pecho-apoyado': 6, prensa: 80, 'curl-martillo': 10 }
 
   for (let w = 4; w >= 1; w--) {
     const lunes = new Date(lunesActual)
@@ -39,7 +39,7 @@ async function sembrar(): Promise<void> {
       // progreso: semana 4 y 3 mismo peso; semana 2 llega al tope; semana 1 sube
       const paso = 4 - w // 0..3
       for (const e of ejerciciosDe(tipo)) {
-        const base = pesoBase[e.id]
+        const base = pesoBase[e.id] ?? 10
         const conPeso = e.modo === 'peso'
         let peso: number | null = null
         if (conPeso) peso = base + (paso >= 3 ? 2 : 0)

@@ -2,7 +2,7 @@
 import { test, expect } from '@playwright/test'
 
 const TAMANOS = [[375, 667], [390, 844], [393, 852], [430, 932]]
-const SELECTORES = ['.sesion-cabecera', '.sesion-titulo-fila h1', '.foto-chica', '.sesion-arriba .t-sub', '.sesion-aviso', '.circulo', '.dial', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo']
+const SELECTORES = ['.sesion-cabecera', '.sesion-titulo-fila h1', '.sesion-foto', '.foto-chica', '.sesion-arriba .t-sub', '.sesion-aviso', '.circulo', '.dial', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo']
 
 async function revisar(page, nombre) {
   const r = await page.evaluate((sels) => {
@@ -50,14 +50,14 @@ for (const [w, h] of TAMANOS) {
     await page.getByLabel('Qué hice').selectOption('B')
     await page.getByRole('button', { name: 'Guardar' }).click()
     await page.getByRole('button', { name: 'Hoy' }).click()
-    await expect(page.locator('h1')).toContainText('Cuerpo completo A')
+    await expect(page.locator('h1')).toContainText('A:')
     await page.getByRole('button', { name: /^Empezar/ }).click()
     await expect(page.locator('h1', { hasText: 'Calentamiento' })).toBeVisible()
     await page.getByRole('button', { name: 'Empezar calentamiento' }).click()
     await page.waitForTimeout(600)
     await revisar(page, 'calentamiento')
     await page.getByRole('button', { name: 'Ya terminé' }).click()
-    await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Press de banca plano con mancuernas')
+    await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Press inclinado con mancuernas')
     await expect(page.locator('.sesion-aviso')).toBeVisible()
     await page.waitForTimeout(700)
     await revisar(page, 'serie 1')

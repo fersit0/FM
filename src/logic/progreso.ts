@@ -59,3 +59,16 @@ export function pesoPorSemana(peso: Bodyweight[], ahora: Date, n = 12): { inicio
   }
   return out
 }
+
+/** Promedio de los últimos 7 días con registro y cambio contra la semana anterior (kg) */
+export function promedioSemanal(peso: Bodyweight[], ahora: Date): { promedio: number | null; cambio: number | null; hoy: number | null } {
+  const claveHoy = claveFecha(ahora)
+  const hace7 = claveFecha(sumarDias(ahora, -6))
+  const hace14 = claveFecha(sumarDias(ahora, -13))
+  const ult = peso.filter((p) => p.fecha >= hace7 && p.fecha <= claveHoy)
+  const prev = peso.filter((p) => p.fecha >= hace14 && p.fecha < hace7)
+  const media = (l: Bodyweight[]) => (l.length ? Math.round((l.reduce((a, p) => a + p.kg, 0) / l.length) * 10) / 10 : null)
+  const promedio = media(ult)
+  const anterior = media(prev)
+  return { promedio, cambio: promedio !== null && anterior !== null ? Math.round((promedio - anterior) * 10) / 10 : null, hoy: peso.find((p) => p.fecha === claveHoy)?.kg ?? null }
+}

@@ -202,3 +202,17 @@ Pendiente: probar en el iPhone el atajo "FM Descanso", el háptico del switch, l
 - "Serie guardada. Deshacer" (5 s) borra la serie y regresa con los mismos valores; "Descanso saltado" y "Ejercicio saltado" también se deshacen 5 s.
 - Menú ✕ → "Series de hoy": editar peso y reps o borrar. Historial: cada serie de una sesión se edita o borra, y "Borrar sesión".
 - "Terminar sesión" y "Descartar sesión" piden confirmación. Pruebas en `e2e/deshacer.spec.mjs`.
+
+# Rutina final (RUTINA-FINAL.md)
+
+- Ids por movimiento con migración única al abrir (`src/logic/migracion.ts`): si hay ids viejos aparece una pantalla "Rutina nueva" con "Descargar respaldo" y "Migrar ahora". Los respaldos viejos también se migran al importar. Ids sin mapa se guardan en `settings.idsDesconocidos` y se avisan.
+- Sesiones A (pecho arriba y dorsal), B (pecho, espalda y postura) y CASA (12 min, sin calentamiento ni cierre, descanso de 60 s, no cuenta para la meta, no mueve la alternancia, máximo 2 por semana). CASA se ofrece en Hoy cuando el horario dice que ya no alcanza el gym o en viernes y sábado, con "llevas X de 2".
+- `laterales` comparte id en A y B: un solo historial. Las alternativas que son otros ejercicios (remo a una mano, prensa, goblet, dead bug…) comparten su id e historial.
+- Pierna según Frida: goblet y prensa a 3 series si en la semana no hay FRIDA, 2 si la hay (`seriesPierna`, con prueba). Hoy lo avisa como "pierna a 3 series".
+- Dominadas asistidas: `invertida`, la sugerencia baja el contrapeso ("Menos ayuda").
+- Regla de 4 semanas: press-inclinado, jalon, press-plano, remo-polea. Unidades por defecto y pesos iniciales según la sección 10; prensa sin sugerencia (aviso con el tanteo).
+- Fotos: pares inicio/final de free-exercise-db para todo, incluidas alternativas; nuevas descargadas y revisadas una por una (todas coinciden; Dumbbell_Incline_Row sí es boca abajo en banco inclinado). `remo-liga` usa Seated_Cable_Rows con etiqueta "Referencia". Encuadre por foto en `ENCUADRE`. Prueba que recorre la biblioteca y falla si falta un archivo (`src/data/fotos.test.ts`).
+- Ficha: foto inicio y final lado a lado, nombre, chips de series × reps y descanso, "Cómo se hace" (qué trabaja, qué sentir, preparación, ejecución), "Errores comunes", "Cómo escoger el peso", "Alternativas" con miniatura cuadrada y caso. En la sesión la foto chica alterna inicio y final al tocarla, sin animación automática.
+- Tratamiento uniforme de fotos: se mantiene el blanco y negro con contraste 1.1 del spec v3 (ya aprobado); no se aplicó otro.
+- Seguimiento: peso diario con promedio de 7 días y cambio contra la semana anterior; cintura cada lunes (store `cintura`, IndexedDB versión 3).
+- Pendiente para Fer: foto propia de `remo-liga` y de `laterales-liga` si quiere; probar la migración en su iPhone (descargar respaldo primero).

@@ -1,6 +1,6 @@
 // IndexedDB con idb. Todo vive en el teléfono.
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
-import type { Sesion, SetLog, Bodyweight, Photo, FotoEjercicio } from './tipos'
+import type { Sesion, SetLog, Bodyweight, Photo, FotoEjercicio, Cintura } from './tipos'
 
 interface GymDB extends DBSchema {
   sesiones: { key: string; value: Sesion; indexes: { fecha: string } }
@@ -8,13 +8,14 @@ interface GymDB extends DBSchema {
   pesoCorporal: { key: string; value: Bodyweight }
   fotos: { key: string; value: Photo }
   fotosEjercicio: { key: string; value: FotoEjercicio }
+  cintura: { key: string; value: Cintura }
 }
 
 let dbPromise: Promise<IDBPDatabase<GymDB>> | null = null
 
 export function db(): Promise<IDBPDatabase<GymDB>> {
   if (!dbPromise) {
-    dbPromise = openDB<GymDB>('gym-app', 2, {
+    dbPromise = openDB<GymDB>('gym-app', 3, {
       upgrade(d, vieja) {
         if (vieja < 1) {
           const s = d.createObjectStore('sesiones', { keyPath: 'id' })
@@ -26,6 +27,7 @@ export function db(): Promise<IDBPDatabase<GymDB>> {
           d.createObjectStore('fotos', { keyPath: 'fecha' })
         }
         if (vieja < 2) d.createObjectStore('fotosEjercicio', { keyPath: 'ejercicioId' })
+        if (vieja < 3) d.createObjectStore('cintura', { keyPath: 'fecha' })
       },
     })
   }
@@ -98,15 +100,28 @@ export async function borrarFotoEjercicio(id: string): Promise<void> {
   await (await db()).delete('fotosEjercicio', id)
 }
 
+// Cintura semanal
+export async function todaLaCintura(): Promise<Cintura[]> {
+  const all = await (await db()).getAll('cintura')
+  return all.sort((a, b) => a.fecha.localeCompare(b.fecha))
+}
+export async function guardarCintura(c: Cintura): Promise<void> {
+  await (await db()).put('cintura', c)
+}
+export async function borrarCintura(fecha: string): Promise<void> {
+  await (await db()).delete('cintura', fecha)
+}
+
 export async function borrarTodo(): Promise<void> {
   const d = await db()
-  const tx = d.transaction(['sesiones', 'setLogs', 'pesoCorporal', 'fotos', 'fotosEjercicio'], 'readwrite')
+  const tx = d.transaction(['sesiones', 'setLogs', 'pesoCorporal', 'fotos', 'fotosEjercicio', 'cintura'], 'readwrite')
   await Promise.all([
     tx.objectStore('sesiones').clear(),
     tx.objectStore('setLogs').clear(),
     tx.objectStore('pesoCorporal').clear(),
     tx.objectStore('fotos').clear(),
     tx.objectStore('fotosEjercicio').clear(),
+    tx.objectStore('cintura').clear(),
   ])
   await tx.done
 }

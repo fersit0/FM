@@ -40,26 +40,33 @@ export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onEleg
   return (
     <Hoja abierta={abierta} altura="completa" onCerrar={onCerrar}>
       {conGrafica && historial.length > 0 && <Linea puntos={historial.map((m) => ({ etiqueta: fechaCorta(m.fecha), valor: m.peso }))} unidad={unidad} />}
-      {abierta && <Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} />}
-      <div className="columna" style={{ gap: 4 }}>
+      {abierta && <Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="par" />}
+      <div className="columna" style={{ gap: 10 }}>
         <h2 className="t-ejercicio">{item.nombre}</h2>
-        <p className="t-nota tenue">{series ?? item.series} series, {rango(item)}{item.porLado ? ' por lado' : ''}, descanso {item.descansoSeg} s{esAlternativa && 'caso' in item ? `. Alternativa de ${base.nombre.toLowerCase()}` : ''}</p>
+        <div className="chips">
+          <span className="chip">{series ?? item.series} × {rango(item)}{item.porLado ? ' por lado' : ''}</span>
+          <span className="chip">Descanso {item.descansoSeg} s</span>
+          {esAlternativa && 'caso' in item && <span className="chip">Alternativa de {base.nombre.toLowerCase()}</span>}
+        </div>
       </div>
       {ficha ? (
         <>
-          <Seccion titulo="Qué trabaja"><p className="t-cuerpo">{ficha.trabaja}</p></Seccion>
-          <Seccion titulo="Qué debes sentir" pez><p className="t-cuerpo" style={{ paddingRight: 80 }}>{ficha.sentir}</p></Seccion>
-          <Seccion titulo="Preparación"><ul>{ficha.preparacion.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ul></Seccion>
-          <Seccion titulo="Ejecución"><ol>{ficha.ejecucion.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ol></Seccion>
+          <Seccion titulo="Cómo se hace" pez>
+            <p className="t-cuerpo" style={{ paddingRight: 80 }}>{ficha.trabaja} Debes sentir: {ficha.sentir.charAt(0).toLowerCase() + ficha.sentir.slice(1)}</p>
+            <ul>{ficha.preparacion.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ul>
+            <ol>{ficha.ejecucion.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ol>
+          </Seccion>
           <Seccion titulo="Errores comunes"><Grupo>{ficha.errores.map((e, i) => <Fila key={i} texto={e.error} detalle={e.correccion} />)}</Grupo></Seccion>
           <Seccion titulo="Cómo escoger el peso"><p className="t-cuerpo">{ficha.peso}</p></Seccion>
           <Seccion titulo="Alternativa"><p className="t-cuerpo">{ficha.alternativa}</p></Seccion>
         </>
       ) : (
         <>
-          {item.ubicar && <Seccion titulo="Ubicar"><p className="t-cuerpo">{item.ubicar}</p></Seccion>}
-          {item.colocacion && <Seccion titulo="Preparación"><p className="t-cuerpo">{item.colocacion}</p></Seccion>}
-          {item.tecnica.length > 0 && <Seccion titulo="Ejecución"><ol>{item.tecnica.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ol></Seccion>}
+          <Seccion titulo="Cómo se hace">
+            {item.ubicar && <p className="t-cuerpo">{item.ubicar}</p>}
+            {item.colocacion && <p className="t-cuerpo">{item.colocacion}</p>}
+            {item.tecnica.length > 0 && <ol>{item.tecnica.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ol>}
+          </Seccion>
           {item.errores.length > 0 && <Seccion titulo="Errores comunes"><ul>{item.errores.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ul></Seccion>}
         </>
       )}
@@ -67,7 +74,9 @@ export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onEleg
         <Grupo>
           {esAlternativa && onElegirAlternativa && <Fila texto={base.nombre} detalle="Volver al original" onClick={() => onElegirAlternativa(null)} />}
           {base.alternativas.filter((a) => a.id !== item.id).map((a) => (
-            <Fila key={a.id} texto={a.nombre} detalle={`${a.caso}. ${a.series} series, ${rango(a)}${a.porLado ? ' por lado' : ''}`} onClick={onElegirAlternativa ? () => onElegirAlternativa(a) : onVerAlternativa ? () => onVerAlternativa(a) : undefined} />
+            <Fila key={a.id} texto={a.nombre} detalle={`${a.caso}. ${a.series} series, ${rango(a)}${a.porLado ? ' por lado' : ''}`} onClick={onElegirAlternativa ? () => onElegirAlternativa(a) : onVerAlternativa ? () => onVerAlternativa(a) : undefined}>
+              <Foto clave={a.ilustracion} ejercicioId={a.id} propias={datos.fotosEjercicio} nombre={a.nombre} modo="chica" />
+            </Fila>
           ))}
         </Grupo>
       </Seccion>

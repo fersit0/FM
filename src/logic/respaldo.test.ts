@@ -7,7 +7,7 @@ describe('respaldo', () => {
     const r = armarRespaldo({
       settings: { ...SETTINGS_DEFAULT, minCarretera: 45 },
       sesiones: [{ id: 'x', fecha: '2026-09-21', tipo: 'A', version: 'completa', inicio: 1, fin: 2, terminada: true }],
-      sets: [{ id: 7, sessionId: 'x', exerciseId: 'A1', ejercicioBaseId: 'A1', numSerie: 1, pesoKg: 14, reps: 10, fecha: '2026-09-21', hora: 1 }],
+      sets: [{ id: 7, sessionId: 'x', exerciseId: 'press-plano', ejercicioBaseId: 'press-plano', numSerie: 1, pesoKg: 14, reps: 10, fecha: '2026-09-21', hora: 1 }],
       peso: [{ fecha: '2026-09-20', kg: 80.5 }],
       fotos: [{ fecha: '2026-09-20', tipo: 'image/jpeg', base64: 'AAAA' }],
     })

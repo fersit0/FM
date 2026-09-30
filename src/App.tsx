@@ -10,7 +10,8 @@ import { useDatos } from './hooks/useDatos'
 import { useReloj } from './hooks/useReloj'
 import { useSesionActiva } from './hooks/useSesionActiva'
 import { claveFecha } from './logic/fechas'
-import type { Version } from './data/tipos'
+import type { Version, Letra } from './data/tipos'
+import { Migracion } from './screens/Migracion'
 
 const CLAVE_ACTUALIZADA = 'gym-app:actualizada'
 
@@ -35,7 +36,7 @@ export default function App() {
     if (datos.listo && activa && !sesionEnCurso) setActiva(null)
   }, [datos.listo, activa, sesionEnCurso, setActiva])
 
-  const empezar = useCallback(async (tipo: 'A' | 'B', version: Version) => {
+  const empezar = useCallback(async (tipo: Letra, version: Version) => {
     const inicio = Date.now()
     const id = `${claveFecha(new Date(inicio))}-${tipo}-${inicio}`
     await datos.guardarSesion({ id, fecha: claveFecha(new Date(inicio)), tipo, version, inicio, terminada: false, cambios: [] })
@@ -45,6 +46,7 @@ export default function App() {
   const cerrarAviso = useCallback(() => setAviso(null), [])
 
   if (!datos.listo) return null
+  if (datos.necesitaMigracion) return <Migracion datos={datos} />
 
   if (enSesion && sesionEnCurso) {
     return <Sesion datos={datos} sesion={sesionEnCurso} activa={activa!} setActiva={setActiva} onSalir={() => setEnSesion(false)} onTerminar={() => { setActiva(null); setEnSesion(false); setDestino('hoy') }} />
