@@ -32,7 +32,7 @@ export function rangoDe(e: Ejercicio | Alternativa): string {
   return e.repsMin === e.repsMax ? `${e.repsMax} reps` : `${e.repsMin} a ${e.repsMax} reps`
 }
 /** diámetro del spec acotado al espacio disponible */
-const acotar = (d: number, alto: number, ancho: number) => Math.max(104, Math.min(d, alto - 8, ancho - 8))
+const acotar = (d: number, alto: number, ancho: number) => Math.max(88, Math.min(d, alto - 4, ancho - 8))
 
 export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }: Props) {
   const { settings, sets } = datos

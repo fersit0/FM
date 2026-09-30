@@ -50,4 +50,4 @@
 .deshacer button { color: var(--rojo); font-weight: 700; font-size: 17px; min-height: 32px; }
 body[data-pantalla='descanso'] .deshacer { background: var(--piedra); color: var(--cobalto); box-shadow: none; }
 /* Pantallas cortas (iPhone SE): la foto de la sesión pasa a 16:9 para que dial, stepper y botón sigan en pantalla */
-@media (max-height: 700px) { .sesion-foto .foto { aspect-ratio: 16 / 9; max-height: 15dvh; } .sesion-medio { min-height: 96px; } }
+@media (max-height: 700px) { .sesion-foto .foto { aspect-ratio: 16 / 9; max-height: 11dvh; } .sesion-foto .foto-etiqueta { display: none; } .sesion-medio { min-height: 92px; } .sesion-arriba { gap: 2px; } .sesion-abajo { gap: 10px; } }
