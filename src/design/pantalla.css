@@ -37,7 +37,9 @@
 .sesion-titulo-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .sesion-titulo-fila h1 { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .sesion-aviso { padding-top: 4px; }
-.sesion-medio { flex: 1; min-height: 120px; display: flex; align-items: center; justify-content: center; padding: 8px 0; }
+.sesion-foto { margin-top: 10px; }
+.sesion-foto .foto { max-height: 26dvh; aspect-ratio: 4 / 3; }
+.sesion-medio { flex: 1; min-height: 110px; display: flex; align-items: center; justify-content: center; padding: 8px 0; }
 .sesion-abajo { display: flex; flex-direction: column; gap: 14px; flex: none; padding-top: 8px; }
 .circulo-sitio { position: relative; flex: none; }
 .circulo-contenido { display: flex; flex-direction: column; align-items: center; gap: 2px; }
@@ -47,3 +49,5 @@
 .deshacer { position: fixed; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 96px); z-index: 25; background: var(--tinta); color: var(--piedra); padding: 14px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--piedra); }
 .deshacer button { color: var(--rojo); font-weight: 700; font-size: 17px; min-height: 32px; }
 body[data-pantalla='descanso'] .deshacer { background: var(--piedra); color: var(--cobalto); box-shadow: none; }
+/* Pantallas cortas (iPhone SE): la foto de la sesión pasa a 16:9 para que dial, stepper y botón sigan en pantalla */
+@media (max-height: 700px) { .sesion-foto .foto { aspect-ratio: 16 / 9; max-height: 15dvh; } .sesion-medio { min-height: 96px; } }

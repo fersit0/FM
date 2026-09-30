@@ -79,8 +79,8 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
       if (f) await datos.borrarSesion(f.id)
       return
     }
-    const lunes = semana.dias[0].fecha
-    await datos.guardarSesion({ id: `frida-${lunes}`, fecha: lunes, tipo: 'FRIDA', version: 'completa', inicio: new Date(lunes + 'T20:00:00').getTime(), fin: new Date(lunes + 'T21:00:00').getTime(), terminada: true })
+    // se registra como hoy: si Frida fue martes u otro día, cuenta igual (RUTINA-FINAL.md, 2)
+    await datos.guardarSesion({ id: `frida-${claveHoy}`, fecha: claveHoy, tipo: 'FRIDA', version: 'completa', inicio: new Date(claveHoy + 'T20:00:00').getTime(), fin: new Date(claveHoy + 'T21:00:00').getTime(), terminada: true })
   }
 
   return (
@@ -109,9 +109,9 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
 
       <div className="inicio-pie">
         {versionNueva && <button className="inicio-linea-roja" onClick={() => window.fmActualizar?.()}>Hay versión nueva. Toca para actualizar.</button>}
-        {esLunes && !semana.fridaHecha && !sesionEnCurso && (
+        {(esLunes || ahora.getDay() === 2) && !semana.fridaHecha && !sesionEnCurso && (
           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-            <span className="t-cuerpo">¿Fuiste con Frida?</span>
+            <span className="t-cuerpo">{esLunes ? '¿Fuiste con Frida?' : '¿Fuiste con Frida hoy?'}</span>
             <BotonTexto onClick={alternarFrida}>Sí, fui</BotonTexto>
           </div>
         )}

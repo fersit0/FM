@@ -2,7 +2,7 @@
 import { test, expect } from '@playwright/test'
 
 const TAMANOS = [[375, 667], [390, 844], [393, 852], [430, 932]]
-const SELECTORES = ['.sesion-cabecera', '.sesion-titulo-fila h1', '.foto-chica', '.sesion-arriba .t-sub', '.sesion-aviso', '.circulo', '.dial', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo']
+const SELECTORES = ['.sesion-cabecera', '.sesion-titulo-fila h1', '.sesion-foto', '.foto-chica', '.sesion-arriba .t-sub', '.sesion-aviso', '.circulo', '.dial', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo']
 
 async function revisar(page, nombre) {
   const r = await page.evaluate((sels) => {

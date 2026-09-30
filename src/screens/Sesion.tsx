@@ -32,7 +32,7 @@ export function rangoDe(e: Ejercicio | Alternativa): string {
   return e.repsMin === e.repsMax ? `${e.repsMax} reps` : `${e.repsMin} a ${e.repsMax} reps`
 }
 /** diámetro del spec acotado al espacio disponible */
-const acotar = (d: number, alto: number, ancho: number) => Math.max(120, Math.min(d, alto - 8, ancho - 8))
+const acotar = (d: number, alto: number, ancho: number) => Math.max(104, Math.min(d, alto - 8, ancho - 8))
 
 export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }: Props) {
   const { settings, sets } = datos
@@ -327,15 +327,13 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, previo, onTec
   return (
     <div className="panel">
       <div className="sesion-arriba">
-        <div className="sesion-titulo-fila" style={{ alignItems: 'flex-start' }}>
-          <TituloAjustable texto={item.nombre} />
-          <Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="chica" onClick={onTecnica} />
-        </div>
+        <div className="sesion-titulo-fila"><TituloAjustable texto={item.nombre} /></div>
         <div className="sesion-titulo-fila">
           <p className="t-sub">{completo ? `${series} series hechas` : `Serie ${serieActual} de ${series}`}</p>
           <BotonTexto subrayado onClick={onTecnica}>Técnica</BotonTexto>
         </div>
         {aviso && <p className="t-cuerpo tenue sesion-aviso" onClick={error ? serieHecha : undefined}>{aviso}</p>}
+        <div className="sesion-foto"><Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="toque" /></div>
       </div>
       <div className="sesion-medio" ref={medio}>
         <Circulo d={d}>
