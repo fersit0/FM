@@ -16,7 +16,7 @@ function rango(e: Ejercicio | Alternativa): string {
   return e.repsMin === e.repsMax ? `${e.repsMax} reps` : `${e.repsMin} a ${e.repsMax} reps`
 }
 
-/** 7.2 Técnica: hoja completa tinta con foto arriba, secciones y "Tomar foto de mi máquina". */
+/** 7.2 Técnica: hoja completa tinta con foto arriba, ficha de FICHAS.md (Para qué, Lo sientes, Prepárate, Movimiento, Imagina, Errores, Cuidado), alternativas y fotos propias. */
 export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onElegirAlternativa, conGrafica = false, onVerAlternativa }: {
   abierta: boolean; onCerrar: () => void; base: Ejercicio; item: Ejercicio | Alternativa; datos: Datos; series?: number; onElegirAlternativa?: (a: Alternativa | null) => void; conGrafica?: boolean; onVerAlternativa?: (a: Alternativa) => void
 }) {
@@ -53,14 +53,15 @@ export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onEleg
       </div>
       {ficha ? (
         <>
-          <Seccion titulo="Cómo se hace" pez>
-            <p className="t-cuerpo" style={{ paddingRight: 80 }}>{ficha.trabaja} Debes sentir: {ficha.sentir.charAt(0).toLowerCase() + ficha.sentir.slice(1)}</p>
-            <ul>{ficha.preparacion.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ul>
-            <ol>{ficha.ejecucion.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ol>
+          <Seccion titulo="Para qué" pez><p className="t-cuerpo" style={{ paddingRight: 80 }}>{ficha.paraQue}</p></Seccion>
+          <Seccion titulo="Lo sientes"><p className="t-cuerpo">{ficha.sientes}</p></Seccion>
+          <Seccion titulo="Prepárate"><p className="t-cuerpo">{ficha.preparate}</p></Seccion>
+          <Seccion titulo="Movimiento"><p className="t-cuerpo">{ficha.movimiento}</p></Seccion>
+          <Seccion titulo="Imagina"><p className="t-cuerpo">{ficha.imagina}</p></Seccion>
+          <Seccion titulo="Errores">
+            {ficha.errores.map((e, i) => <p key={i} className="t-cuerpo">{e.error} <span className="tenue">{e.correccion}</span></p>)}
           </Seccion>
-          <Seccion titulo="Errores comunes"><Grupo>{ficha.errores.map((e, i) => <Fila key={i} texto={e.error} detalle={e.correccion} />)}</Grupo></Seccion>
-          <Seccion titulo="Cómo escoger el peso"><p className="t-cuerpo">{ficha.peso}</p></Seccion>
-          <Seccion titulo="Alternativa"><p className="t-cuerpo">{ficha.alternativa}</p></Seccion>
+          <Seccion titulo="Cuidado"><p className="t-cuerpo">{ficha.cuidado}</p></Seccion>
         </>
       ) : (
         <>
@@ -69,7 +70,7 @@ export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onEleg
             {item.colocacion && <p className="t-cuerpo">{item.colocacion}</p>}
             {item.tecnica.length > 0 && <ol>{item.tecnica.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ol>}
           </Seccion>
-          {item.errores.length > 0 && <Seccion titulo="Errores comunes"><ul>{item.errores.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ul></Seccion>}
+          {item.errores.length > 0 && <Seccion titulo="Errores"><ul>{item.errores.map((t, i) => <li key={i} className="t-cuerpo">{t}</li>)}</ul></Seccion>}
         </>
       )}
       <Seccion titulo={onElegirAlternativa ? 'Cambiar por' : 'Alternativas'}>

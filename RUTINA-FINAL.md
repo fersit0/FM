@@ -237,6 +237,8 @@ Aplica el mapeo en: `SetLog.exerciseId` y `SetLog.ejercicioBaseId`, `Sesion.camb
 
 ## 11. Fichas nuevas
 
+> Actualización: todas las fichas (ejercicios y alternativas) viven ahora en `FICHAS.md` con formato fijo (Para qué, Lo sientes, Prepárate, Movimiento, Imagina, Errores, Cuidado). Lo de abajo queda como historia de las cuatro que se agregaron en su momento.
+
 Las fichas viejas se mueven con el mapeo. `laterales-casa` usa la de `laterales` con peso de 4 a 5 kg y `plancha-casa` la de `plancha`. Estas cuatro son nuevas:
 
 **remo-mancuerna**
