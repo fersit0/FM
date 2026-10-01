@@ -28,14 +28,18 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
     const r = armarRespaldo({ settings, sesiones: datos.sesiones, sets: datos.sets, peso: datos.peso, fotos, fotosEjercicio })
     const nombre = `gym-respaldo-${claveFecha(new Date())}.json`
     const file = new File([JSON.stringify(r)], nombre, { type: 'application/json' })
+    const marcar = () => datos.setSettings({ ...datos.settings, ultimoRespaldo: claveFecha(new Date()) })
     try {
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: 'Respaldo' })
+        marcar()
         return
       }
     } catch {
       /* canceló */
+      return
     }
+    marcar()
     const url = URL.createObjectURL(file)
     const a = document.createElement('a')
     a.href = url
@@ -59,7 +63,7 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
       for (const p of r.peso) await guardarPeso(p)
       for (const foto of r.fotos) await guardarFoto({ fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo) })
       for (const foto of r.fotosEjercicio ?? []) await guardarFotoEjercicio({ ejercicioId: migrarFoto({ ejercicioId: foto.ejercicioId, blob: new Blob(), fecha: foto.fecha }, desconocidos).ejercicioId, fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo), blob2: foto.base64b ? base64ABlob(foto.base64b, foto.tipo) : undefined })
-      datos.setSettings({ ...migrarSettings(r.settings, desconocidos), idsDesconocidos: [...desconocidos] })
+      datos.setSettings({ ...migrarSettings(r.settings, desconocidos), idsDesconocidos: [...desconocidos], ultimoRespaldo: claveFecha(new Date()) })
       await datos.recargar()
       onAviso(desconocidos.size ? `Respaldo importado; ids sin mapa: ${[...desconocidos].join(', ')}` : 'Respaldo importado')
       onCerrar()
@@ -105,7 +109,7 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
       </Grupo>
 
       <Grupo titulo="Respaldo">
-        <Fila texto="Exportar respaldo" detalle="Un JSON con todo; se comparte o descarga" onClick={exportar} />
+        <Fila texto="Exportar respaldo" detalle={settings.ultimoRespaldo ? `Último: ${settings.ultimoRespaldo}. Un JSON con todo; se comparte o descarga` : 'Un JSON con todo; se comparte o descarga'} onClick={exportar} />
         <Fila texto="Importar respaldo" detalle="Reemplaza lo que hay en este teléfono" onClick={() => archivo.current?.click()} />
         <input ref={archivo} type="file" accept="application/json,.json" onChange={importar} className="oculto-visual" />
       </Grupo>

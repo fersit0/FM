@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
         <img className="pez" src={`${import.meta.env.BASE_URL}pez/confundido.png`} alt="" style={{ position: 'static', width: 96, height: 96 }} />
         <h1 className="t-titulo">Algo falló.</h1>
         <p className="t-sub" style={{ color: 'color-mix(in srgb, var(--piedra) 60%, transparent)' }}>Tu sesión está guardada.</p>
-        <button className="boton" style={{ background: 'var(--rojo)', color: 'var(--tinta)', marginTop: 24 }} onClick={() => { location.hash = ''; location.reload() }}>Volver al inicio</button>
+        <button className="boton" style={{ background: 'var(--rojo)', color: 'var(--tinta)', marginTop: 24 }} onClick={() => { try { sessionStorage.setItem('gym-app:sin-retomar', '1') } catch { /* nada */ } location.hash = ''; location.reload() }}>Volver al inicio</button>
       </div>
     )
   }

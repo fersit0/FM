@@ -8,6 +8,7 @@ import { porSesion } from '../logic/progresion'
 import { unidadDe, incrementoDe, pesoDeSet, formatoPeso } from '../logic/unidades'
 import { ejerciciosDe, itemDeRutina, NOMBRE_SESION } from '../data/ejercicios'
 import { claveFecha, DIAS_NOMBRE, formatoHora, minutosDe } from '../logic/fechas'
+import { tocaRespaldo } from '../logic/respaldo'
 import { Circulo, BotonPrincipal, BotonTexto, Hoja, Grupo, Fila, Pez } from '../components/fm'
 
 interface Props {
@@ -64,6 +65,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   const minutos = version === 'corta' ? 45 : version === 'bonus' ? 75 : 65
   const tope = formatoHora(minutosDe(settings.horaTope))
   const claveHoy = claveFecha(ahora)
+  const recordarRespaldo = !sesionEnCurso && tocaRespaldo(settings.ultimoRespaldo, sesiones, claveHoy)
   const recortada = version === 'corta'
 
   let linea: string
@@ -116,6 +118,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
           </div>
         )}
         {proponerExtra && !sesionEnCurso && <button className="inicio-linea-roja" onClick={() => setHojaExtra(true)}>Ya toca pasar a 4 series.</button>}
+        {recordarRespaldo && <BotonTexto onClick={onAjustes}>{settings.ultimoRespaldo ? 'Ya pasaron 2 semanas del último respaldo. Descárgalo en Ajustes.' : 'Descarga tu primer respaldo en Ajustes.'}</BotonTexto>}
         {ofrecerCasa && <BotonTexto onClick={() => onEmpezar('CASA', 'completa')}>Casa, 12 minutos. Llevas {casaHechas} de {CASA_MAX}.</BotonTexto>}
         {sesionEnCurso ? (
           <>

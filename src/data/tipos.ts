@@ -122,6 +122,8 @@ export interface Settings {
   migracionRutinaFinal?: boolean
   /** ids viejos que no estaban en la tabla de migración */
   idsDesconocidos?: string[]
+  /** último respaldo exportado o importado (YYYY-MM-DD): se recuerda cada 2 semanas */
+  ultimoRespaldo?: string
 }
 
 export interface Cintura {

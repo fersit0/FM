@@ -33,10 +33,14 @@ export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onEleg
     const f = e.target.files?.[0]
     e.target.value = ''
     if (!f) return
-    const blob = await comprimirFoto(f)
-    if (cual === 'a') await datos.guardarFotoEjercicio({ ejercicioId: item.id, blob, blob2: propia?.blob2, fecha: new Date().toISOString().slice(0, 10) })
-    else if (propia) await datos.guardarFotoEjercicio({ ...propia, blob2: blob })
-    else await datos.guardarFotoEjercicio({ ejercicioId: item.id, blob, fecha: new Date().toISOString().slice(0, 10) })
+    try {
+      const blob = await comprimirFoto(f)
+      if (cual === 'a') await datos.guardarFotoEjercicio({ ejercicioId: item.id, blob, blob2: propia?.blob2, fecha: new Date().toISOString().slice(0, 10) })
+      else if (propia) await datos.guardarFotoEjercicio({ ...propia, blob2: blob })
+      else await datos.guardarFotoEjercicio({ ejercicioId: item.id, blob, fecha: new Date().toISOString().slice(0, 10) })
+    } catch {
+      alert('No se pudo guardar la foto. Inténtalo otra vez; si no, revisa que haya espacio en el teléfono.')
+    }
   }
   const videos = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${item.nombre} técnica`)}`
   return (

@@ -1,31 +1,23 @@
 import { useEffect, useState } from 'react'
 
 /**
- * Cuenta regresiva que nunca falla (9.1): calcula `fin - Date.now()` en cada frame
- * y al volver a la app. Nada suma segundos. Devuelve los ms que faltan (negativo si ya pasó).
+ * Cuenta regresiva que nunca falla (9.1): calcula `fin - Date.now()` cuatro veces por segundo y al volver a la app.
+ * Nada suma segundos, así que bloquear la pantalla o cambiar de app no la desfasa. Devuelve los ms que faltan (negativo si ya pasó).
  */
 export function useCuentaRegresiva(fin: number | undefined): number {
   const [restante, setRestante] = useState(() => (fin === undefined ? 0 : fin - Date.now()))
   useEffect(() => {
     if (fin === undefined) return
     let id = 0
-    let vivo = true
-    const tick = () => {
-      if (!vivo) return
-      setRestante(fin - Date.now())
-      if (document.visibilityState === 'visible') id = requestAnimationFrame(tick)
-    }
-    const alVolver = () => {
-      cancelAnimationFrame(id)
-      tick()
-    }
-    tick()
+    const tick = () => setRestante(fin - Date.now())
+    const arrancar = () => { clearInterval(id); tick(); if (document.visibilityState === 'visible') id = window.setInterval(tick, 250) }
+    const alVolver = () => arrancar()
+    arrancar()
     document.addEventListener('visibilitychange', alVolver)
     window.addEventListener('focus', alVolver)
     window.addEventListener('pageshow', alVolver)
     return () => {
-      vivo = false
-      cancelAnimationFrame(id)
+      clearInterval(id)
       document.removeEventListener('visibilitychange', alVolver)
       window.removeEventListener('focus', alVolver)
       window.removeEventListener('pageshow', alVolver)

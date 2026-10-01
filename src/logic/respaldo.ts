@@ -67,3 +67,12 @@ export function base64ABlob(base64: string, tipo: string): Blob {
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
   return new Blob([bytes], { type: tipo || 'image/jpeg' })
 }
+
+/** Recordar el respaldo cada 2 semanas: si nunca se hizo, desde la primera sesión terminada */
+export function tocaRespaldo(ultimoRespaldo: string | undefined, sesiones: { fecha: string; terminada: boolean }[], hoy: string, dias = 14): boolean {
+  const hechas = sesiones.filter((s) => s.terminada).map((s) => s.fecha).sort()
+  if (hechas.length === 0) return false
+  const desde = ultimoRespaldo ?? hechas[0]
+  const ms = new Date(hoy + 'T12:00:00').getTime() - new Date(desde + 'T12:00:00').getTime()
+  return ms >= dias * 86400_000
+}

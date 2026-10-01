@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Sesion as SesionTipo, Ejercicio, Alternativa, SetLog, Version, Modo } from '../data/tipos'
 import type { SesionActiva } from '../hooks/useSesionActiva'
@@ -217,12 +217,11 @@ function PasoTiempo({ titulo, detalle, nota, minutos, activa, setActiva, onListo
   const [medio, alto, ancho] = useAlto<HTMLDivElement>()
   const fin = activa.timerFin
   const restante = useCuentaRegresiva(fin)
-  const [termino, setTermino] = useState(false)
+  const termino = fin !== undefined && restante <= 0
   const d = acotar(0.8 * W, alto, ancho)
-  if (fin !== undefined && restante <= 0 && !termino) {
-    setTermino(true)
-    if (document.visibilityState === 'visible') { haptico.finDescanso(); sonarFinDescanso() }
-  }
+  useEffect(() => {
+    if (termino && document.visibilityState === 'visible') { haptico.finDescanso(); sonarFinDescanso() }
+  }, [termino])
   return (
     <div className="panel">
       <div className="sesion-arriba">
@@ -402,11 +401,11 @@ function PasoDescanso({ paso, sets, sesion, fin, total, avisado, unidad, onMas, 
   const restante = useCuentaRegresiva(fin)
   const termino = restante <= 0
   const tarde = restante < -3000
-  const [avisadoFin, setAvisadoFin] = useState(false)
-  if (termino && !avisadoFin) {
-    setAvisadoFin(true)
-    if (document.visibilityState === 'visible') { haptico.finDescanso(); if (!avisado) sonarFinDescanso() }
-  }
+  useEffect(() => {
+    if (termino && document.visibilityState === 'visible') { haptico.finDescanso(); if (!avisado) sonarFinDescanso() }
+    // solo al cruzar el cero, no por cada cambio de avisado
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [termino])
   const progreso = Math.max(0, Math.min(1, restante / (total * 1000)))
   const dMax = acotar(0.96 * W, alto, ancho), dMin = Math.min(0.56 * W, dMax)
   const d = dMin + (dMax - dMin) * progreso

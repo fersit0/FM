@@ -40,7 +40,7 @@
 .sesion-titulo-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .sesion-titulo-fila h1 { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .sesion-aviso { padding-top: 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
-.sesion-aviso button { color: inherit; text-decoration: underline; text-underline-offset: 3px; font: inherit; }
+.sesion-aviso button, .sesion-alternativa button { color: inherit; text-decoration: underline; text-underline-offset: 3px; font: inherit; padding: 10px 4px; margin: -10px -4px; }
 .sesion-foto { margin-top: 10px; flex: 0 1 auto; min-height: 0; overflow: hidden; }
 .sesion-foto:empty { display: none; }
 .sesion-foto .foto { width: 100%; aspect-ratio: 4 / 3; max-height: min(26dvh, 100%); }

@@ -23,7 +23,6 @@ await foto('sesion-descanso')
 // recarga a media cuenta: el timer debe seguir exacto
 await page.reload()
 await page.waitForTimeout(800)
-await page.getByRole('button', { name: 'Seguir sesión' }).click()
 await foto('sesion-descanso-recargado')
 await page.getByRole('button', { name: 'Saltar' }).click()
 await foto('sesion-ejercicio-2')

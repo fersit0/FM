@@ -30,7 +30,8 @@ export function parsearFichas(md) {
       const campo = CAMPOS.find(([etiqueta]) => l.startsWith(`${etiqueta}:`))
       if (!campo) throw new Error(`${id}: línea sin campo conocido: "${l}"`)
       const valor = l.slice(campo[0].length + 1).trim()
-      ficha[campo[1]] = campo[1] === 'errores' ? parsearErrores(valor) : valor
+      // en la app la etiqueta va como título aparte, así que el texto empieza con mayúscula
+      ficha[campo[1]] = campo[1] === 'errores' ? parsearErrores(valor) : mayuscula(valor)
     }
     for (const [etiqueta, clave] of CAMPOS) if (ficha[clave] === undefined || ficha[clave].length === 0) throw new Error(`${id}: falta "${etiqueta}"`)
     fichas[id] = ficha
