@@ -162,7 +162,7 @@ export const EJERCICIOS: Ejercicio[] = [
     tecnica: ['Bajar controlado hasta unos 90° en las rodillas.', 'Empujar sin trabar las rodillas arriba.'], errores: ['Despegar la cadera del asiento.', 'Trabar rodillas.', 'No poner los seguros al terminar.'], ilustracion: 'prensa',
     alternativas: [
       goblet('Prensa ocupada o no la ubicas'),
-      alt({ id: 'prensa-corta', nombre: 'Prensa con recorrido corto', caso: 'Rodilla molesta', series: 2, repsMin: 10, repsMax: 12, descansoSeg: 90, tecnica: ['Prensa de pierna bajando menos, sin llegar a 90°.'], ilustracion: 'prensa-corta' }),
+      alt({ id: 'prensa-corta', nombre: 'Prensa con recorrido corto', caso: 'Rodilla molesta', series: 2, repsMin: 10, repsMax: 12, descansoSeg: 90, tecnica: ['Misma máquina, bajando menos: sin llegar a 90°.'], ilustracion: 'prensa-corta' }),
     ],
   },
   {

@@ -20,7 +20,8 @@ function rango(e: Ejercicio | Alternativa): string {
 export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onElegirAlternativa, conGrafica = false, onVerAlternativa }: {
   abierta: boolean; onCerrar: () => void; base: Ejercicio; item: Ejercicio | Alternativa; datos: Datos; series?: number; onElegirAlternativa?: (a: Alternativa | null) => void; conGrafica?: boolean; onVerAlternativa?: (a: Alternativa) => void
 }) {
-  const ficha = FICHAS[item.id] ?? FICHAS[base.id]
+  // solo la ficha del ejercicio que se está haciendo: nada del original cuando hay alternativa elegida
+  const ficha = FICHAS[item.id]
   const archivoA = useRef<HTMLInputElement>(null)
   const archivoB = useRef<HTMLInputElement>(null)
   const unidad = unidadDe(item, datos.settings.unidades)
@@ -47,7 +48,7 @@ export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onEleg
         <div className="chips">
           <span className="chip">{series ?? item.series} × {rango(item)}{item.porLado ? ' por lado' : ''}</span>
           <span className="chip">Descanso {item.descansoSeg} s</span>
-          {esAlternativa && 'caso' in item && <span className="chip">Alternativa de {base.nombre.toLowerCase()}</span>}
+          {esAlternativa && 'caso' in item && <span className="chip">{item.caso}</span>}
         </div>
       </div>
       {ficha ? (
@@ -73,7 +74,7 @@ export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onEleg
       )}
       <Seccion titulo={onElegirAlternativa ? 'Cambiar por' : 'Alternativas'}>
         <Grupo>
-          {esAlternativa && onElegirAlternativa && <Fila texto={base.nombre} detalle="Volver al original" onClick={() => onElegirAlternativa(null)} />}
+          {esAlternativa && onElegirAlternativa && <Fila texto="Volver al original" detalle="Un toque y regresa el de la rutina" onClick={() => onElegirAlternativa(null)} />}
           {base.alternativas.filter((a) => a.id !== item.id).map((a) => (
             <Fila key={a.id} texto={a.nombre} detalle={`${a.caso}. ${a.series} series, ${rango(a)}${a.porLado ? ' por lado' : ''}`} onClick={onElegirAlternativa ? () => onElegirAlternativa(a) : onVerAlternativa ? () => onVerAlternativa(a) : undefined}>
               <Foto clave={a.ilustracion} ejercicioId={a.id} propias={datos.fotosEjercicio} nombre={a.nombre} modo="chica" />

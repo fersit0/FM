@@ -1,10 +1,17 @@
 // Datos ficticios de 4 semanas, activables con ?seed=1 (y ?seed=0 para borrarlos)
 import { borrarTodo, guardarSesion, guardarSet } from '../data/db'
-import { ejerciciosDe } from '../data/ejercicios'
+import { ejerciciosDe, EJERCICIOS } from '../data/ejercicios'
+import { FOTOS_BASE } from '../data/fotos'
 import { claveFecha } from '../logic/fechas'
 import type { Sesion, SetLog } from '../data/tipos'
 
+declare global {
+  interface Window { fmBiblioteca?: { ejercicios: unknown; fotos: unknown } }
+}
+
 export async function sembrarSiToca(): Promise<void> {
+  // en desarrollo las pruebas de punta a punta leen la biblioteca real desde aquí
+  if (import.meta.env.DEV) window.fmBiblioteca = { ejercicios: EJERCICIOS, fotos: FOTOS_BASE }
   const params = new URLSearchParams(location.search)
   const seed = params.get('seed')
   if (seed === null) return
