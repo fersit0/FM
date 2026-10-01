@@ -12,6 +12,10 @@ export interface SesionActiva {
   descansoSeg?: number
   /** se pidió aviso con Atajos para este descanso: no duplicar el sonido */
   avisado?: boolean
+  /** peso y reps que se estaban ajustando, para retomar exacto si iOS cierra la app */
+  borrador?: { itemId: string; peso: number; reps: number; unidad: 'kg' | 'lb' }
+  /** el usuario salió con "Seguir después": no se abre sola al volver */
+  pausada?: boolean
 }
 
 const CLAVE = 'gym-app:sesion-activa'

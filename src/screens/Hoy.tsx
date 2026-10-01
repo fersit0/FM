@@ -5,7 +5,7 @@ import { usePantalla, useMedidas } from '../design/pantallaActiva'
 import { estadoSemana, siguienteSesion, avisoRescate, semanasCumplidas, tocaProponerSeriesExtra, entraEnVersion, seriesPierna, casaDeSemana, casaDisponible, CASA_MAX } from '../logic/semana'
 import { estadoTiempo, estadoSiSalgo, versionInicial, textoManana } from '../logic/horario'
 import { porSesion } from '../logic/progresion'
-import { unidadDe, pesoDeSet, formatoPeso } from '../logic/unidades'
+import { unidadDe, incrementoDe, pesoDeSet, formatoPeso } from '../logic/unidades'
 import { ejerciciosDe, itemDeRutina, NOMBRE_SESION } from '../data/ejercicios'
 import { claveFecha, DIAS_NOMBRE, formatoHora, minutosDe } from '../logic/fechas'
 import { Circulo, BotonPrincipal, BotonTexto, Hoja, Grupo, Fila, Pez } from '../components/fm'
@@ -54,12 +54,12 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     let dato = ''
     if (u) {
       const un = unidadDe(e, settings.unidades)
-      const peso = Math.max(...u.map((s) => pesoDeSet(s, un) ?? 0))
+      const peso = Math.max(...u.map((s) => pesoDeSet(s, un, incrementoDe(e, un)) ?? 0))
       const reps = Math.max(...u.map((s) => s.reps))
       dato = e.modo === 'peso' ? formatoPeso(peso, un) : e.modo === 'tiempo' ? `${reps} s` : `${reps} reps`
     }
     return { id: e.id, nombre: e.nombre, dato }
-  }), [lista, sets, settings.reemplazos])
+  }), [lista, sets, settings.reemplazos, settings.unidades])
   const pierna = seriesPierna(sesiones, ahora)
   const minutos = version === 'corta' ? 45 : version === 'bonus' ? 75 : 65
   const tope = formatoHora(minutosDe(settings.horaTope))

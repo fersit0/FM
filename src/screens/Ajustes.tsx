@@ -96,7 +96,7 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
         <Fila texto="Sonido" detalle="Dos notas al terminar el descanso, si la app está abierta">
           <Interruptor valor={sonido} onCambiar={(v) => { setSonidoActivo(v); setSonido(v); if (v) { prepararAudio(); sonarFinDescanso() } }} etiqueta="Sonido" />
         </Fila>
-        <Fila texto="Hápticos" detalle="Tick del dial, serie hecha, fin de descanso y de sesión">
+        <Fila texto="Hápticos" detalle="Tick de − y +, serie hecha, fin de descanso y de sesión">
           <Interruptor valor={hapticos} onCambiar={(v) => { setHapticosActivos(v); setHapticos(v); if (v) haptico.serieHecha() }} etiqueta="Hápticos" />
         </Fila>
         <Fila texto="Aviso de descanso con Atajos" detalle="Para que suene aunque estés en otra app" dato={atajo ? 'Ocultar' : 'Cómo'} onClick={() => setAtajo((v) => !v)} />

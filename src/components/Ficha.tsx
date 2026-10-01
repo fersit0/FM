@@ -3,7 +3,7 @@ import type { Ejercicio, Alternativa } from '../data/tipos'
 import type { Datos } from '../hooks/useDatos'
 import { FICHAS } from '../data/fichas'
 import { porSesion } from '../logic/progresion'
-import { unidadDe, pesoDeSet } from '../logic/unidades'
+import { unidadDe, incrementoDe, pesoDeSet } from '../logic/unidades'
 import { fechaCorta } from '../logic/fechas'
 import { comprimirFoto } from '../lib/fotos'
 import { Foto } from './Foto'
@@ -24,7 +24,8 @@ export function FichaHoja({ abierta, onCerrar, base, item, datos, series, onEleg
   const archivoA = useRef<HTMLInputElement>(null)
   const archivoB = useRef<HTMLInputElement>(null)
   const unidad = unidadDe(item, datos.settings.unidades)
-  const historial = useMemo(() => porSesion(datos.sets, item.id).slice(-12).map((g) => ({ fecha: g[0].fecha, peso: Math.max(...g.map((s) => pesoDeSet(s, unidad) ?? 0)) })).filter((m) => m.peso > 0), [datos.sets, item.id, unidad])
+  const paso = incrementoDe(item, unidad)
+  const historial = useMemo(() => porSesion(datos.sets, item.id).slice(-12).map((g) => ({ fecha: g[0].fecha, peso: Math.max(...g.map((s) => pesoDeSet(s, unidad, paso) ?? 0)) })).filter((m) => m.peso > 0), [datos.sets, item.id, unidad, paso])
   const esAlternativa = item.id !== base.id
   const propia = datos.fotosEjercicio.find((f) => f.ejercicioId === item.id)
   async function tomarFoto(cual: 'a' | 'b', e: React.ChangeEvent<HTMLInputElement>) {

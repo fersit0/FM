@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('deshacer serie hecha regresa con los mismos valores', async ({ page }) => {
-  await page.getByRole('button', { name: 'Más' }).click()
+  await page.getByRole('button', { name: 'Más', exact: true }).click()
   const reps = await page.locator('.stepper .t-cifra').innerText()
   const peso = await page.locator('.circulo-cifra button').first().innerText()
   await page.getByRole('button', { name: 'Serie hecha' }).click()

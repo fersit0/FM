@@ -43,7 +43,7 @@ export interface Ejercicio extends Detalle {
   porLado?: boolean
   alternativas: Alternativa[]
   ilustracion: string
-  /** incremento del dial de peso en kg (2.5 por defecto) */
+  /** incremento en kg (2.5 por defecto) */
   incrementoKg?: number
 }
 

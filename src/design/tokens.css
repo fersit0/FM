@@ -92,25 +92,13 @@ button.kg { padding: 10px 6px; margin: -10px -6px -10px 0; min-width: 44px; min-
 .circulo-timer { font-weight: 500; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* ---------- 5. Controles ---------- */
-/* Dial de peso */
-.dial { position: relative; width: 86%; margin: 0 auto; height: 84px; }
-.dial-pista { height: 100%; overflow-x: auto; overflow-y: hidden; display: flex; align-items: flex-start; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; padding-top: 6px; }
-.dial-pista::-webkit-scrollbar { display: none; }
-.dial-relleno { flex: none; width: calc(50% - 10.5px + 21px); }
-.dial-pista { padding-left: 0; }
-.dial-marca { flex: none; width: 21px; height: 74px; display: flex; flex-direction: column; align-items: center; scroll-snap-align: center; position: relative; }
-.dial-marca::before { content: ''; width: 4px; height: 20px; border-radius: 2px; background: var(--texto); }
-.dial-marca.diez::before { height: 44px; }
-.dial-num { position: absolute; top: 50px; font-size: 24px; font-weight: 400; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.dial-aguja { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 6px; height: 50px; border-radius: 3px; background: var(--texto); pointer-events: none; }
-.dial-aguja::after { content: ''; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); width: 18px; height: 18px; border-radius: 50%; background: var(--texto); }
 .cifra-input { width: 100%; background: transparent; border: 0; color: inherit; outline: none; padding: 0; text-align: center; font: inherit; font-variant-numeric: tabular-nums; }
 
 /* Stepper de reps */
 .stepper { display: flex; align-items: center; justify-content: space-between; width: 86%; margin: 0 auto; }
-.stepper-boton { width: 64px; height: 64px; border-radius: 50%; background: var(--texto); color: var(--fondo); display: grid; place-items: center; transition: transform 100ms; }
-.stepper-boton:active { transform: scale(0.97); }
-.stepper-boton svg { width: 28px; height: 28px; stroke: currentColor; stroke-width: 4; stroke-linecap: round; fill: none; }
+.stepper-boton, .mas-menos { width: 64px; height: 64px; border-radius: 50%; background: var(--texto); color: var(--fondo); display: grid; place-items: center; transition: transform 100ms; }
+.stepper-boton:active, .mas-menos:active { transform: scale(0.97); }
+.stepper-boton svg, .mas-menos svg { width: 28px; height: 28px; stroke: currentColor; stroke-width: 4; stroke-linecap: round; fill: none; }
 .stepper-cifra { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 
 /* Botones */
