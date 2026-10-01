@@ -90,7 +90,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
         <div className="puntos" aria-label={`Esta semana ${semana.hechas} de ${semana.meta}`}>
           {semana.dias.map((d, i) => {
             const clase = `punto ${d.tipos.length ? 'hecho' : ''} ${d.fecha === claveHoy ? 'hoy' : ''}`
-            return i === 0 ? <button key={d.fecha} className={clase} onClick={alternarFrida} aria-label={semana.fridaHecha ? 'Lunes con Frida hecho, tocar para quitar' : 'Marcar lunes con Frida'} aria-pressed={semana.fridaHecha} /> : <span key={d.fecha} className={clase} />
+            return i === 0 ? <button key={d.fecha} className="punto-boton" onClick={alternarFrida} aria-label={semana.fridaHecha ? 'Lunes con Frida hecho, tocar para quitar' : 'Marcar lunes con Frida'} aria-pressed={semana.fridaHecha}><span className={clase} /></button> : <span key={d.fecha} className={clase} />
           })}
         </div>
         <BotonTexto onClick={onAjustes}>Ajustes</BotonTexto>

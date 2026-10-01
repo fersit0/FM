@@ -48,7 +48,8 @@ body { min-height: 100dvh; background: var(--fondo); color: var(--texto); transi
 #root { min-height: 100dvh; display: flex; flex-direction: column; }
 button, input, select { font: inherit; color: inherit; letter-spacing: inherit; }
 button { border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none; color: inherit; }
-input, select { border: 0; background: transparent; color: var(--texto); padding: 0; outline: none; font-variant-numeric: tabular-nums; }
+/* 16 px mínimo: con menos, Safari hace zoom al tocar el campo */
+input, select { border: 0; background: transparent; color: var(--texto); padding: 0; outline: none; font-variant-numeric: tabular-nums; font-size: max(16px, 1em); min-height: 44px; }
 h1, h2, h3, p, figure, ul, ol { margin: 0; }
 .oculto-visual { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 120ms !important; animation-duration: 120ms !important; } }
@@ -87,6 +88,7 @@ h1, h2, h3, p, figure, ul, ol { margin: 0; }
 .circulo.sin-transicion { transition: background-color 350ms var(--curva), color 350ms var(--curva); }
 .circulo-cifra { display: inline-flex; align-items: baseline; font-weight: 700; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; pointer-events: auto; background: none; border: 0; color: inherit; padding: 0; white-space: nowrap; }
 .circulo-cifra .kg { font-weight: 700; letter-spacing: -0.02em; margin-left: 0.04em; }
+button.kg { padding: 10px 6px; margin: -10px -6px -10px 0; min-width: 44px; min-height: 44px; display: inline-flex; align-items: baseline; }
 .circulo-timer { font-weight: 500; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* ---------- 5. Controles ---------- */
@@ -125,7 +127,7 @@ h1, h2, h3, p, figure, ul, ol { margin: 0; }
 
 /* Barra de navegación: solo texto */
 .barra { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px var(--margen) calc(var(--safe-bottom) + 14px); display: flex; gap: 24px; background: var(--tinta); z-index: 10; }
-.barra button { font-size: 15px; font-weight: 600; color: color-mix(in srgb, var(--piedra) 40%, transparent); min-height: 32px; }
+.barra button { font-size: 15px; font-weight: 600; color: color-mix(in srgb, var(--piedra) 40%, transparent); min-height: 44px; padding: 0 4px; margin: -6px -4px; }
 .barra button[aria-current='page'] { color: var(--piedra); }
 
 /* Listas planas con separadores */
@@ -186,7 +188,8 @@ button.foto { padding: 0; border: 0; cursor: pointer; }
 .punto.hecho { background: var(--texto); }
 .punto.hoy { background: transparent; box-shadow: inset 0 0 0 1.5px var(--texto); }
 .punto.hoy.hecho { background: var(--texto); box-shadow: 0 0 0 2px var(--fondo), 0 0 0 3.5px var(--texto); }
-button.punto { padding: 0; }
+/* el punto de Frida es tocable: área de 44 alrededor de los 8 px */
+.punto-boton { width: 44px; height: 44px; margin: -18px; display: grid; place-items: center; padding: 0; flex: none; }
 
 /* Aviso discreto */
 .aviso-flotante { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--safe-bottom) + 84px); background: var(--piedra); color: var(--tinta); padding: 12px 20px; border-radius: 999px; font-size: 15px; font-weight: 600; z-index: 20; }
