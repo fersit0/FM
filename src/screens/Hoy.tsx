@@ -5,9 +5,10 @@ import { usePantalla, useMedidas } from '../design/pantallaActiva'
 import { estadoSemana, siguienteSesion, avisoRescate, semanasCumplidas, tocaProponerSeriesExtra, entraEnVersion, seriesPierna, casaDeSemana, casaDisponible, CASA_MAX } from '../logic/semana'
 import { estadoTiempo, estadoSiSalgo, versionInicial, textoManana } from '../logic/horario'
 import { porSesion } from '../logic/progresion'
-import { unidadDe, pesoDeSet, formatoPeso } from '../logic/unidades'
+import { unidadDe, incrementoDe, pesoDeSet, formatoPeso } from '../logic/unidades'
 import { ejerciciosDe, itemDeRutina, NOMBRE_SESION } from '../data/ejercicios'
 import { claveFecha, DIAS_NOMBRE, formatoHora, minutosDe } from '../logic/fechas'
+import { tocaRespaldo } from '../logic/respaldo'
 import { Circulo, BotonPrincipal, BotonTexto, Hoja, Grupo, Fila, Pez } from '../components/fm'
 
 interface Props {
@@ -54,16 +55,17 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     let dato = ''
     if (u) {
       const un = unidadDe(e, settings.unidades)
-      const peso = Math.max(...u.map((s) => pesoDeSet(s, un) ?? 0))
+      const peso = Math.max(...u.map((s) => pesoDeSet(s, un, incrementoDe(e, un)) ?? 0))
       const reps = Math.max(...u.map((s) => s.reps))
       dato = e.modo === 'peso' ? formatoPeso(peso, un) : e.modo === 'tiempo' ? `${reps} s` : `${reps} reps`
     }
     return { id: e.id, nombre: e.nombre, dato }
-  }), [lista, sets, settings.reemplazos])
+  }), [lista, sets, settings.reemplazos, settings.unidades])
   const pierna = seriesPierna(sesiones, ahora)
   const minutos = version === 'corta' ? 45 : version === 'bonus' ? 75 : 65
   const tope = formatoHora(minutosDe(settings.horaTope))
   const claveHoy = claveFecha(ahora)
+  const recordarRespaldo = !sesionEnCurso && tocaRespaldo(settings.ultimoRespaldo, sesiones, claveHoy)
   const recortada = version === 'corta'
 
   let linea: string
@@ -90,7 +92,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
         <div className="puntos" aria-label={`Esta semana ${semana.hechas} de ${semana.meta}`}>
           {semana.dias.map((d, i) => {
             const clase = `punto ${d.tipos.length ? 'hecho' : ''} ${d.fecha === claveHoy ? 'hoy' : ''}`
-            return i === 0 ? <button key={d.fecha} className={clase} onClick={alternarFrida} aria-label={semana.fridaHecha ? 'Lunes con Frida hecho, tocar para quitar' : 'Marcar lunes con Frida'} aria-pressed={semana.fridaHecha} /> : <span key={d.fecha} className={clase} />
+            return i === 0 ? <button key={d.fecha} className="punto-boton" onClick={alternarFrida} aria-label={semana.fridaHecha ? 'Lunes con Frida hecho, tocar para quitar' : 'Marcar lunes con Frida'} aria-pressed={semana.fridaHecha}><span className={clase} /></button> : <span key={d.fecha} className={clase} />
           })}
         </div>
         <BotonTexto onClick={onAjustes}>Ajustes</BotonTexto>
@@ -116,6 +118,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
           </div>
         )}
         {proponerExtra && !sesionEnCurso && <button className="inicio-linea-roja" onClick={() => setHojaExtra(true)}>Ya toca pasar a 4 series.</button>}
+        {recordarRespaldo && <BotonTexto onClick={onAjustes}>{settings.ultimoRespaldo ? 'Ya pasaron 2 semanas del último respaldo. Descárgalo en Ajustes.' : 'Descarga tu primer respaldo en Ajustes.'}</BotonTexto>}
         {ofrecerCasa && <BotonTexto onClick={() => onEmpezar('CASA', 'completa')}>Casa, 12 minutos. Llevas {casaHechas} de {CASA_MAX}.</BotonTexto>}
         {sesionEnCurso ? (
           <>

@@ -9,20 +9,24 @@ function urlsDe(clave: string, propia?: FotoEjercicio): { a: string; b?: string;
 
 /**
  * Foto del ejercicio (RUTINA-FINAL.md, 8): propia primero, luego base. Recorte 4:3 con encuadre por ejercicio.
- * `modo`: 'toque' alterna inicio y final al tocar (sesión); 'par' muestra las dos lado a lado con etiqueta (ficha); 'chica' miniatura.
+ * `modo`: 'toque' alterna inicio y final al tocar (sesión; las dos imágenes ya están cargadas, así que no brinca);
+ * 'par' muestra las dos lado a lado con etiqueta (ficha); 'chica' miniatura. Si una imagen no carga, no se muestra nada roto.
  */
 export function Foto({ clave, ejercicioId, propias, nombre, modo = 'toque', onClick }: { clave: string; ejercicioId: string; propias: FotoEjercicio[]; nombre: string; modo?: 'toque' | 'par' | 'chica'; onClick?: () => void }) {
   const propia = propias.find((f) => f.ejercicioId === ejercicioId)
   const [urls, setUrls] = useState<ReturnType<typeof urlsDe>>(null)
   const [cual, setCual] = useState<0 | 1>(0)
+  const [fallo, setFallo] = useState(false)
   useEffect(() => {
     const u = urlsDe(clave, propia)
     setUrls(u)
+    setFallo(false)
+    setCual(0)
     return () => { if (propia && u) { URL.revokeObjectURL(u.a); if (u.b) URL.revokeObjectURL(u.b) } }
   }, [propia, clave])
-  if (!urls) return null
+  if (!urls || fallo) return null
   const pos = ENCUADRE[clave] ?? '50% 35%'
-  const img = (src: string, alt: string, lazy = true) => <img src={src} alt={alt} width={720} height={540} loading={lazy ? 'lazy' : 'eager'} style={{ objectPosition: pos }} />
+  const img = (src: string, alt: string, lazy = true, extra?: React.CSSProperties) => <img src={src} alt={alt} width={720} height={540} loading={lazy ? 'lazy' : 'eager'} decoding="async" onError={() => setFallo(true)} style={{ objectPosition: pos, ...extra }} />
   const ref = urls.referencia && <span className="foto-etiqueta">Referencia</span>
   if (modo === 'chica') {
     if (!onClick) return <span className="foto foto-chica" role="img" aria-label={nombre}>{img(urls.a, `${nombre}, inicio`)}</span>
@@ -41,7 +45,8 @@ export function Foto({ clave, ejercicioId, propias, nombre, modo = 'toque', onCl
   const Tag = onClick || dos ? 'button' : 'div'
   return (
     <Tag className="foto ficha-foto" onClick={toque} aria-label={onClick ? `${nombre}: ver técnica` : `${nombre}, ${cual === 0 ? 'inicio' : 'final'}`}>
-      {img(cual === 1 && urls.b ? urls.b : urls.a, `${nombre}, ${cual === 0 ? 'inicio' : 'final'}`, false)}
+      {img(urls.a, `${nombre}, inicio`, false, dos && cual === 1 ? { visibility: 'hidden' } : undefined)}
+      {dos && <span className="foto-b" aria-hidden={cual !== 1}>{img(urls.b!, `${nombre}, final`, false, cual === 0 ? { visibility: 'hidden' } : undefined)}</span>}
       {dos && <span className="foto-etiqueta">{cual === 0 ? 'Inicio' : 'Final'}{onClick ? '' : ' · toca para cambiar'}</span>}
       {ref}
     </Tag>

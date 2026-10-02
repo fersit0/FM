@@ -14,7 +14,7 @@ export const CIERRE = {
 }
 export const REGLAS_GLOBALES: { titulo: string; texto: string }[] = [
   { titulo: 'Esfuerzo', texto: 'Terminar cada serie con 1 o 2 repeticiones en reserva. Si la última salió fácil, el peso era chico. Si no llegaste al mínimo del rango, era grande.' },
-  { titulo: 'Ajuste dentro de la sesión', texto: 'Si la primera serie pasó del número alto con 3 o más en reserva, sube un escalón para la siguiente; si no llegó al número bajo, baja uno. Un escalón: 2 kg por mano en mancuernas (1 kg en laterales) o una placa en máquina.' },
+  { titulo: 'Ajuste dentro de la sesión', texto: 'Si la primera serie pasó del número alto con 3 o más en reserva, sube un escalón para la siguiente; si no llegó al número bajo, baja uno. Un escalón: 5 lb por mano en mancuernas (1 kg en las laterales de casa) o una placa en máquina.' },
   { titulo: 'Serie de aproximación', texto: 'En el primer ejercicio de cada sesión, 10 repeticiones con la mitad del peso. No se registra.' },
   { titulo: 'Descanso', texto: 'El que marca cada ejercicio. Sin cel entre series; la app muestra el cronómetro grande.' },
   { titulo: 'Pierna según Frida', texto: 'Goblet en A y prensa en B van a 3 series si en la semana todavía no hay lunes con Frida; si ya lo hubo, 2.' },
@@ -162,7 +162,7 @@ export const EJERCICIOS: Ejercicio[] = [
     tecnica: ['Bajar controlado hasta unos 90° en las rodillas.', 'Empujar sin trabar las rodillas arriba.'], errores: ['Despegar la cadera del asiento.', 'Trabar rodillas.', 'No poner los seguros al terminar.'], ilustracion: 'prensa',
     alternativas: [
       goblet('Prensa ocupada o no la ubicas'),
-      alt({ id: 'prensa-corta', nombre: 'Prensa con recorrido corto', caso: 'Rodilla molesta', series: 2, repsMin: 10, repsMax: 12, descansoSeg: 90, tecnica: ['Prensa de pierna bajando menos, sin llegar a 90°.'], ilustracion: 'prensa-corta' }),
+      alt({ id: 'prensa-corta', nombre: 'Prensa con recorrido corto', caso: 'Rodilla molesta', series: 2, repsMin: 10, repsMax: 12, descansoSeg: 90, tecnica: ['Misma máquina, bajando menos: sin llegar a 90°.'], ilustracion: 'prensa-corta' }),
     ],
   },
   {

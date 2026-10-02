@@ -6,12 +6,13 @@
 .pie.con-barra-pie { bottom: calc(var(--safe-bottom) + 72px); }
 
 
-/* Inicio */
-.inicio { position: relative; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; padding: calc(var(--safe-top) + 14px) var(--margen) calc(var(--safe-bottom) + 76px); max-width: none; gap: 16px; }
+/* Inicio: columna de 100dvh; si no cabe (SE en Safari) hace scroll en vez de cortar el botón */
+.inicio { position: relative; display: flex; flex-direction: column; min-height: 100dvh; height: 100dvh; overflow-x: hidden; overflow-y: auto; padding: calc(var(--safe-top) + 14px) var(--margen) calc(var(--safe-bottom) + 76px); max-width: none; gap: 16px; }
 .inicio-arriba { display: flex; justify-content: space-between; align-items: center; z-index: 2; flex: none; }
-.inicio-texto { position: relative; margin-top: auto; display: flex; flex-direction: column; gap: 10px; z-index: 1; }
+.inicio-texto { position: relative; margin-top: auto; display: flex; flex-direction: column; gap: 10px; z-index: 1; flex: none; }
 .inicio-pie { display: flex; flex-direction: column; gap: 14px; align-items: center; margin: 0 calc(-1 * var(--margen)); z-index: 1; flex: none; }
-.inicio-linea-roja { color: var(--rojo); font-size: 17px; }
+.inicio-linea-roja { color: var(--rojo); font-size: 17px; min-height: 44px; }
+@media (max-height: 700px) { .inicio { gap: 10px; } .t-inicio { font-size: 44px; } .inicio-pie { gap: 8px; } }
 
 /* Ficha */
 .ficha-foto { margin: 0 calc(-1 * var(--margen)); }
@@ -29,25 +30,49 @@
 .vacio { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; padding-top: 24px; }
 .vacio img { width: 120px; height: 120px; }
 
-/* Sesión: columna flexible, nunca hace scroll. Arriba texto, abajo controles, el círculo toma lo que sobra. */
+/* Sesión: columna flexible, nunca hace scroll. Arriba texto y foto, abajo controles, el círculo toma lo que sobra.
+   Prioridad cuando no cabe: primero cede la foto, luego el círculo (mínimo 88), nunca los botones. */
 .sesion { display: flex; flex-direction: column; height: 100dvh; min-height: 100dvh; overflow: hidden; padding: calc(var(--safe-top) + 8px) var(--margen) calc(var(--safe-bottom) + 20px); gap: 0; max-width: none; }
 .sesion-cabecera { display: flex; justify-content: space-between; align-items: center; height: 36px; flex: none; margin-left: -10px; position: relative; z-index: 3; }
 .panel { display: flex; flex-direction: column; flex: 1; min-height: 0; z-index: 1; animation: panel-entra 380ms var(--curva) both; }
-.sesion-arriba { display: flex; flex-direction: column; gap: 4px; flex: none; padding-top: 8px; }
+.sesion-arriba { display: flex; flex-direction: column; gap: 4px; flex: 0 1 auto; min-height: 0; padding-top: 8px; }
+.sesion-arriba > * { flex: none; }
 .sesion-titulo-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .sesion-titulo-fila h1 { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.sesion-aviso { padding-top: 4px; }
-.sesion-foto { margin-top: 10px; }
-.sesion-foto .foto { max-height: 26dvh; aspect-ratio: 4 / 3; }
-.sesion-medio { flex: 1; min-height: 110px; display: flex; align-items: center; justify-content: center; padding: 8px 0; }
+.sesion-aviso { padding-top: 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.sesion-aviso button, .sesion-alternativa button { color: inherit; text-decoration: underline; text-underline-offset: 3px; font: inherit; padding: 10px 4px; margin: -10px -4px; }
+.sesion-foto { margin-top: 10px; flex: 0 1 auto; min-height: 0; overflow: hidden; }
+.sesion-foto:empty { display: none; }
+.sesion-foto .foto { width: 100%; aspect-ratio: 4 / 3; max-height: min(26dvh, 100%); }
+.sesion-medio { flex: 1 1 0; min-height: 96px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 0; }
 .sesion-abajo { display: flex; flex-direction: column; gap: 14px; flex: none; padding-top: 8px; }
 .circulo-sitio { position: relative; flex: none; }
 .circulo-contenido { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .circulo-equivalencia { opacity: 0.7; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .resumen-cifras { display: flex; justify-content: space-between; }
 .resumen-cifra { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.deshacer { position: fixed; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 96px); z-index: 25; background: var(--tinta); color: var(--piedra); padding: 14px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--piedra); }
-.deshacer button { color: var(--rojo); font-weight: 700; font-size: 17px; min-height: 32px; }
+.deshacer { position: fixed; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 96px); z-index: 25; background: var(--tinta); color: var(--piedra); padding: 10px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--piedra); }
+.deshacer button { color: var(--rojo); font-weight: 700; font-size: 17px; min-height: 44px; padding: 0 8px; }
 body[data-pantalla='descanso'] .deshacer { background: var(--piedra); color: var(--cobalto); box-shadow: none; }
-/* Pantallas cortas (iPhone SE): la foto de la sesión pasa a 16:9 para que dial, stepper y botón sigan en pantalla */
-@media (max-height: 700px) { .sesion-foto .foto { aspect-ratio: 16 / 9; max-height: 11dvh; } .sesion-foto .foto-etiqueta { display: none; } .sesion-medio { min-height: 92px; } .sesion-arriba { gap: 2px; } .sesion-abajo { gap: 10px; } }
+/* Pantallas cortas (iPhone SE instalado, 667): foto 16:9 compacta, menos aire */
+@media (max-height: 700px) {
+  .sesion-foto .foto { aspect-ratio: 16 / 9; max-height: min(12dvh, 100%); }
+  .sesion-foto .foto-etiqueta { display: none; }
+  .sesion-medio { min-height: 92px; padding: 4px 0; }
+  .sesion-arriba { gap: 2px; padding-top: 4px; }
+  .sesion-abajo { gap: 10px; }
+}
+/* Muy cortas (iPhone SE dentro de Safari, ~553): sin foto, título fijo chico, controles compactos */
+@media (max-height: 600px) {
+  .sesion { padding-bottom: calc(var(--safe-bottom) + 12px); }
+  .sesion-foto { display: none; }
+  .sesion-aviso { -webkit-line-clamp: 2; }
+  .sesion-arriba .t-sub { font-size: 20px; }
+  .sesion-medio { min-height: 88px; }
+  .sesion-abajo { gap: 8px; padding-top: 4px; }
+  .stepper-boton { width: 52px; height: 52px; }
+  .stepper .t-cifra { font-size: 44px; }
+  .boton { height: 56px; }
+  .t-descanso, .t-titulo { font-size: 44px; }
+  .t-listo { font-size: 64px; }
+}

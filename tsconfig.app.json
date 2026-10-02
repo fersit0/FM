@@ -28,6 +28,7 @@
     "src"
   ],
   "exclude": [
-    "src/data/fotos.test.ts"
+    "src/data/fotos.test.ts",
+    "src/data/fichas.test.ts"
   ]
 }

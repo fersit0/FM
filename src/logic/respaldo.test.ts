@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { armarRespaldo, leerRespaldo } from './respaldo'
+import { tocaRespaldo, armarRespaldo, leerRespaldo } from './respaldo'
 import { SETTINGS_DEFAULT } from '../data/tipos'
 
 describe('respaldo', () => {
@@ -22,5 +22,18 @@ describe('respaldo', () => {
   it('rechaza archivos ajenos', () => {
     expect(() => leerRespaldo('{"hola":1}')).toThrow(/no es un respaldo/)
     expect(() => leerRespaldo('no json')).toThrow(/JSON/)
+  })
+})
+
+describe('tocaRespaldo', () => {
+  const ses = [{ fecha: '2026-09-01', terminada: true }, { fecha: '2026-09-10', terminada: true }]
+  it('sin sesiones no molesta', () => { expect(tocaRespaldo(undefined, [], '2026-10-01')).toBe(false) })
+  it('nunca respaldado: cuenta desde la primera sesión', () => {
+    expect(tocaRespaldo(undefined, ses, '2026-09-14')).toBe(false)
+    expect(tocaRespaldo(undefined, ses, '2026-09-15')).toBe(true)
+  })
+  it('respaldado hace menos de 14 días: no; hace 14 o más: sí', () => {
+    expect(tocaRespaldo('2026-09-20', ses, '2026-10-01')).toBe(false)
+    expect(tocaRespaldo('2026-09-17', ses, '2026-10-01')).toBe(true)
   })
 })

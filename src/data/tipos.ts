@@ -43,7 +43,7 @@ export interface Ejercicio extends Detalle {
   porLado?: boolean
   alternativas: Alternativa[]
   ilustracion: string
-  /** incremento del dial de peso en kg (2.5 por defecto) */
+  /** incremento en kg (2.5 por defecto) */
   incrementoKg?: number
 }
 
@@ -122,6 +122,8 @@ export interface Settings {
   migracionRutinaFinal?: boolean
   /** ids viejos que no estaban en la tabla de migración */
   idsDesconocidos?: string[]
+  /** último respaldo exportado o importado (YYYY-MM-DD): se recuerda cada 2 semanas */
+  ultimoRespaldo?: string
 }
 
 export interface Cintura {

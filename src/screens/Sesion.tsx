@@ -1,12 +1,12 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import type { Sesion as SesionTipo, Ejercicio, Alternativa, SetLog, Version } from '../data/tipos'
+import type { Sesion as SesionTipo, Ejercicio, Alternativa, SetLog, Version, Modo } from '../data/tipos'
 import type { SesionActiva } from '../hooks/useSesionActiva'
 import { ejerciciosDe, CALENTAMIENTO, CIERRE, buscarCualquiera, itemDeRutina } from '../data/ejercicios'
 import { seriesPara, entraEnVersion, estadoSemana, seriesPierna } from '../logic/semana'
 import { sugerirPeso, subioDePeso, porSesion } from '../logic/progresion'
 import { claveFecha } from '../logic/fechas'
-import { unidadDe, incrementoDe, pesoDeSet, pesoInicial, aKg, convertir, formatoPeso, type Unidad } from '../logic/unidades'
+import { unidadDe, incrementoDe, pesoDeSet, pesoInicial, aKg, convertir, formatoPeso, redondearAPaso, type Unidad } from '../logic/unidades'
 import { useWakeLock } from '../hooks/useWakeLock'
 import { useAlto } from '../hooks/useAlto'
 import { usePantalla, useMedidas } from '../design/pantallaActiva'
@@ -14,7 +14,7 @@ import { haptico } from '../lib/haptics'
 import { prepararAudio, sonarClic, sonarFinDescanso } from '../lib/sonido'
 import { abrirAtajo } from '../lib/atajos'
 import { useCuentaRegresiva, mmss } from '../hooks/useCuentaRegresiva'
-import { Circulo, Dial, Stepper, BotonPrincipal, BotonContorno, BotonTexto, Hoja, Grupo, Fila, Pez, TituloAjustable, Deshacer } from '../components/fm'
+import { Circulo, Stepper, BotonPrincipal, BotonContorno, BotonTexto, Hoja, Grupo, Fila, Pez, TituloAjustable, Deshacer } from '../components/fm'
 import { FichaHoja } from '../components/Ficha'
 import { Foto } from '../components/Foto'
 
@@ -22,7 +22,6 @@ interface Props { datos: Datos; sesion: SesionTipo; activa: SesionActiva; setAct
 type PasoEj = { tipo: 'ejercicio'; base: Ejercicio; item: Ejercicio | Alternativa; indice: number; series: number }
 type Paso = { tipo: 'calentamiento' } | PasoEj | { tipo: 'cierre' } | { tipo: 'resumen' }
 type Accion = { texto: string; deshacer: () => void | Promise<void> }
-type Previo = { itemId: string; peso: number; reps: number; unidad: Unidad }
 
 const minCal = (v: Version) => (v === 'corta' ? CALENTAMIENTO.minCorta : CALENTAMIENTO.minCompleta)
 const minCierre = (v: Version) => (v === 'corta' ? CIERRE.minCorta : v === 'bonus' ? CIERRE.minBonus : CIERRE.minCompleta)
@@ -55,9 +54,8 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
   const indice = Math.min(activa.paso, pasos.length - 1)
   const paso = pasos[indice]
   const [accion, setAccion] = useState<Accion | null>(null)
-  const previo = useRef<Previo | null>(null)
   const ir = useCallback((n: number) => {
-    setActiva({ ...activa, paso: Math.max(0, Math.min(pasos.length - 1, n)), timerFin: undefined, timerSeg: undefined, descansoFin: undefined, descansoSeg: undefined, avisado: undefined })
+    setActiva({ ...activa, paso: Math.max(0, Math.min(pasos.length - 1, n)), timerFin: undefined, timerSeg: undefined, descansoFin: undefined, descansoSeg: undefined, avisado: undefined, borrador: undefined })
   }, [activa, pasos.length, setActiva])
   const [menu, setMenu] = useState(false)
   const [tecnica, setTecnica] = useState(false)
@@ -70,7 +68,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
     const u = g[g.length - 1]
     if (!u) return 'Sin registro'
     const un = unidadDe(it, settings.unidades)
-    const pesos = u.map((x) => pesoDeSet(x, un)).filter((x): x is number => x !== null)
+    const pesos = u.map((x) => pesoDeSet(x, un, incrementoDe(it, un))).filter((x): x is number => x !== null)
     return pesos.length ? formatoPeso(Math.max(...pesos), un) : `${Math.max(...u.map((x) => x.reps))} reps`
   }
   function usarSiempre(base: Ejercicio, altId: string | null) {
@@ -123,8 +121,8 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
       )}
       {paso.tipo === 'calentamiento' && <PasoTiempo key="cal" titulo="Calentamiento" detalle={`Elíptica ${minCal(version)} min, ritmo en el que puedes platicar.`} nota={CALENTAMIENTO.siOcupada} minutos={minCal(version)} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
       {paso.tipo === 'ejercicio' && !descansando && (
-        <PasoSerie key={paso.item.id} datos={datos} sesion={sesion} paso={paso} sets={sets} activa={activa} setActiva={setActiva} previo={previo.current} onTecnica={() => setTecnica(true)} onSiguiente={() => ir(indice + 1)}
-          onGuardado={(id, p) => { previo.current = p; setAccion({ texto: 'Serie guardada.', deshacer: async () => { await datos.borrarSet(id); setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined }) } }) }} />
+        <PasoSerie key={paso.item.id} datos={datos} sesion={sesion} paso={paso} sets={sets} activa={activa} setActiva={setActiva} onTecnica={() => setTecnica(true)} onSiguiente={() => ir(indice + 1)} onSeries={() => setSeriesHoy(true)} onVolverOriginal={() => elegirAlternativa(null)}
+          onGuardado={(id) => setAccion({ texto: 'Serie guardada.', deshacer: async () => { await datos.borrarSet(id); setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined }) } })} />
       )}
       {paso.tipo === 'ejercicio' && descansando && activa.descansoFin !== undefined && (
         <PasoDescanso key={`d${activa.descansoFin}`} paso={paso} sets={sets} sesion={sesion} fin={activa.descansoFin} total={activa.descansoSeg ?? paso.item.descansoSeg} avisado={!!activa.avisado} unidad={unidadDe(paso.item, settings.unidades)}
@@ -189,7 +187,8 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
 export function SerieEditable({ set, datos }: { set: SetLog; datos: Datos }) {
   const info = buscarCualquiera(set.exerciseId)
   const unidad: Unidad = info ? unidadDe(info.item, datos.settings.unidades) : 'kg'
-  const [peso, setPeso] = useState(() => { const p = pesoDeSet(set, unidad); return p === null ? '' : String(p) })
+  const paso = info ? incrementoDe(info.item, unidad) : undefined
+  const [peso, setPeso] = useState(() => { const p = pesoDeSet(set, unidad, paso); return p === null ? '' : String(p) })
   const [reps, setReps] = useState(String(set.reps))
   async function guardar() {
     const p = peso === '' ? null : parseFloat(peso.replace(',', '.'))
@@ -218,12 +217,11 @@ function PasoTiempo({ titulo, detalle, nota, minutos, activa, setActiva, onListo
   const [medio, alto, ancho] = useAlto<HTMLDivElement>()
   const fin = activa.timerFin
   const restante = useCuentaRegresiva(fin)
-  const [termino, setTermino] = useState(false)
+  const termino = fin !== undefined && restante <= 0
   const d = acotar(0.8 * W, alto, ancho)
-  if (fin !== undefined && restante <= 0 && !termino) {
-    setTermino(true)
-    if (document.visibilityState === 'visible') { haptico.finDescanso(); sonarFinDescanso() }
-  }
+  useEffect(() => {
+    if (termino && document.visibilityState === 'visible') { haptico.finDescanso(); sonarFinDescanso() }
+  }, [termino])
   return (
     <div className="panel">
       <div className="sesion-arriba">
@@ -247,7 +245,15 @@ function PasoTiempo({ titulo, detalle, nota, minutos, activa, setActiva, onListo
 }
 
 // ---------- 6.2 Serie ----------
-function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, previo, onTecnica, onSiguiente, onGuardado }: { datos: Datos; sesion: SesionTipo; paso: PasoEj; sets: SetLog[]; activa: SesionActiva; setActiva: (a: SesionActiva) => void; previo: Previo | null; onTecnica: () => void; onSiguiente: () => void; onGuardado: (id: number, p: Previo) => void }) {
+/** Formato de una serie hecha: "30 × 10", "12" o "45 s" */
+function textoSerie(h: SetLog, modo: Modo, unidad: Unidad, paso: number): string {
+  if (modo === 'tiempo') return `${h.reps} s`
+  if (modo === 'corporal') return `${h.reps}`
+  const p = pesoDeSet(h, unidad, paso)
+  return `${p ?? '—'} × ${h.reps}`
+}
+
+function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, onTecnica, onSiguiente, onGuardado, onSeries, onVolverOriginal }: { datos: Datos; sesion: SesionTipo; paso: PasoEj; sets: SetLog[]; activa: SesionActiva; setActiva: (a: SesionActiva) => void; onTecnica: () => void; onSiguiente: () => void; onGuardado: (id: number) => void; onSeries: () => void; onVolverOriginal: () => void }) {
   usePantalla('serie')
   const { W } = useMedidas()
   const [medio, alto, ancho] = useAlto<HTMLDivElement>()
@@ -256,6 +262,8 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, previo, onTec
   const unidad = unidadDe(item, settings.unidades)
   const otra: Unidad = unidad === 'kg' ? 'lb' : 'kg'
   const incremento = incrementoDe(item, unidad)
+  const conPeso = item.modo === 'peso'
+  const esAlternativa = item.id !== base.id
   const hechos = useMemo(() => sets.filter((s) => s.sessionId === sesion.id && s.exerciseId === item.id).sort((a, b) => a.numSerie - b.numSerie), [sets, sesion.id, item.id])
   const historial = useMemo(() => sets.filter((s) => s.sessionId !== sesion.id), [sets, sesion.id])
   const sugerencia = useMemo(() => sugerirPeso(historial, item.id, item.repsMax, item.modo, item.repsMin), [historial, item.id, item.repsMax, item.modo, item.repsMin])
@@ -266,33 +274,46 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, previo, onTec
   const primeraVez = sugerencia.tipo === 'inicial' && !ultimo
   const pesoBase = (() => {
     if (!ultimaVez) return null
-    const pesos = ultimaVez.map((s) => pesoDeSet(s, unidad)).filter((x): x is number => x !== null)
+    const pesos = ultimaVez.map((s) => pesoDeSet(s, unidad, incremento)).filter((x): x is number => x !== null)
     return pesos.length ? Math.max(...pesos) : null
   })()
   const invertida = 'invertida' in item && !!item.invertida
   const signo = invertida ? -1 : 1
   const pesoSugerido = pesoBase === null ? null : sugerencia.tipo === 'subir' ? Math.max(0, pesoBase + signo * incremento) : sugerencia.tipo === 'bajar' ? Math.max(0, pesoBase - signo * incremento) : pesoBase
-  const [peso, setPeso] = useState<number>(() => {
-    if (previo && previo.itemId === item.id) return convertir(previo.peso, previo.unidad, unidad)
-    const ult = ultimo ? pesoDeSet(ultimo, unidad) : null
+  // la serie nueva arranca con el peso y reps de la anterior; si iOS cerró la app, con lo que se estaba ajustando
+  const borrador = activa.borrador && activa.borrador.itemId === item.id ? activa.borrador : null
+  const [peso, setPesoState] = useState<number>(() => {
+    if (borrador) return convertir(borrador.peso, borrador.unidad, unidad, incremento)
+    const ult = ultimo ? pesoDeSet(ultimo, unidad, incremento) : null
     if (ult !== null) return ult
     if (pesoSugerido !== null) return pesoSugerido
-    return item.modo === 'peso' ? pesoInicial(item, unidad) : 0
+    return conPeso ? pesoInicial(item, unidad) : 0
   })
-  const [reps, setReps] = useState<number>(() => (previo && previo.itemId === item.id ? previo.reps : ultimo?.reps ?? (item.modo === 'tiempo' ? item.repsMax : item.repsMax || 10)))
+  const [reps, setRepsState] = useState<number>(() => borrador?.reps ?? ultimo?.reps ?? (item.modo === 'tiempo' ? item.repsMax : item.repsMax || 10))
   const [error, setError] = useState(false)
   const [editando, setEditando] = useState(false)
   const [texto, setTexto] = useState('')
+  const guardarBorrador = (p: number, r: number, u: Unidad) => setActiva({ ...activa, borrador: { itemId: item.id, peso: p, reps: r, unidad: u } })
+  const setPeso = (v: number) => { setPesoState(v); guardarBorrador(v, reps, unidad) }
+  const setReps = (v: number) => { setRepsState(v); guardarBorrador(peso, v, unidad) }
 
   const serieActual = Math.min(siguienteNum, series)
   const dSpec = series <= 1 ? 0.66 * W : 0.48 * W + (0.36 * W * (serieActual - 1)) / (series - 1)
-  const d = acotar(dSpec, alto, ancho)
+  const anchoLibre = conPeso ? ancho - 2 * (64 + 12) : ancho
+  const d = acotar(dSpec, alto, anchoLibre)
   const largo = String(peso).length
   const cifra = Math.round(d * 0.42 * (largo <= 2 ? 1 : largo === 3 ? 0.88 : largo === 4 ? 0.76 : 0.64))
 
   function cambiarUnidad() {
+    const nuevo = convertir(peso, unidad, otra, incrementoDe(item, otra))
     datos.setSettings({ ...settings, unidades: { ...(settings.unidades ?? {}), [item.id]: otra } })
-    setPeso(convertir(peso, unidad, otra))
+    setPesoState(nuevo)
+    guardarBorrador(nuevo, reps, otra)
+  }
+  function mover(dir: 1 | -1) {
+    const v = Math.max(0, Math.round((peso + dir * incremento) * 100) / 100)
+    haptico.marcaDial()
+    setPeso(v)
   }
   async function serieHecha() {
     prepararAudio()
@@ -300,13 +321,13 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, previo, onTec
     const ahora = Date.now()
     let id: number
     try {
-      id = await datos.guardarSet({ sessionId: sesion.id, exerciseId: item.id, ejercicioBaseId: base.id, numSerie: siguienteNum, pesoKg: item.modo === 'peso' ? aKg(peso, unidad) : null, peso: item.modo === 'peso' ? peso : undefined, unidad: item.modo === 'peso' ? unidad : undefined, reps, fecha: claveFecha(new Date(ahora)), hora: ahora })
+      id = await datos.guardarSet({ sessionId: sesion.id, exerciseId: item.id, ejercicioBaseId: base.id, numSerie: siguienteNum, pesoKg: conPeso ? aKg(peso, unidad) : null, peso: conPeso ? peso : undefined, unidad: conPeso ? unidad : undefined, reps, fecha: claveFecha(new Date(ahora)), hora: ahora })
     } catch { setError(true); return }
     setError(false)
     sonarClic()
     if (siguienteNum >= series) haptico.finEjercicio(); else haptico.serieHecha()
-    setActiva({ ...activa, descansoFin: ahora + item.descansoSeg * 1000, descansoSeg: item.descansoSeg, avisado: undefined })
-    onGuardado(id, { itemId: item.id, peso, reps, unidad })
+    setActiva({ ...activa, descansoFin: ahora + item.descansoSeg * 1000, descansoSeg: item.descansoSeg, avisado: undefined, borrador: { itemId: item.id, peso, reps, unidad } })
+    onGuardado(id)
   }
   function confirmarTexto() {
     const v = parseFloat(texto.replace(',', '.'))
@@ -314,14 +335,16 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, previo, onTec
     setEditando(false)
   }
 
-  let aviso: string | null = null
-  if (error) aviso = 'No se guardó la serie. Toca para reintentar.'
-  else if (hechos.length === 0) {
+  let aviso: ReactNode = null
+  if (error) aviso = <span onClick={serieHecha}>No se guardó la serie. Toca para reintentar.</span>
+  else if (hechos.length > 0) {
+    aviso = <>{conPeso ? `Hechas en ${unidad}: ` : 'Hechas: '}{hechos.map((h) => textoSerie(h, item.modo, unidad, incremento)).join(', ')}. <button onClick={onSeries}>Editar</button></>
+  } else {
     if (sugerencia.tipo === 'subir' && ultimaVez && pesoSugerido !== null) aviso = invertida ? `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Menos ayuda: ${formatoPeso(pesoSugerido, unidad)}.` : `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Sube a ${formatoPeso(pesoSugerido, unidad)}.`
     else if (sugerencia.tipo === 'bajar' && pesoSugerido !== null) aviso = `Dos veces seguidas bajaron las reps. Baja a ${formatoPeso(pesoSugerido, unidad)}.`
     else if (sugerencia.tipo === 'quedarse' && pesoBase !== null) aviso = `La vez pasada no llegaste al mínimo. Quédate en ${formatoPeso(pesoBase, unidad)} o baja.`
-    else if (primeraVez && item.modo === 'peso') aviso = item.id.startsWith('prensa') ? 'Primera vez: tantea. 20 kg por lado y 10 reps; si fue fácil, 40 por lado, y de ahí de 10 en 10.' : 'Primera vez: empieza con este y ajusta.'
-    else if (base.orden === 1 && item.modo === 'peso' && peso > 0) aviso = `Antes, una de aproximación con ${formatoPeso(Math.round(peso / 2 / incremento) * incremento || incremento, unidad)}, 10 reps. No se registra.`
+    else if (primeraVez && conPeso) aviso = item.id.startsWith('prensa') ? 'Primera vez: tantea. 20 kg por lado y 10 reps; si fue fácil, 40 por lado, y de ahí de 10 en 10.' : 'Primera vez: empieza con este y ajusta.'
+    else if (base.orden === 1 && conPeso && peso > 0) aviso = `Antes, una de aproximación con ${formatoPeso(redondearAPaso(peso / 2, incremento) || incremento, unidad)}, 10 reps. No se registra.`
   }
 
   return (
@@ -332,12 +355,14 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, previo, onTec
           <p className="t-sub">{completo ? `${series} series hechas` : `Serie ${serieActual} de ${series}`}</p>
           <BotonTexto subrayado onClick={onTecnica}>Técnica</BotonTexto>
         </div>
-        {aviso && <p className="t-cuerpo tenue sesion-aviso" onClick={error ? serieHecha : undefined}>{aviso}</p>}
+        {esAlternativa && <p className="t-nota tenue sesion-alternativa">{'caso' in item ? `${item.caso}. ` : ''}<button onClick={onVolverOriginal}>Volver al original</button></p>}
+        {aviso && <p className="t-cuerpo tenue sesion-aviso">{aviso}</p>}
         <div className="sesion-foto"><Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="toque" /></div>
       </div>
       <div className="sesion-medio" ref={medio}>
+        {conPeso && <button className="mas-menos" aria-label={`Menos ${incremento} ${unidad}`} onClick={() => mover(-1)}><svg viewBox="0 0 28 28"><path d="M6 14h16" /></svg></button>}
         <Circulo d={d}>
-          {item.modo === 'peso' ? (
+          {conPeso ? (
             <div className="circulo-contenido">
               {editando ? (
                 <input className="cifra-input" style={{ fontSize: cifra, fontWeight: 700, letterSpacing: '-0.05em', width: d * 0.9 }} inputMode="decimal" value={texto} onChange={(e) => setTexto(e.target.value)} onBlur={confirmarTexto} onKeyDown={(e) => e.key === 'Enter' && confirmarTexto()} autoFocus aria-label="Peso" />
@@ -347,15 +372,15 @@ function PasoSerie({ datos, sesion, paso, sets, activa, setActiva, previo, onTec
                   <button className="kg" style={{ fontSize: Math.max(20, Math.round(cifra * 0.3)) }} onClick={cambiarUnidad} aria-label={`Cambiar a ${otra}`}>{unidad}</button>
                 </span>
               )}
-              <span className="circulo-equivalencia" style={{ fontSize: Math.max(15, Math.round(cifra * 0.22)) }}>{formatoPeso(convertir(peso, unidad, otra), otra)}</span>
+              <span className="circulo-equivalencia" style={{ fontSize: Math.max(15, Math.round(cifra * 0.22)) }}>{formatoPeso(convertir(peso, unidad, otra, incrementoDe(item, otra)), otra)}</span>
             </div>
           ) : (
             <span className="circulo-cifra" style={{ fontSize: cifra }}>{reps}<span className="kg" style={{ fontSize: Math.max(20, Math.round(cifra * 0.3)) }}>{item.modo === 'tiempo' ? 's' : ''}</span></span>
           )}
         </Circulo>
+        {conPeso && <button className="mas-menos" aria-label={`Más ${incremento} ${unidad}`} onClick={() => mover(1)}><svg viewBox="0 0 28 28"><path d="M6 14h16M14 6v16" /></svg></button>}
       </div>
       <div className="sesion-abajo">
-        {item.modo === 'peso' && <Dial valor={peso} onChange={setPeso} paso={incremento} max={unidad === 'lb' ? 500 : 250} />}
         <Stepper valor={reps} onChange={setReps} unidad={item.modo === 'tiempo' ? 'segundos' : 'reps'} min={item.modo === 'tiempo' ? 5 : 1} max={item.modo === 'tiempo' ? 300 : 99} />
         {completo ? <BotonPrincipal onClick={onSiguiente}>Siguiente ejercicio</BotonPrincipal> : <BotonPrincipal onClick={serieHecha}>Serie hecha</BotonPrincipal>}
       </div>
@@ -376,15 +401,15 @@ function PasoDescanso({ paso, sets, sesion, fin, total, avisado, unidad, onMas, 
   const restante = useCuentaRegresiva(fin)
   const termino = restante <= 0
   const tarde = restante < -3000
-  const [avisadoFin, setAvisadoFin] = useState(false)
-  if (termino && !avisadoFin) {
-    setAvisadoFin(true)
-    if (document.visibilityState === 'visible') { haptico.finDescanso(); if (!avisado) sonarFinDescanso() }
-  }
+  useEffect(() => {
+    if (termino && document.visibilityState === 'visible') { haptico.finDescanso(); if (!avisado) sonarFinDescanso() }
+    // solo al cruzar el cero, no por cada cambio de avisado
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [termino])
   const progreso = Math.max(0, Math.min(1, restante / (total * 1000)))
   const dMax = acotar(0.96 * W, alto, ancho), dMin = Math.min(0.56 * W, dMax)
   const d = dMin + (dMax - dMin) * progreso
-  const pesoUlt = ultimo ? pesoDeSet(ultimo, unidad) : null
+  const pesoUlt = ultimo ? pesoDeSet(ultimo, unidad, incrementoDe(item, unidad)) : null
   const sigue = ejercicioCompleto ? 'Sigue: el siguiente ejercicio' : `Sigue: serie ${siguiente}${pesoUlt !== null ? `, ${formatoPeso(pesoUlt, unidad)}` : ''}`
   return (
     <div className="panel">
@@ -426,7 +451,8 @@ function Resumen({ datos, sesion, sets, ejercicios, onTerminar }: { datos: Datos
     const unidad: Unidad = info ? unidadDe(info.item, datos.settings.unidades) : 'kg'
     const grupos = porSesion(sets, id)
     const i = grupos.findIndex((g) => g[0].sessionId === sesion.id)
-    const max = (g: SetLog[]) => Math.max(...g.map((s) => pesoDeSet(s, unidad) ?? 0))
+    const paso = info ? incrementoDe(info.item, unidad) : undefined
+    const max = (g: SetLog[]) => Math.max(...g.map((s) => pesoDeSet(s, unidad, paso) ?? 0))
     return { nombre: (info?.item.nombre ?? id).toLowerCase(), delta: Math.round((i > 0 ? max(grupos[i]) - max(grupos[i - 1]) : 0) * 10) / 10, unidad }
   })
   const minutos = Math.max(1, Math.round((fin - sesion.inicio) / 60000))

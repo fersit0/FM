@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // Misma versión que package.json; se muestra en Ajustes
-const version = '0.4.0'
+const version = '0.5.0'
 
 export default defineConfig({
   base: '/FM/',

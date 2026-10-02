@@ -226,16 +226,18 @@ Aplica el mapeo en: `SetLog.exerciseId` y `SetLog.ejercicioBaseId`, `Sesion.camb
 ## 10. Reglas y progresión
 
 - Doble progresión igual que hoy, ahora por id de movimiento: cuando salga el número alto del rango en todas las series, la siguiente vez sube el peso.
-- Incrementos: `laterales`, `laterales-sentado` y `laterales-casa` en kg suben de 1 en 1; el resto en kg de 2.5; en lb de 5.
-- Unidad por defecto lb: `jalon`, `remo-polea`, `triceps-polea`, `prensa`, `press-inclinado-maquina`, `press-pecho-maquina`, `press-hombro-maquina`, `remo-pecho-maquina`, `remo-alto-maquina`, `laterales-polea`, `curl-polea`, `curl-cuerda`, `remo-polea-una-mano`, `dominadas-asistidas`. Lo demás en kg.
+- Incrementos: en lb de 5 en 5 (mancuernas o una placa en máquina); en kg de 2.5; `laterales`, `laterales-sentado` y `laterales-casa` en kg de 1 en 1. En la sesión el peso se ajusta con botones − y + con ese paso, y al tocar la cifra se escribe el exacto (12, 17.5).
+- Unidad por defecto: en el club casi todo está en lb, mancuernas incluidas, así que todo lo del gym (A, B y sus alternativas) va en lb; CASA y sus alternativas en kg. En la sesión, un toque en la unidad cambia kg/lb de ese ejercicio y se queda guardado (`settings.unidades`). Cada serie guarda la unidad en que se registró; historial y sugerencia se muestran convertidos a la unidad actual, redondeados al paso real, sin perder el dato original.
 - Regla de 4 semanas: `CON_SERIE_EXTRA = ['press-inclinado', 'jalon', 'press-plano', 'remo-polea']`.
 - Semana pesada: igual que hoy, todo a 2 series con el mismo peso.
 - Dolor: igual que hoy; molestia muscular sí, dolor agudo en articulación, alternativa.
 - La lógica nueva (pierna según Frida, límite y conteo de CASA) va en `src/logic` con pruebas.
-- Peso inicial cuando no hay historial (si hay historial, manda el historial), en la unidad por defecto de cada ejercicio: `press-inclinado` 14 kg, `jalon` 90 lb, `press-militar` 12 kg, `laterales` 6 kg, `goblet` 20 kg, `curl-z` 20 kg con barra, `triceps-polea` 50 lb, `press-plano` 16 kg, `remo-polea` 90 lb, `remo-mancuerna` 20 kg, `remo-pecho-apoyado` 8 kg, `curl-martillo` 10 kg, `laterales-casa` 4 kg. `prensa` sin sugerencia: la ficha explica el tanteo (20 kg por lado y 10 repeticiones; si fue fácil, 40 por lado, y de ahí de 10 en 10 hasta que 12 cuesten).
-- Ajuste dentro de la sesión, como texto en la ficha: si la primera serie pasó del número alto con 3 o más en reserva, sube un escalón para la siguiente; si no llegó al número bajo, baja uno. Un escalón: 2 kg por mano en mancuernas (1 kg en laterales) o una placa en máquina.
+- Peso inicial cuando no hay historial (si hay historial, manda el historial), en lb y por mano en mancuernas: `press-inclinado` 30, `jalon` 90, `press-militar` 25, `laterales` 10, `goblet` 45, `curl-z` 45 con barra, `triceps-polea` 50, `press-plano` 35, `remo-polea` 90, `remo-mancuerna` 45, `remo-pecho-apoyado` 15, `curl-martillo` 20; `laterales-casa` 4 kg. `prensa` sin sugerencia: la ficha explica el tanteo (20 kg por lado y 10 repeticiones; si fue fácil, 40 por lado, y de ahí de 10 en 10 hasta que 12 cuesten).
+- Ajuste dentro de la sesión, como texto en la ficha: si la primera serie pasó del número alto con 3 o más en reserva, sube un escalón para la siguiente; si no llegó al número bajo, baja uno. Un escalón en lb: 5 lb por mano en mancuernas o una placa en máquina (en casa, 1 kg en laterales).
 
 ## 11. Fichas nuevas
+
+> Actualización: todas las fichas (ejercicios y alternativas) viven ahora en `FICHAS.md` con formato fijo (Para qué, Lo sientes, Prepárate, Movimiento, Imagina, Errores, Cuidado). Lo de abajo queda como historia de las cuatro que se agregaron en su momento.
 
 Las fichas viejas se mueven con el mapeo. `laterales-casa` usa la de `laterales` con peso de 4 a 5 kg y `plancha-casa` la de `plancha`. Estas cuatro son nuevas:
 

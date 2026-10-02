@@ -216,3 +216,38 @@ Pendiente: probar en el iPhone el atajo "FM Descanso", el háptico del switch, l
 - Tratamiento uniforme de fotos: se mantiene el blanco y negro con contraste 1.1 del spec v3 (ya aprobado); no se aplicó otro.
 - Seguimiento: peso diario con promedio de 7 días y cambio contra la semana anterior; cintura cada lunes (store `cintura`, IndexedDB versión 3).
 - Pendiente para Fer: foto propia de `remo-liga` y de `laterales-liga` si quiere; probar la migración en su iPhone (descargar respaldo primero).
+
+# Mejoras tras uso real: iPhone, libras por serie, alternativas, fichas, auditoría
+
+## Layout en iPhone
+- Causa real del botón cortado: la prueba de layout no simulaba las áreas seguras del iPhone (arriba 47 a 59 px, abajo 34) ni el viewport recortado de Safari. Ahora `e2e/layout.spec.mjs` corre cuatro iPhones en Safari y como app instalada, inyectando `--safe-top`/`--safe-bottom`, con el nombre de alternativa más largo y la foto grande, y falla si un botón principal se sale, queda tapado o con texto cortado.
+- Prioridad cuando no cabe: primero cede la foto (hasta desaparecer en pantallas muy cortas), luego el círculo (mínimo 88), nunca los controles. Inicio hace scroll si de plano no cabe.
+- Inputs a 16 px mínimo para que Safari no haga zoom; barra, deshacer, unidad del círculo, "Editar" del aviso y punto de Frida con área de 44 px.
+
+## Libras por serie
+- Gym en lb (mancuernas incluidas), CASA en kg. Un toque en la unidad del círculo cambia el ejercicio y se guarda.
+- Cada serie guarda `peso` y `unidad` exactos; al mostrar en otra unidad se convierte y se redondea al paso real (5 lb, 2.5 kg, 1 kg en laterales) sin tocar el dato.
+- El dial se fue: − y + a los lados del círculo con el paso del ejercicio; tocar la cifra abre el teclado decimal para el exacto. La serie nueva arranca con el peso de la anterior; las hechas se ven en la tarjeta ("Hechas en lb: 35 × 10") con Editar.
+- Pesos iniciales en lb según Fer; la regla de ajuste dice 5 lb o una placa. RUTINA-FINAL.md sección 10 actualizada.
+
+## Alternativas
+- La ficha ya no cae a la del original cuando la alternativa no tenía ficha (ahora todas tienen). El chip dice el caso ("Banco ocupado"); "Volver al original" sin el nombre del original, en la tarjeta y en la ficha.
+- `e2e/alternativas.spec.mjs` recorre A, B y CASA con cada alternativa leyendo la biblioteca real (`window.fmBiblioteca`, solo en desarrollo).
+
+## Fichas
+- `FICHAS.md` es la fuente; `node scripts/fichas-desde-md.mjs` genera `src/data/fichas.ts`. 47 fichas con el formato fijo. Tope duro de 80 palabras revisado por la prueba; las dos de Fer (press inclinado 107, jalón 115) van tal cual.
+
+## Auditoría: bugs encontrados y arreglados
+- Botón principal cortado en iPhone real (áreas seguras no contempladas).
+- Ficha de alternativa mostraba el texto del original (caída a `FICHAS[base.id]`).
+- Peso de la serie en curso se perdía si iOS cerraba la app: ahora va en `borrador` de la sesión activa.
+- La sesión no se retomaba sola al reabrir (había que tocar "Seguir sesión"): ahora entra directo si la sesión tiene menos de 4 horas y no se salió con "Seguir después". Tras "Algo falló → Volver al inicio" no se retoma sola, para no caer en el mismo error.
+- La cuenta regresiva renderizaba 60 veces por segundo (batería): ahora 4 por segundo, siempre calculada por hora real; se recalcula al volver (visibilitychange, focus, pageshow).
+- Hápticos y sonido de fin de timer se disparaban dentro del render: ahora en un efecto.
+- Wake lock se vuelve a pedir también en `pageshow`.
+- La foto de la sesión brincaba al tocar (cargaba la segunda imagen en ese momento): ahora las dos están cargadas y solo se alterna; si una imagen no carga, no queda figura rota.
+- Lista de Hoy no se actualizaba al cambiar la unidad de un ejercicio (dependencia faltante).
+- Fallo al guardar una foto propia era silencioso: ahora avisa.
+- Punto de Frida de 8 px era casi intocable; barra y deshacer tenían 32 px.
+- Texto de `prensa-corta` nombraba al original.
+- Se pide almacenamiento persistente al abrir y al empezar sesión; Inicio recuerda descargar el respaldo cada 2 semanas (`tocaRespaldo`, con prueba) y Ajustes muestra la fecha del último.

@@ -85,7 +85,7 @@ test('salir a medio descanso, recargar y seguir', async ({ page }) => {
   await expect(page.locator('h1', { hasText: 'Descanso' })).toBeVisible()
   await page.waitForTimeout(1500)
   await page.reload()
-  await page.getByRole('button', { name: 'Seguir sesión' }).click()
+  // se retoma sola, sin tocar nada
   await expect(page.locator('h1', { hasText: 'Descanso' })).toBeVisible()
   const t = await page.locator('.circulo-timer').innerText()
   expect(t).toMatch(/^1:[0-4]\d$|^0:/)
@@ -98,10 +98,28 @@ test('cerrar la app a media sesión y retomar', async ({ page }) => {
   await page.getByRole('button', { name: 'Saltar' }).click()
   await expect(page.getByText(/Serie 2 de/)).toBeVisible()
   await page.goto('')
-  await expect(page.getByText('Sesión a medias')).toBeVisible()
-  await page.getByRole('button', { name: 'Seguir sesión' }).click()
+  // iOS cerró la app: se retoma sola, en el mismo ejercicio y serie
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText(titulo)
   await expect(page.getByText(/Serie 2 de/)).toBeVisible()
+})
+
+test('seguir después deja la sesión en Inicio hasta que yo la retome', async ({ page }) => {
+  await empezarSesion(page)
+  await page.getByRole('button', { name: 'Serie hecha' }).click()
+  await menu(page, 'Seguir después')
+  await expect(page.getByText('Sesión a medias')).toBeVisible()
+  await page.goto('')
+  await expect(page.getByText('Sesión a medias')).toBeVisible()
+  await page.getByRole('button', { name: 'Seguir sesión' }).click()
+  await expect(page.locator('h1', { hasText: 'Descanso' })).toBeVisible()
+})
+
+test('tras un error no se retoma sola', async ({ page }) => {
+  await empezarSesion(page)
+  await page.getByRole('button', { name: 'Serie hecha' }).click()
+  await page.evaluate(() => sessionStorage.setItem('gym-app:sin-retomar', '1'))
+  await page.goto('')
+  await expect(page.getByText('Sesión a medias')).toBeVisible()
 })
 
 test('terminar con 0 series', async ({ page }) => {

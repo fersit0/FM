@@ -1,329 +1,61 @@
-// Fichas de técnica (DISENO-FM-v2.md, 8.2). Español mexicano, directo, frases cortas.
-// Complementan la sección 7 del brief: no agregan ejercicios, explican los que hay.
+// Generado por scripts/fichas-desde-md.mjs a partir de FICHAS.md (fuente de verdad). No editar a mano.
 export interface Ficha {
-  trabaja: string
-  sentir: string
-  preparacion: string[]
-  ejecucion: string[]
+  nombre: string
+  paraQue: string
+  sientes: string
+  preparate: string
+  movimiento: string
+  imagina: string
   errores: { error: string; correccion: string }[]
-  peso: string
-  alternativa: string
+  cuidado: string
 }
-
-const REGLA = 'Si terminas la última serie con más de 2 reps de sobra, sube. Si no llegas al mínimo del rango, baja.'
 
 export const FICHAS: Record<string, Ficha> = {
-  'remo-mancuerna': {
-    trabaja: 'Dorsal y espalda media.',
-    sentir: 'El jalón en el costado de la espalda, no en el bíceps.',
-    preparacion: ['Rodilla y mano del mismo lado en el banco, espalda plana y casi paralela al piso.', 'La mancuerna colgando bajo el hombro.', 'Sin banco: mano libre en el mancuernero o un rack, torso a 45°.'],
-    ejecucion: ['Jala el codo hacia la cadera, pegado al cuerpo, hasta que pase la línea de la espalda.', 'Baja lento hasta estirar.'],
-    errores: [{ error: 'Girar el torso para subir más.', correccion: 'Baja el peso y deja el pecho viendo al piso.' }, { error: 'Jalar hacia el hombro.', correccion: 'Lleva el codo hacia la bolsa del pantalón.' }],
-    peso: 'El que te deje 12 limpias con 2 en reserva; para empezar, 20 kg. Si la primera serie pasó del número alto con 3 o más en reserva, sube 2 kg para la siguiente; si no llegó al número bajo, baja 2.',
-    alternativa: 'Mancuernas ocupadas: remo sentado a una mano en polea.',
-  },
-  'remo-pecho-apoyado': {
-    trabaja: 'Espalda alta y la parte de atrás del hombro; ayuda a la postura.',
-    sentir: 'Entre los omóplatos.',
-    preparacion: ['Banco inclinado a 30 o 45°, boca abajo con el pecho apoyado y la barbilla por fuera del respaldo.', 'Mancuernas colgando.'],
-    ejecucion: ['Jala abriendo los codos hacia los lados, doblados a unos 90°, hasta que queden a la altura de la espalda.', 'Aprieta los omóplatos un segundo y baja lento.'],
-    errores: [{ error: 'Despegar el pecho del banco.', correccion: 'Baja el peso.' }, { error: 'Encoger los hombros hacia las orejas.', correccion: 'Hombros abajo.' }],
-    peso: 'Ligero para empezar, de 4 a 8 kg por mano. Si la primera serie pasó del número alto con 3 o más en reserva, sube 2 kg; si no llegó al número bajo, baja 2.',
-    alternativa: 'Banco inclinado ocupado: remo alto en máquina. Si tampoco: remo en máquina con pecho apoyado, codos abiertos.',
-  },
-  lagartijas: {
-    trabaja: 'Pecho, tríceps y hombro de enfrente.',
-    sentir: 'El pecho.',
-    preparacion: ['Manos un poco más abiertas que los hombros.', 'Cuerpo recto de la cabeza a los talones.'],
-    ejecucion: ['Baja hasta que el pecho quede a un puño del piso, con los codos a unos 45° del cuerpo.', 'Sube empujando el piso.'],
-    errores: [{ error: 'Cadera caída.', correccion: 'Aprieta glúteo y abdomen.' }, { error: 'Codos abiertos en T.', correccion: 'Llévalos a 45°.' }],
-    peso: 'Sin peso: registra las repeticiones de cada serie, al tope dejando 2 en reserva. Si cuestan, manos en la cama o una mesa firme; si ya haces más de 20, pies en el banco.',
-    alternativa: 'Si cuestan: lagartijas inclinadas con las manos en la cama. Si ya haces más de 20: pies en el banco.',
-  },
-  'remo-liga': {
-    trabaja: 'Espalda media y dorsal.',
-    sentir: 'Entre los omóplatos.',
-    preparacion: ['Liga anclada en la puerta a la altura del pecho, con la puerta cerrada con seguro.', 'Sentado en el piso con las piernas estiradas, o de pie con las rodillas un poco dobladas, a la distancia en que la liga quede tensa con los brazos estirados.'],
-    ejecucion: ['Jala los codos hacia atrás pegados al cuerpo.', 'Aprieta los omóplatos un segundo y regresa lento.'],
-    errores: [{ error: 'Echarte para atrás con el cuerpo.', correccion: 'Mueve solo los brazos.' }, { error: 'Dejar que la liga regrese de golpe.', correccion: 'Controla la vuelta.' }],
-    peso: 'Sin peso: cuando salgan 15 fácil, un paso más atrás o una liga más dura.',
-    alternativa: 'Sin liga: remo a una mano apoyado en la cama o una silla.',
-  },
-  'press-plano': {
-    trabaja: 'Pecho, sobre todo la parte media. Ayudan hombro frontal y tríceps.',
-    sentir: 'El pecho estirándose abajo y apretándose arriba. Si lo sientes en el hombro de frente o te punza, los codos van muy abiertos o bajas de más.',
-    preparacion: [
-      'Banco plano libre. Lleva las mancuernas al banco, no las cargues acostado.',
-      'Siéntate en la orilla con las mancuernas sobre los muslos; al acostarte impúlsalas una a la vez con la rodilla.',
-      'Pies firmes en el piso, espalda alta pegada, omóplatos juntos y abajo.',
-    ],
-    ejecucion: [
-      'Arranca con las mancuernas arriba, sobre el pecho, codos a unos 45° del cuerpo.',
-      'Inhala y baja en 2 segundos hasta que los codos queden a la altura del pecho o poco más abajo.',
-      'Exhala y empuja hasta arriba sin chocar las mancuernas.',
-      'Al terminar, baja las mancuernas a los muslos y siéntate; no las sueltes al piso.',
-    ],
-    errores: [
-      { error: 'Rebotar abajo.', correccion: 'Frena 2 segundos en la bajada y arranca desde quieto.' },
-      { error: 'Arquear la espalda baja de más.', correccion: 'Apoya los pies y aprieta el abdomen; el arco es solo el natural.' },
-      { error: 'Subir hacia la cara.', correccion: 'Empuja recto hacia el techo, sobre el pecho.' },
-      { error: 'Abrir codos a 90°.', correccion: 'Métélos a 45°; el hombro lo agradece.' },
-    ],
-    peso: `Primera vez: un par con el que 10 reps salgan con 2 de sobra, unos 12 a 14 kg por mano. ${REGLA}`,
-    alternativa: 'Banco ocupado: press en el piso con mancuernas. Sin mancuernas suficientes: lagartijas con los pies sobre el banco. Máquina de press de pecho si está libre.',
-  },
-  'jalon': {
-    trabaja: 'Dorsal ancho y espalda alta. Ayudan bíceps y antebrazo.',
-    sentir: 'Los costados de la espalda jalando, como si metieras los codos en las bolsas del pantalón. Si arden los bíceps o el antebrazo primero, estás jalando con las manos.',
-    preparacion: [
-      'Torre alta con asiento y cojín para las rodillas; barra ancha colgando.',
-      'Ajusta el cojín para que las rodillas queden trabadas sin apretar.',
-      'Agarre un poco más ancho que los hombros, palmas al frente. Pecho arriba, inclinación mínima hacia atrás.',
-    ],
-    ejecucion: [
-      'Brazos estirados del todo arriba, hombros relajados.',
-      'Exhala y jala la barra hasta la parte alta del pecho llevando los codos abajo y atrás.',
-      'Pausa corta con los omóplatos juntos.',
-      'Inhala y suelta controlado hasta estirar del todo, sin que el cuerpo se levante.',
-    ],
-    errores: [
-      { error: 'Jalar detrás de la nuca.', correccion: 'Siempre al frente, a la clavícula.' },
-      { error: 'Columpiarse.', correccion: 'Baja el peso y quédate casi vertical.' },
-      { error: 'Jalar con los brazos.', correccion: 'Piensa en llevar los codos hacia la cadera, las manos son ganchos.' },
-      { error: 'No estirar arriba.', correccion: 'Cada rep empieza con los brazos completamente estirados.' },
-    ],
-    peso: `Primera vez: una placa con la que 12 reps salgan con 2 de sobra, más o menos la mitad de tu peso corporal. ${REGLA}`,
-    alternativa: 'Torre ocupada: dominadas asistidas si hay máquina; si no, remo con mancuerna a una mano apoyado en el banco.',
-  },
-  'goblet': {
-    trabaja: 'Cuádriceps y glúteo. Ayudan abdomen y espalda baja para sostener el tronco.',
-    sentir: 'Los muslos al bajar y el glúteo al empujar para subir. Si te arde la espalda baja, te encorvaste o el peso te jaló hacia adelante.',
-    preparacion: [
-      'Una mancuerna. Frente a un espejo si se puede.',
-      'Sujétala vertical, pegada al pecho, por la cabeza de arriba con las dos manos.',
-      'Pies al ancho de hombros, puntas un poco hacia afuera.',
-    ],
-    ejecucion: [
-      'Inhala y baja como si te sentaras, rodillas siguiendo la dirección de los pies.',
-      'Llega hasta que los muslos queden al menos paralelos al piso. Pecho arriba, talones pegados.',
-      'Exhala y sube empujando el piso con todo el pie.',
-      'Tempo: 2 segundos abajo, 1 arriba.',
-    ],
-    errores: [
-      { error: 'Talones despegándose.', correccion: 'Reparte el peso en todo el pie; si no puedes, abre un poco más las puntas.' },
-      { error: 'Rodillas cerrándose hacia adentro.', correccion: 'Empuja las rodillas hacia afuera siguiendo los pies.' },
-      { error: 'Encorvarse.', correccion: 'La mancuerna pegada al pecho y la mirada al frente.' },
-      { error: 'Bajar poco.', correccion: 'Baja el peso hasta que llegues al paralelo con buena forma.' },
-    ],
-    peso: `Primera vez: 12 a 16 kg. Sube rápido: aquí se aguanta más de lo que parece. ${REGLA} Cuando la mancuerna más pesada ya sale fácil, pásate a prensa o a dos mancuernas a los costados.`,
-    alternativa: 'Sin mancuernas libres: sentadilla a un banco con peso corporal, 3 × 15. Rodilla molesta: prensa con recorrido corto.',
-  },
-  'press-militar': {
-    trabaja: 'Hombro, sobre todo la parte frontal y media. Ayuda el tríceps.',
-    sentir: 'El hombro trabajando arriba y a los lados. Si punza adelante o arde el cuello, estás empujando hacia adelante o encogiendo los hombros.',
-    preparacion: [
-      'Banco con respaldo ajustable, casi vertical: un clic antes de 90°.',
-      'Mancuernas a la altura de las orejas, palmas al frente.',
-      'Espalda baja pegada al respaldo, abdomen apretado, pies firmes.',
-    ],
-    ejecucion: [
-      'Exhala y empuja hacia arriba hasta estirar sin trabar los codos.',
-      'Las mancuernas suben en línea recta, no hacia adelante ni se juntan de golpe.',
-      'Inhala y baja controlado, 2 segundos, hasta la altura de las orejas.',
-    ],
-    errores: [
-      { error: 'Arquear la espalda.', correccion: 'Menos peso y espalda baja pegada al respaldo.' },
-      { error: 'Bajar de más.', correccion: 'Hasta las orejas, no hasta los hombros.' },
-      { error: 'Impulso con las piernas.', correccion: 'Si necesitas patear, el peso es grande.' },
-    ],
-    peso: `Primera vez: 8 a 10 kg por mano, con 10 reps y 2 de sobra. ${REGLA}`,
-    alternativa: 'Sin banco con respaldo: de pie, con un poco menos de peso y glúteos apretados. Banco ocupado: máquina de press de hombro. Hombro molesto: agarre neutro, palmas mirándose.',
-  },
-  'curl-z': {
-    trabaja: 'Bíceps. Ayuda el antebrazo.',
-    sentir: 'El bíceps apretando arriba y estirándose abajo. Si lo sientes en la espalda baja o en los hombros, te estás balanceando.',
-    preparacion: [
-      'Barra Z con discos, o una de las fijas si el gym las tiene.',
-      'De pie, pies al ancho de la cadera, codos pegados a los costados.',
-    ],
-    ejecucion: [
-      'Exhala y sube doblando solo los codos; aprieta arriba un segundo.',
-      'Inhala y baja en 2 segundos hasta estirar del todo.',
-      'Los codos no se mueven de su lugar en toda la serie.',
-    ],
-    errores: [
-      { error: 'Balancear el cuerpo.', correccion: 'Pega la espalda a una pared o baja el peso.' },
-      { error: 'Codos hacia adelante.', correccion: 'Imagina que los tienes amarrados a las costillas.' },
-      { error: 'No bajar completo.', correccion: 'Cada rep termina con el brazo estirado.' },
-    ],
-    peso: `Primera vez: la barra fija de 10 a 15 kg. ${REGLA}`,
-    alternativa: 'Sin barra: curl alternado con mancuernas. Barra ocupada: curl en polea baja con barra recta.',
-  },
-  'triceps-polea': {
-    trabaja: 'Tríceps, las tres cabezas.',
-    sentir: 'La parte de atrás del brazo apretando al estirar. Si lo sientes en el hombro o el pecho, te estás inclinando y empujando con el cuerpo.',
-    preparacion: [
-      'Polea alta de la torre del jalón, con barra recta corta o cuerda.',
-      'De pie, un pie ligeramente adelante, codos pegados a los costados, antebrazos paralelos al piso.',
-    ],
-    ejecucion: [
-      'Exhala y empuja hacia abajo hasta estirar los codos.',
-      'Aprieta un segundo abajo.',
-      'Inhala y sube controlado hasta que los antebrazos vuelvan a quedar paralelos al piso.',
-      'Solo se mueven los antebrazos.',
-    ],
-    errores: [
-      { error: 'Abrir los codos.', correccion: 'Pégalos a las costillas; si se abren, baja el peso.' },
-      { error: 'Inclinarse y empujar con el cuerpo.', correccion: 'Quédate derecho; el peso lo mueve el tríceps, no la espalda.' },
-    ],
-    peso: `Primera vez: dos o tres placas ligeras, 12 reps limpias con 2 de sobra. ${REGLA}`,
-    alternativa: 'Sin polea: extensión sobre la cabeza con una mancuerna a dos manos, sentado. Polea ocupada: fondos en banco.',
-  },
-  'plancha': {
-    trabaja: 'Abdomen profundo y recto abdominal. Ayudan glúteos y hombros para sostener.',
-    sentir: 'El abdomen apretado como si esperaras un golpe, y los glúteos firmes. Si arde la espalda baja, la cadera se cayó.',
-    preparacion: [
-      'Antebrazos en el piso, codos justo debajo de los hombros.',
-      'Pies juntos o al ancho de la cadera, puntas apoyadas.',
-    ],
-    ejecucion: [
-      'Levanta el cuerpo en una línea recta de la cabeza a los talones.',
-      'Aprieta glúteos y abdomen, mirada al piso.',
-      'Respira normal, sin contener el aire, hasta completar el tiempo.',
-    ],
-    errores: [
-      { error: 'Cadera caída.', correccion: 'Aprieta los glúteos y mete un poco la pelvis.' },
-      { error: 'Cadera levantada.', correccion: 'Baja hasta que hombros, cadera y talones queden en línea.' },
-      { error: 'Contener la respiración.', correccion: 'Cuenta las respiraciones en vez de los segundos.' },
-    ],
-    peso: 'No lleva peso. Empieza con 40 segundos por serie; si terminas con más de 10 segundos de sobra, sube a 50.',
-    alternativa: 'Si no se sostiene: plancha con rodillas apoyadas, misma duración. Piso ocupado o sucio: dead bug, 3 × 10 por lado.',
-  },
-  'press-inclinado': {
-    trabaja: 'Pecho, sobre todo la parte alta. Ayudan hombro frontal y tríceps.',
-    sentir: 'La parte alta del pecho estirándose abajo y apretando arriba. Si punza el hombro, el banco está muy inclinado o los codos muy abiertos.',
-    preparacion: [
-      'Banco con respaldo ajustable a 30°, uno o dos clics arriba de plano. Más de 45° ya es hombro.',
-      'Igual que el press plano: mancuernas sobre los muslos, impúlsalas una a la vez al acostarte.',
-      'Espalda alta pegada, omóplatos juntos y abajo, pies firmes.',
-    ],
-    ejecucion: [
-      'Inhala y baja en 2 segundos hasta la parte alta del pecho.',
-      'Exhala y empuja hacia arriba y un poco atrás.',
-      'Codos a unos 45° del cuerpo; las mancuernas no chocan arriba.',
-    ],
-    errores: [
-      { error: 'Banco muy inclinado.', correccion: 'Máximo dos clics arriba de plano.' },
-      { error: 'Codos abiertos.', correccion: 'Métélos a 45°.' },
-      { error: 'Rebotar abajo.', correccion: 'Frena 2 segundos y arranca desde quieto.' },
-    ],
-    peso: `Primera vez: un par más ligero que el del press plano, unos 10 a 12 kg por mano. ${REGLA}`,
-    alternativa: 'Sin banco ajustable: press plano ese día. Banco ocupado: máquina de press inclinado o lagartijas con los pies en el banco.',
-  },
-  'remo-polea': {
-    trabaja: 'Espalda media y dorsal. Ayudan bíceps y hombro posterior.',
-    sentir: 'Los omóplatos juntándose y la espalda media apretando. Si lo sientes en la espalda baja, te estás meciendo con el torso.',
-    preparacion: [
-      'Polea baja de la torre del jalón con el agarre en V, o la máquina de remo con plataforma.',
-      'Pies en la plataforma o firmes en el piso, rodillas apenas dobladas.',
-      'Espalda recta, brazos estirados al frente, pecho arriba.',
-    ],
-    ejecucion: [
-      'Exhala y jala el agarre hacia el abdomen llevando los codos atrás.',
-      'Pausa corta con los omóplatos juntos.',
-      'Inhala y suelta controlado hasta estirar los brazos, sin encorvarte.',
-      'El torso se queda casi quieto toda la serie.',
-    ],
-    errores: [
-      { error: 'Mecerse con el torso.', correccion: 'Baja el peso y mantén el pecho arriba todo el tiempo.' },
-      { error: 'Encoger los hombros.', correccion: 'Hombros abajo y lejos de las orejas.' },
-      { error: 'Jalar hacia el pecho alto.', correccion: 'El agarre llega al ombligo, no a la clavícula.' },
-    ],
-    peso: `Primera vez: parecido al jalón o un poco menos. ${REGLA} Si la polea ya no alcanza, agrega una pausa de 2 segundos atrás.`,
-    alternativa: 'Sin polea: remo con mancuerna a una mano apoyado en banco. Ocupada: máquina de remo con pecho apoyado.',
-  },
-  'prensa': {
-    trabaja: 'Cuádriceps y glúteo. Ayudan isquiotibiales.',
-    sentir: 'Los muslos llenándose al bajar y el glúteo al empujar. Si duele la rodilla por delante, estás trabando arriba o bajando de más.',
-    preparacion: [
-      'Máquina grande con asiento reclinado y plataforma inclinada arriba; los discos van en los brazos laterales.',
-      'Pies al ancho de hombros a media plataforma.',
-      'Espalda baja y glúteos pegados al asiento. Suelta los seguros con las piernas ya estiradas.',
-    ],
-    ejecucion: [
-      'Inhala y baja controlado hasta unos 90° en las rodillas.',
-      'Exhala y empuja con todo el pie sin trabar las rodillas arriba.',
-      'Tempo: 2 segundos abajo, 1 arriba.',
-      'Al terminar, pon los seguros antes de soltar.',
-    ],
-    errores: [
-      { error: 'Despegar la cadera del asiento.', correccion: 'Estás bajando de más; para en 90°.' },
-      { error: 'Trabar las rodillas arriba.', correccion: 'Deja los últimos grados sin estirar.' },
-      { error: 'Bajar poco.', correccion: 'Menos peso, más recorrido.' },
-      { error: 'No poner los seguros al terminar.', correccion: 'Seguros primero, luego sales.' },
-    ],
-    peso: 'Sin sugerencia automática: tantea. Empieza con 20 kg por lado y 10 repeticiones; si fue fácil, 40 por lado, y de ahí de 10 en 10 hasta que 12 cuesten.',
-    alternativa: 'No se ubica u ocupada: sentadilla goblet. Sin nada libre: sentadilla a un banco con peso corporal, 3 × 15 a 20.',
-  },
-  laterales: {
-    trabaja: 'Hombro medio, el que da anchura.',
-    sentir: 'Un ardor a los lados del hombro al pasar de 10 reps. Si lo sientes en el cuello, estás encogiendo los hombros.',
-    preparacion: [
-      'Mancuernas ligeras: empieza con las que parezcan poca cosa.',
-      'De pie, mancuernas a los costados, codos apenas doblados, hombros abajo.',
-    ],
-    ejecucion: [
-      'Exhala y sube a los lados hasta la altura de los hombros, guiando con los codos.',
-      'Inhala y baja en 2 segundos.',
-      'Nada de impulso: si tienes que columpiarte, el peso es grande.',
-    ],
-    errores: [
-      { error: 'Impulso con el cuerpo.', correccion: 'Hazlas sentado en la orilla del banco.' },
-      { error: 'Pasar de los hombros.', correccion: 'Para en horizontal; más arriba ya no trabaja el hombro medio.' },
-      { error: 'Encoger los hombros.', correccion: 'Hombros lejos de las orejas toda la serie.' },
-    ],
-    peso: `Primera vez: 4 a 6 kg por mano. Aquí se sube de a 1 kg. ${REGLA}`,
-    alternativa: 'Sin mancuernas chicas: en polea baja a una mano, cruzando el cable frente al cuerpo.',
-  },
-  'curl-martillo': {
-    trabaja: 'Bíceps y braquial, el músculo debajo del bíceps. Ayuda el antebrazo.',
-    sentir: 'El brazo entero apretando, más hacia afuera que en el curl normal. Si arde la muñeca, la estás doblando.',
-    preparacion: [
-      'Mancuernas con las palmas mirándose, como si sostuvieras un martillo.',
-      'De pie, codos pegados a los costados.',
-    ],
-    ejecucion: [
-      'Exhala y sube con las palmas mirándose todo el recorrido.',
-      'Aprieta arriba un segundo.',
-      'Inhala y baja controlado hasta estirar.',
-    ],
-    errores: [
-      { error: 'Balancear el cuerpo.', correccion: 'Baja el peso y quédate quieto.' },
-      { error: 'Girar la muñeca arriba.', correccion: 'Las palmas se miran de principio a fin.' },
-    ],
-    peso: `Primera vez: 8 a 10 kg por mano. ${REGLA}`,
-    alternativa: 'Mancuernas ocupadas: curl con cuerda en polea baja. Sin polea: curl alternado con mancuernas.',
-  },
-  'elevacion-piernas': {
-    trabaja: 'Abdomen bajo y flexores de cadera.',
-    sentir: 'La parte baja del abdomen apretando al subir. Si arde la espalda baja, se despegó del banco.',
-    preparacion: [
-      'Banco plano, acostado boca arriba, manos agarrando el banco detrás de la cabeza.',
-      'Espalda baja pegada al banco antes de empezar.',
-    ],
-    ejecucion: [
-      'Exhala y sube las piernas casi estiradas hasta la vertical.',
-      'Inhala y baja controlado, 2 segundos, sin que la espalda baja se despegue.',
-      'Para antes de que los talones toquen el banco.',
-    ],
-    errores: [
-      { error: 'Arquear la espalda.', correccion: 'No bajes tanto: para donde la espalda se quiera despegar.' },
-      { error: 'Bajar con impulso.', correccion: 'Cuenta 2 segundos en cada bajada.' },
-    ],
-    peso: 'No lleva peso. Si 12 reps salen fáciles, baja más lento o sostén un segundo arriba.',
-    alternativa: 'Sin banco: en el piso con las manos bajo los glúteos. Si cuesta: rodillas dobladas. Sin banco ni piso limpio: dead bug.',
-  },
+  "press-inclinado": {"nombre":"Press inclinado con mancuernas","paraQue":"Pecho de arriba, el que se nota con playera.","sientes":"Arriba del pecho. Si lo sientes más en el hombro, baja el banco.","preparate":"Banco a 30°, pies firmes, omóplatos juntos y abajo, mancuernas a los lados del pecho.","movimiento":"Baja en 2 a 3 segundos con los codos a 45° del cuerpo, no en T, hasta que los codos queden un poco abajo del banco. Sube empujando arriba y un poco hacia adentro.","imagina":"Que quieres juntar los bíceps arriba.","errores":[{"error":"Arquear la espalda baja.","correccion":"Deja el glúteo pegado al banco."},{"error":"Rebotar abajo.","correccion":"Haz una pausa de un segundo."}],"cuidado":"Si duele el frente del hombro, cambia a press en el piso."},
+  "jalon": {"nombre":"Jalón al pecho en polea","paraQue":"Dorsal, lo que abre la espalda en V.","sientes":"A los costados, abajo de las axilas. No en bíceps ni en cuello.","preparate":"Rodillo apretando los muslos, agarre un poco más abierto que los hombros, pecho arriba y apenas inclinado hacia atrás.","movimiento":"Jala la barra a la parte alta del pecho bajando los codos a los costados. Pausa un segundo y sube en 2 a 3 segundos hasta estirar sin soltar la tensión.","imagina":"Que tus manos son ganchos y jalas con los codos hacia las bolsas de atrás.","errores":[{"error":"Columpiarte para jalar.","correccion":"Baja el peso."},{"error":"Hombros a las orejas.","correccion":"Bájalos antes de jalar."}],"cuidado":"Si molesta el hombro, usa un agarre más cerrado o con las palmas hacia ti."},
+  "press-militar": {"nombre":"Press militar sentado con mancuernas","paraQue":"Hombro de enfrente y de los lados.","sientes":"En los hombros y un poco en tríceps. No en la espalda baja.","preparate":"Respaldo casi vertical, espalda baja pegada, abdomen apretado, mancuernas a la altura de las orejas.","movimiento":"Empuja hasta estirar sin trabar los codos. Baja en 2 a 3 segundos hasta las orejas.","imagina":"Que empujas el techo con los nudillos.","errores":[{"error":"Arquear la espalda baja.","correccion":"Aprieta el abdomen."},{"error":"Bajar de más.","correccion":"Para en las orejas."}],"cuidado":"Si pellizca el hombro, usa las palmas viéndose."},
+  "laterales": {"nombre":"Elevaciones laterales","paraQue":"Hombro de los lados, el que te hace ver más ancho.","sientes":"En el lado del hombro, no en el cuello.","preparate":"De pie, mancuernas ligeras a los costados, codos apenas doblados, hombros abajo.","movimiento":"Sube a los lados hasta la altura de los hombros, codo más alto que la mano. Baja en 2 segundos.","imagina":"Que sirves dos jarras de agua.","errores":[{"error":"Tomar impulso.","correccion":"Usa menos peso."},{"error":"Encoger los hombros.","correccion":"Bájalos."}],"cuidado":"Si duele al pasar la horizontal, no subas tanto."},
+  "goblet": {"nombre":"Sentadilla goblet","paraQue":"Muslos y glúteo, la base de todo.","sientes":"En los muslos al bajar y en el glúteo al subir.","preparate":"Mancuerna vertical pegada al pecho, pies al ancho de hombros, puntas un poco afuera.","movimiento":"Baja en 2 a 3 segundos como si te sentaras, hasta muslos paralelos. Pecho arriba, talones pegados. Sube empujando el piso.","imagina":"Que te sientas en una silla atrás de ti.","errores":[{"error":"Talones despegados.","correccion":"Abre más las puntas."},{"error":"Rodillas hacia adentro.","correccion":"Empújalas afuera."}],"cuidado":"Si molesta la rodilla, baja menos."},
+  "curl-z": {"nombre":"Curl con barra Z","paraQue":"Bíceps.","sientes":"En el frente del brazo, no en el antebrazo ni en la espalda.","preparate":"De pie, pies firmes, codos pegados a los costados, barra colgando con los brazos estirados.","movimiento":"Sube doblando solo los codos, aprieta arriba un segundo y baja en 2 a 3 segundos hasta estirar.","imagina":"Que los codos están clavados a las costillas.","errores":[{"error":"Balancear el cuerpo.","correccion":"Baja el peso."},{"error":"Codos hacia adelante.","correccion":"Mantenlos atrás."}],"cuidado":"Si duele la muñeca, agarra la parte más inclinada de la barra."},
+  "triceps-polea": {"nombre":"Extensión de tríceps en polea alta","paraQue":"Tríceps, la parte de atrás del brazo.","sientes":"Atrás del brazo, no en el hombro.","preparate":"De pie frente a la polea alta, codos pegados a los costados, antebrazos paralelos al piso.","movimiento":"Empuja hacia abajo hasta estirar, aprieta un segundo y sube en 2 a 3 segundos hasta que los antebrazos queden paralelos.","imagina":"Que solo se mueve el antebrazo, como una bisagra.","errores":[{"error":"Abrir los codos.","correccion":"Pégalos al cuerpo."},{"error":"Empujar con el cuerpo.","correccion":"Baja el peso."}],"cuidado":"Si molesta el codo, usa la cuerda."},
+  "plancha": {"nombre":"Plancha","paraQue":"Abdomen y espalda baja, para sostener todo lo demás.","sientes":"En el abdomen. No en la espalda baja.","preparate":"Antebrazos en el piso, codos bajo los hombros, cuerpo en línea recta de la cabeza a los talones.","movimiento":"Aprieta glúteo y abdomen y sostén. Respira normal, mirada al piso.","imagina":"Que te quieren pisar el estómago y lo endureces.","errores":[{"error":"Cadera caída.","correccion":"Aprieta el glúteo."},{"error":"Cadera levantada.","correccion":"Bájala hasta hacer línea."}],"cuidado":"Si duele la espalda baja, apoya las rodillas o cambia a dead bug."},
+  "press-plano": {"nombre":"Press plano con mancuernas","paraQue":"Pecho, sobre todo la parte media.","sientes":"En el pecho. Si lo sientes en el hombro, bajas de más.","preparate":"Sube las mancuernas con las rodillas. Pies firmes, omóplatos juntos y abajo.","movimiento":"Baja en 2 a 3 segundos con los codos a 45° hasta la altura del pecho. Sube sin chocar las mancuernas.","imagina":"Que doblas el banco con la espalda alta.","errores":[{"error":"Rebotar abajo.","correccion":"Pausa de un segundo."},{"error":"Codos en T.","correccion":"Ciérralos a 45°."}],"cuidado":"Al terminar, mancuernas a los muslos y siéntate."},
+  "remo-polea": {"nombre":"Remo sentado en polea baja","paraQue":"Espalda media y dorsal, lo que te endereza.","sientes":"Entre los omóplatos y a los costados.","preparate":"Pies en la plataforma, rodillas apenas dobladas, espalda recta, brazos estirados.","movimiento":"Jala al abdomen llevando los codos atrás y juntando los omóplatos. Pausa un segundo y suelta en 2 a 3 segundos.","imagina":"Que aprietas una pelota entre los omóplatos.","errores":[{"error":"Mecerte con el torso.","correccion":"Quédate vertical."},{"error":"Encoger los hombros.","correccion":"Bájalos."}],"cuidado":"Si duele la espalda baja, no te estires tanto adelante."},
+  "remo-mancuerna": {"nombre":"Remo a una mano apoyado en banco","paraQue":"Dorsal y espalda media, un lado a la vez.","sientes":"En el costado de la espalda, no en el bíceps.","preparate":"Rodilla y mano del mismo lado en el banco, espalda plana, mancuerna colgando.","movimiento":"Jala el codo hacia la cadera, pegado al cuerpo, hasta pasar la espalda. Baja en 2 a 3 segundos.","imagina":"Que arrancas una podadora.","errores":[{"error":"Girar el torso.","correccion":"Pecho viendo al piso."},{"error":"Jalar al hombro.","correccion":"Codo a la cadera."}],"cuidado":"Sin banco, mano libre en el mancuernero."},
+  "remo-pecho-apoyado": {"nombre":"Remo con pecho apoyado, codos abiertos","paraQue":"Espalda alta y atrás del hombro; endereza la postura.","sientes":"Entre los omóplatos.","preparate":"Banco a 30 o 45°, boca abajo con el pecho apoyado y la barbilla fuera del respaldo, mancuernas colgando.","movimiento":"Jala abriendo los codos a 90° hasta la altura de la espalda. Aprieta un segundo y baja en 2 a 3 segundos.","imagina":"Que haces alas con los codos.","errores":[{"error":"Despegar el pecho.","correccion":"Baja el peso."},{"error":"Encoger los hombros.","correccion":"Bájalos."}],"cuidado":"Empieza ligero; 15 lb por mano ya se sienten."},
+  "prensa": {"nombre":"Prensa de pierna","paraQue":"Muslos y glúteo con la espalda apoyada.","sientes":"En muslos y glúteo. No en rodillas ni espalda baja.","preparate":"Pies al ancho de hombros a media plataforma, espalda baja y glúteos pegados. Suelta los seguros con las piernas estiradas.","movimiento":"Baja en 2 a 3 segundos hasta 90° en las rodillas. Empuja con todo el pie sin trabar.","imagina":"Que empujas la pared con los talones.","errores":[{"error":"Despegar la cadera.","correccion":"Baja menos."},{"error":"Trabar las rodillas.","correccion":"Para antes de estirar."}],"cuidado":"Pon los seguros antes de bajarte."},
+  "curl-martillo": {"nombre":"Curl martillo","paraQue":"Bíceps y antebrazo, lo que engrosa el brazo.","sientes":"En el brazo y un poco en el antebrazo.","preparate":"De pie, mancuernas colgando con las palmas viéndose entre sí, codos pegados al cuerpo.","movimiento":"Sube doblando los codos sin girar las muñecas, aprieta arriba y baja en 2 a 3 segundos hasta estirar.","imagina":"Que clavas con un martillo hacia tu hombro.","errores":[{"error":"Balancear el cuerpo.","correccion":"Baja el peso."},{"error":"Codos hacia adelante.","correccion":"Mantenlos atrás."}],"cuidado":"Si duele el codo, usa menos peso y sube más lento."},
+  "elevacion-piernas": {"nombre":"Elevación de piernas acostado en banco","paraQue":"Abdomen bajo.","sientes":"En el abdomen, abajo del ombligo. No en la espalda baja.","preparate":"Boca arriba en el banco, manos agarrándolo detrás de la cabeza, espalda baja pegada.","movimiento":"Sube las piernas casi estiradas hasta la vertical. Baja en 2 a 3 segundos sin despegar la espalda baja.","imagina":"Que la espalda baja está pegada al banco.","errores":[{"error":"Arquear la espalda.","correccion":"Dobla un poco las rodillas."},{"error":"Bajar con impulso.","correccion":"Frena antes de llegar."}],"cuidado":"Si jala la espalda baja, dobla las rodillas."},
+  "laterales-casa": {"nombre":"Laterales con mancuernas de 4 a 5 kg","paraQue":"Hombro de los lados, el que te hace ver más ancho.","sientes":"En el lado del hombro, no en el cuello.","preparate":"De pie, mancuernas a los costados, codos apenas doblados, hombros abajo.","movimiento":"Sube a los lados hasta la altura de los hombros y baja en 2 segundos. De 15 a 20 por serie.","imagina":"Que sirves dos jarras de agua.","errores":[{"error":"Tomar impulso.","correccion":"Usa menos peso."},{"error":"Encoger los hombros.","correccion":"Bájalos antes de subir."}],"cuidado":"Si duele al pasar la horizontal, no subas tanto."},
+  "lagartijas": {"nombre":"Lagartijas dejando 2 en reserva","paraQue":"Pecho, tríceps y hombro de enfrente, sin equipo.","sientes":"En el pecho.","preparate":"Manos un poco más abiertas que los hombros, cuerpo recto de la cabeza a los talones, glúteo apretado.","movimiento":"Baja en 2 segundos hasta un puño del piso, codos a 45°. Sube empujando. Para cuando te queden 2.","imagina":"Que empujas el piso lejos de ti.","errores":[{"error":"Cadera caída.","correccion":"Aprieta glúteo y abdomen."},{"error":"Codos abiertos en T.","correccion":"Ciérralos a 45°."}],"cuidado":"Si cuestan, manos en la cama o una mesa firme."},
+  "remo-liga": {"nombre":"Remo con liga anclada en la puerta","paraQue":"Espalda media y dorsal, en casa.","sientes":"Entre los omóplatos.","preparate":"Liga a la altura del pecho, puerta con seguro. Sentado o de pie, a la distancia en que quede tensa con los brazos estirados.","movimiento":"Jala los codos atrás pegados al cuerpo, aprieta un segundo y regresa en 2 a 3 segundos.","imagina":"Que metes los codos en las bolsas de atrás.","errores":[{"error":"Echarte para atrás.","correccion":"Mueve solo los brazos."},{"error":"Soltar de golpe.","correccion":"Controla la vuelta."}],"cuidado":"Cuando salgan 15 fácil, un paso más atrás."},
+  "plancha-casa": {"nombre":"Plancha","paraQue":"Abdomen y espalda baja, para sostener todo lo demás.","sientes":"En el abdomen. No en la espalda baja.","preparate":"Antebrazos en el piso, codos bajo los hombros, cuerpo en línea recta de la cabeza a los talones.","movimiento":"Aprieta glúteo y abdomen y sostén 45 segundos. Respira normal.","imagina":"Que te quieren pisar el estómago y lo endureces.","errores":[{"error":"Cadera caída.","correccion":"Aprieta el glúteo."},{"error":"Cadera levantada.","correccion":"Bájala hasta hacer línea."}],"cuidado":"Si duele la espalda baja, apoya las rodillas o cambia a dead bug."},
+  "press-inclinado-maquina": {"nombre":"Press inclinado en máquina","paraQue":"Pecho de arriba, con la máquina guiando el recorrido.","sientes":"Arriba del pecho.","preparate":"Asiento a la altura en que las manijas queden al nivel del pecho alto, espalda pegada al respaldo.","movimiento":"Empuja al frente y arriba sin trabar los codos. Regresa en 2 a 3 segundos sin que las placas choquen.","imagina":"Que alejas la máquina de ti.","errores":[{"error":"Despegar la espalda.","correccion":"Baja el peso."},{"error":"Trabar los codos.","correccion":"Para un poco antes."}],"cuidado":"Si molesta el hombro, sube un poco el asiento."},
+  "lagartijas-pies-banco": {"nombre":"Lagartijas con los pies en el banco","paraQue":"Pecho de arriba y hombro, sin mancuernas.","sientes":"Arriba del pecho.","preparate":"Pies sobre el banco, manos en el piso un poco más abiertas que los hombros, cuerpo recto, glúteo apretado.","movimiento":"Baja en 2 segundos hasta un puño del piso, codos a 45°. Sube empujando. Para cuando te queden 2.","imagina":"Que empujas el piso lejos de ti.","errores":[{"error":"Cadera caída.","correccion":"Aprieta glúteo y abdomen."},{"error":"Cabeza colgando.","correccion":"Mira un punto adelante."}],"cuidado":"Si molesta el hombro, pies en el piso."},
+  "press-piso": {"nombre":"Press en el piso con mancuernas","paraQue":"Pecho y tríceps con menos recorrido, más seguro para el hombro.","sientes":"En el pecho y atrás del brazo.","preparate":"Acostado en el piso, rodillas dobladas, mancuernas sobre el pecho con los codos a 45°.","movimiento":"Baja en 2 a 3 segundos hasta que los brazos toquen el piso, pausa un segundo y sube.","imagina":"Que el piso frena la bajada por ti.","errores":[{"error":"Dejar caer los codos.","correccion":"Frena antes de tocar."},{"error":"Rebotar.","correccion":"Haz la pausa."}],"cuidado":"Sube y baja las mancuernas desde los muslos."},
+  "dominadas-asistidas": {"nombre":"Dominadas asistidas en máquina o con liga","paraQue":"Dorsal y espalda alta, el camino a la dominada.","sientes":"A los costados de la espalda, no en los bíceps.","preparate":"Rodillas en la plataforma o pies en la liga, agarre abierto, brazos estirados.","movimiento":"Sube llevando los codos abajo y atrás hasta pasar la barbilla. Baja en 2 a 3 segundos.","imagina":"Que jalas la barra hacia tu pecho.","errores":[{"error":"Columpiarte.","correccion":"Sube más despacio."},{"error":"Quedarte a medias.","correccion":"Lleva el pecho a la barra."}],"cuidado":"En la máquina, más peso es más ayuda."},
+  "press-militar-pie": {"nombre":"Press militar de pie con mancuernas","paraQue":"Hombro de enfrente y de los lados, sin banco.","sientes":"En los hombros. No en la espalda baja.","preparate":"Pies al ancho de hombros, glúteo y abdomen apretados, mancuernas a la altura de las orejas.","movimiento":"Empuja hasta estirar sin trabar los codos. Baja en 2 a 3 segundos hasta las orejas.","imagina":"Que una cuerda te jala de la coronilla.","errores":[{"error":"Arquear la espalda baja.","correccion":"Aprieta el abdomen."},{"error":"Impulso con las piernas.","correccion":"Quédate quieto."}],"cuidado":"Un poco menos de peso que sentado."},
+  "press-hombro-maquina": {"nombre":"Press de hombro en máquina","paraQue":"Hombro, con la máquina guiando el recorrido.","sientes":"En los hombros.","preparate":"Asiento a la altura en que las manijas queden a la altura de los hombros, espalda pegada al respaldo.","movimiento":"Empuja hacia arriba sin trabar los codos y baja en 2 a 3 segundos hasta los hombros.","imagina":"Que empujas el techo.","errores":[{"error":"Despegar la espalda del respaldo.","correccion":"Baja el peso."},{"error":"Bajar de más.","correccion":"Para a la altura de los hombros."}],"cuidado":"Si pellizca el hombro, usa las manijas con las palmas viéndose."},
+  "press-militar-neutro": {"nombre":"Press con agarre neutro, palmas viéndose","paraQue":"Hombro, con el agarre que menos molesta.","sientes":"En los hombros, no en el frente del hombro.","preparate":"Respaldo casi vertical, espalda baja pegada, mancuernas a la altura de las orejas con las palmas viéndose.","movimiento":"Empuja arriba y un poco hacia adentro hasta estirar. Baja en 2 a 3 segundos.","imagina":"Que las mancuernas suben por un riel.","errores":[{"error":"Arquear la espalda baja.","correccion":"Aprieta el abdomen."},{"error":"Abrir los codos.","correccion":"Mantenlos al frente."}],"cuidado":"Si aun así duele, deja el hombro ese día."},
+  "laterales-sentado": {"nombre":"Laterales sentado","paraQue":"Hombro de los lados, sin poder balancearte.","sientes":"En el lado del hombro.","preparate":"Sentado en la orilla del banco, pecho arriba, mancuernas colgando a los costados, codos apenas doblados.","movimiento":"Sube a los lados hasta la altura de los hombros y baja en 2 segundos.","imagina":"Que sirves dos jarras de agua.","errores":[{"error":"Inclinarte para subir.","correccion":"Quédate vertical y usa menos peso."},{"error":"Encoger los hombros.","correccion":"Bájalos."}],"cuidado":"Si duele al pasar la horizontal, no subas tanto."},
+  "laterales-polea": {"nombre":"Lateral en polea","paraQue":"Hombro de los lados con tensión pareja.","sientes":"En el lado del hombro.","preparate":"Polea abajo, de lado a la máquina, manija en la mano de afuera cruzando frente al cuerpo, codo apenas doblado.","movimiento":"Sube el brazo a un lado hasta la altura del hombro y baja en 2 segundos. Cambia de mano.","imagina":"Que dibujas medio círculo con la mano.","errores":[{"error":"Tomar impulso con el cuerpo.","correccion":"Baja el peso."},{"error":"Encoger el hombro.","correccion":"Bájalo."}],"cuidado":"Si duele al pasar la horizontal, no subas tanto."},
+  "laterales-liga": {"nombre":"Laterales con liga","paraQue":"Hombro de los lados, sin mancuernas.","sientes":"En el lado del hombro.","preparate":"Pisa la liga con los dos pies, agarra las puntas con los codos apenas doblados.","movimiento":"Sube a los lados hasta la altura de los hombros y baja en 2 segundos. De 15 a 20 por serie.","imagina":"Que sirves dos jarras de agua.","errores":[{"error":"Tomar impulso con el cuerpo.","correccion":"Quédate quieto."},{"error":"Encoger los hombros.","correccion":"Bájalos."}],"cuidado":"Cuando salgan 20 fácil, pisa más abierto para tensar más."},
+  "sentadilla-mancuernas": {"nombre":"Sentadilla con dos mancuernas","paraQue":"Muslos y glúteo cuando una mancuerna ya no alcanza.","sientes":"En los muslos al bajar y en el glúteo al subir.","preparate":"Mancuernas colgando a los costados, pies al ancho de hombros, puntas un poco afuera, pecho arriba.","movimiento":"Baja en 2 a 3 segundos hasta muslos paralelos, talones pegados. Sube empujando el piso.","imagina":"Que te sientas en una silla atrás de ti.","errores":[{"error":"Encorvarte.","correccion":"Baja el peso y mira al frente."},{"error":"Rodillas hacia adentro.","correccion":"Empújalas afuera."}],"cuidado":"Si molesta la rodilla, baja menos."},
+  "sentadilla-banco": {"nombre":"Sentadilla a un banco","paraQue":"Muslos y glúteo sin equipo, con el banco marcando hasta dónde bajar.","sientes":"En los muslos y el glúteo.","preparate":"De espaldas a un banco, pies al ancho de hombros, brazos al frente.","movimiento":"Baja en 2 a 3 segundos hasta rozar el banco sin sentarte y sube empujando el piso. 15 por serie.","imagina":"Que apenas tocas el banco con el glúteo.","errores":[{"error":"Dejarte caer.","correccion":"Frena antes de tocar."},{"error":"Rodillas hacia adentro.","correccion":"Empújalas hacia afuera."}],"cuidado":"Si molesta la rodilla, usa un banco más alto."},
+  "curl-alternado": {"nombre":"Curl alterno con mancuernas","paraQue":"Bíceps, un brazo a la vez.","sientes":"En el frente del brazo.","preparate":"De pie, mancuernas colgando, codos pegados a los costados, palmas al frente.","movimiento":"Sube una mancuerna doblando solo el codo, aprieta arriba y baja en 2 a 3 segundos. Luego la otra.","imagina":"Que los codos están clavados a las costillas.","errores":[{"error":"Balancear el cuerpo.","correccion":"Baja el peso."},{"error":"Codo hacia adelante.","correccion":"Mantenlo atrás."}],"cuidado":"Si duele la muñeca, gira la palma hacia adentro al bajar."},
+  "curl-polea": {"nombre":"Curl en polea","paraQue":"Bíceps con tensión pareja en todo el recorrido.","sientes":"En el frente del brazo.","preparate":"Polea abajo con barra recta, de pie, codos pegados a los costados, brazos estirados.","movimiento":"Sube doblando solo los codos, aprieta arriba y baja en 2 a 3 segundos hasta estirar sin soltar la tensión.","imagina":"Que los codos están clavados a las costillas.","errores":[{"error":"Inclinarte hacia atrás.","correccion":"Quédate vertical y baja el peso."},{"error":"Codos hacia adelante.","correccion":"Mantenlos atrás."}],"cuidado":"Si duele la muñeca, usa la cuerda."},
+  "triceps-cabeza": {"nombre":"Extensión con mancuerna sobre la cabeza, sentado","paraQue":"Tríceps, sobre todo la parte larga de atrás.","sientes":"Atrás del brazo, estirándose abajo.","preparate":"Sentado con respaldo, una mancuerna a dos manos por el disco de arriba, brazos estirados sobre la cabeza.","movimiento":"Baja detrás de la cabeza en 2 a 3 segundos doblando solo los codos y estira sin abrirlos.","imagina":"Que los codos apuntan al techo.","errores":[{"error":"Abrir los codos.","correccion":"Ciérralos hacia las orejas."},{"error":"Arquear la espalda baja.","correccion":"Aprieta el abdomen."}],"cuidado":"Si molesta el hombro o el codo, baja menos."},
+  "fondos-banco": {"nombre":"Fondos en banco","paraQue":"Tríceps y un poco de pecho, sin equipo.","sientes":"Atrás del brazo. No en el frente del hombro.","preparate":"Manos en la orilla del banco a la altura de las caderas, pies al frente, espalda pegada al banco.","movimiento":"Baja en 2 segundos doblando los codos hacia atrás, hasta unos 90°, y sube estirando.","imagina":"Que la espalda resbala por el banco.","errores":[{"error":"Bajar de más.","correccion":"Para en 90°."},{"error":"Alejarte del banco.","correccion":"Mantén la espalda rozándolo."}],"cuidado":"Si molesta el hombro, no los uses ese día."},
+  "plancha-rodillas": {"nombre":"Plancha con rodillas apoyadas","paraQue":"Abdomen y espalda baja, con menos carga.","sientes":"En el abdomen.","preparate":"Antebrazos en el piso, codos bajo los hombros, rodillas apoyadas, cuerpo en línea recta de la cabeza a las rodillas.","movimiento":"Aprieta glúteo y abdomen y sostén 45 segundos. Respira normal.","imagina":"Que te quieren pisar el estómago y lo endureces.","errores":[{"error":"Cadera levantada.","correccion":"Bájala hasta hacer línea."},{"error":"Cadera caída.","correccion":"Aprieta el glúteo."}],"cuidado":"Cuando los 45 segundos salgan fácil, pásate a la plancha normal."},
+  "dead-bug": {"nombre":"Dead bug","paraQue":"Abdomen profundo, cuidando la espalda baja.","sientes":"En el abdomen. La espalda baja nunca se despega.","preparate":"Boca arriba, espalda baja pegada al piso, brazos al techo, rodillas dobladas a 90° sobre la cadera.","movimiento":"Estira un brazo atrás y la pierna contraria al frente en 2 a 3 segundos. Regresa y cambia.","imagina":"Que aplastas un papel bajo la espalda baja.","errores":[{"error":"Despegar la espalda baja.","correccion":"Estira menos la pierna."},{"error":"Contener la respiración.","correccion":"Exhala al estirar."}],"cuidado":"Si duele la espalda, estira solo la pierna."},
+  "press-pecho-maquina": {"nombre":"Press de pecho en máquina","paraQue":"Pecho, con la máquina guiando el recorrido.","sientes":"En el pecho.","preparate":"Asiento a la altura en que las manijas queden a la altura de los pezones, espalda pegada al respaldo, pies firmes.","movimiento":"Empuja al frente sin trabar los codos. Regresa en 2 a 3 segundos sin que las placas choquen.","imagina":"Que alejas la máquina de ti.","errores":[{"error":"Despegar la espalda del respaldo.","correccion":"Baja el peso."},{"error":"Trabar los codos.","correccion":"Para un poco antes."}],"cuidado":"Si molesta el hombro, no regreses tan atrás."},
+  "remo-pecho-maquina": {"nombre":"Remo en máquina con pecho apoyado","paraQue":"Espalda media y dorsal, con el pecho fijo para no mecerte.","sientes":"Entre los omóplatos y a los costados.","preparate":"Asiento a la altura en que el pecho descanse en el cojín, brazos estirados en las manijas.","movimiento":"Jala llevando los codos atrás, pegados o abiertos a 90° para espalda alta. Pausa y suelta en 2 a 3 segundos.","imagina":"Que aprietas una pelota entre los omóplatos.","errores":[{"error":"Despegar el pecho.","correccion":"Baja el peso."},{"error":"Encoger los hombros.","correccion":"Bájalos."}],"cuidado":"Si duele la espalda baja, menos peso."},
+  "remo-polea-una-mano": {"nombre":"Remo sentado a una mano en polea","paraQue":"Dorsal, un lado a la vez.","sientes":"En el costado de la espalda, no en el bíceps.","preparate":"Polea baja con manija de una mano, pies en la plataforma, espalda recta, brazo estirado.","movimiento":"Jala el codo hacia la cadera, pegado al cuerpo. Pausa y suelta en 2 a 3 segundos. Cambia de mano.","imagina":"Que arrancas una podadora.","errores":[{"error":"Girar el torso.","correccion":"Quédate de frente."},{"error":"Jalar al hombro.","correccion":"Lleva el codo a la cadera."}],"cuidado":"Si duele la espalda baja, no te estires tanto."},
+  "remo-alto-maquina": {"nombre":"Remo alto en máquina","paraQue":"Espalda alta y parte de atrás del hombro; endereza la postura.","sientes":"Entre los omóplatos.","preparate":"Asiento a la altura en que las manijas queden al nivel del pecho alto, pecho apoyado si hay cojín.","movimiento":"Jala con los codos abiertos hacia el pecho alto, aprieta los omóplatos un segundo y suelta en 2 a 3 segundos.","imagina":"Que haces alas con los codos.","errores":[{"error":"Encoger los hombros.","correccion":"Bájalos antes de jalar."},{"error":"Mecerte.","correccion":"Baja el peso."}],"cuidado":"Si pellizca el hombro, cierra un poco los codos."},
+  "prensa-corta": {"nombre":"Prensa con recorrido corto","paraQue":"Muslos y glúteo cuidando la rodilla.","sientes":"En los muslos. Nunca dolor en la rodilla.","preparate":"Pies al ancho de hombros a media plataforma, espalda baja y glúteos pegados, seguros sueltos con las piernas estiradas.","movimiento":"Baja en 2 a 3 segundos solo hasta donde la rodilla no moleste, antes de 90°, y empuja sin trabar.","imagina":"Que empujas la pared con los talones.","errores":[{"error":"Bajar hasta donde duele.","correccion":"Para antes."},{"error":"Trabar las rodillas.","correccion":"Para antes de estirar."}],"cuidado":"Pon los seguros antes de bajarte."},
+  "curl-cuerda": {"nombre":"Curl martillo en polea con cuerda","paraQue":"Bíceps y antebrazo con tensión pareja.","sientes":"En el brazo y un poco en el antebrazo.","preparate":"Polea abajo con cuerda, de pie, palmas viéndose entre sí, codos pegados al cuerpo.","movimiento":"Sube doblando solo los codos, aprieta arriba y baja en 2 a 3 segundos sin soltar la tensión.","imagina":"Que clavas con un martillo hacia tu hombro.","errores":[{"error":"Inclinarte hacia atrás.","correccion":"Quédate vertical."},{"error":"Codos hacia adelante.","correccion":"Mantenlos atrás."}],"cuidado":"Si duele el codo, usa menos peso."},
+  "elevacion-piernas-piso": {"nombre":"Elevación de piernas en el piso","paraQue":"Abdomen bajo, sin banco.","sientes":"En el abdomen, abajo del ombligo. No en la espalda baja.","preparate":"Boca arriba, manos bajo los glúteos, espalda baja pegada al piso.","movimiento":"Sube las piernas casi estiradas hasta la vertical y baja en 2 a 3 segundos sin despegar la espalda baja.","imagina":"Que la espalda baja está pegada al piso con pegamento.","errores":[{"error":"Arquear la espalda.","correccion":"Dobla un poco las rodillas."},{"error":"Bajar con impulso.","correccion":"Frena antes de llegar abajo."}],"cuidado":"Si jala la espalda baja, dobla las rodillas."},
+  "elevacion-rodillas": {"nombre":"Elevación de rodillas dobladas","paraQue":"Abdomen bajo, con menos carga para la espalda.","sientes":"En el abdomen, abajo del ombligo.","preparate":"Boca arriba, manos bajo los glúteos o agarrando el banco, espalda baja pegada, rodillas dobladas.","movimiento":"Lleva las rodillas hacia el pecho y baja en 2 a 3 segundos sin que la espalda baja se despegue.","imagina":"Que enrollas el abdomen como una alfombra.","errores":[{"error":"Arquear la espalda.","correccion":"No bajes tanto."},{"error":"Bajar con impulso.","correccion":"Frena antes de llegar abajo."}],"cuidado":"Cuando salgan 12 fácil, estira un poco más las piernas."},
+  "lagartijas-inclinadas": {"nombre":"Lagartijas con las manos en la cama o una mesa firme","paraQue":"Pecho, tríceps y hombro con menos carga.","sientes":"En el pecho.","preparate":"Manos en la cama o una mesa firme un poco más abiertas que los hombros, cuerpo recto, glúteo apretado.","movimiento":"Baja en 2 segundos hasta que el pecho quede a un puño del borde, codos a 45°. Sube empujando. Para cuando te queden 2.","imagina":"Que empujas la mesa lejos de ti.","errores":[{"error":"Cadera caída.","correccion":"Aprieta glúteo y abdomen."},{"error":"Codos abiertos en T.","correccion":"Ciérralos a 45°."}],"cuidado":"Cuando salgan 20 fácil, pasa al piso."},
+  "remo-mancuerna-casa": {"nombre":"Remo a una mano apoyado en la cama o una silla","paraQue":"Espalda media y dorsal, en casa.","sientes":"En el costado de la espalda, no en el bíceps.","preparate":"Mano y rodilla en la cama, o la mano en una silla firme, espalda plana, mancuerna colgando.","movimiento":"Jala el codo hacia la cadera, pegado al cuerpo, hasta pasar la espalda. Baja en 2 a 3 segundos.","imagina":"Que arrancas una podadora.","errores":[{"error":"Girar el torso.","correccion":"Pecho viendo al piso."},{"error":"Jalar al hombro.","correccion":"Codo a la cadera."}],"cuidado":"Si la silla se mueve, usa la cama."},
 }
-
-FICHAS['laterales-casa'] = { ...FICHAS.laterales, peso: 'Mancuernas de 4 a 5 kg; si salen 20 fáciles, sube 1 kg.' }
-FICHAS['plancha-casa'] = FICHAS.plancha

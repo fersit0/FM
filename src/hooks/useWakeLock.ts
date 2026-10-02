@@ -18,9 +18,11 @@ export function useWakeLock(activo: boolean): void {
     }
     pedir()
     document.addEventListener('visibilitychange', alVolver)
+    window.addEventListener('pageshow', alVolver)
     return () => {
       cancelado = true
       document.removeEventListener('visibilitychange', alVolver)
+      window.removeEventListener('pageshow', alVolver)
       lock?.release().catch(() => {})
     }
   }, [activo])
