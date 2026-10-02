@@ -235,7 +235,7 @@ Pendiente: probar en el iPhone el atajo "FM Descanso", el háptico del switch, l
 - `e2e/alternativas.spec.mjs` recorre A, B y CASA con cada alternativa leyendo la biblioteca real (`window.fmBiblioteca`, solo en desarrollo).
 
 ## Fichas
-- `FICHAS.md` es la fuente; `node scripts/fichas-desde-md.mjs` genera `src/data/fichas.ts`. 47 fichas con el formato fijo. Las dos de Fer (press inclinado 107 palabras, jalón 115) marcan el tope que revisa la prueba; las demás quedaron entre 71 y 111.
+- `FICHAS.md` es la fuente; `node scripts/fichas-desde-md.mjs` genera `src/data/fichas.ts`. 47 fichas con el formato fijo. Tope duro de 80 palabras revisado por la prueba; las dos de Fer (press inclinado 107, jalón 115) van tal cual.
 
 ## Auditoría: bugs encontrados y arreglados
 - Botón principal cortado en iPhone real (áreas seguras no contempladas).

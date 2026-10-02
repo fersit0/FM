@@ -6,8 +6,9 @@ import { FICHAS } from './fichas'
 import { parsearFichas, palabrasDe } from '../../scripts/fichas-md.mjs'
 
 const CAMPOS = ['paraQue', 'sientes', 'preparate', 'movimiento', 'imagina', 'cuidado'] as const
-/** Las dos fichas que dio Fer como tono (press inclinado y jalón) miden 107 y 115 palabras: ese es el tope */
-const MAX_PALABRAS = 115
+/** Tope de 80 palabras; las dos fichas que escribió Fer como tono van tal cual */
+const MAX_PALABRAS = 80
+const DE_FER = new Set(['press-inclinado', 'jalon'])
 
 describe('fichas', () => {
   const items = EJERCICIOS.flatMap((e) => [e, ...e.alternativas])
@@ -19,7 +20,7 @@ describe('fichas', () => {
       expect(f.errores.length).toBeGreaterThanOrEqual(1)
       expect(f.errores.length).toBeLessThanOrEqual(2)
       for (const e of f.errores) { expect(e.error.length).toBeGreaterThan(3); expect(e.correccion.length).toBeGreaterThan(3) }
-      expect(palabrasDe(f), `${ej.id} tiene ${palabrasDe(f)} palabras`).toBeLessThanOrEqual(MAX_PALABRAS)
+      if (!DE_FER.has(ej.id)) expect(palabrasDe(f), `${ej.id} tiene ${palabrasDe(f)} palabras`).toBeLessThanOrEqual(MAX_PALABRAS)
       // de tú, sin usted
       expect(JSON.stringify(f)).not.toMatch(/\busted\b/i)
     })
