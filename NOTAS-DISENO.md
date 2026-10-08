@@ -282,3 +282,30 @@ Ya estaba todo del 1 de octubre (layout con áreas seguras y prueba del botón, 
 - `e2e/comun.mjs`: `limpiar(page, 'hecha' | 'no')` usa `?frida=` (solo en desarrollo) para dejar Frida registrada o "esta semana no hay".
 - `e2e/frida.spec.mjs`: lunes muestra FRIDA, mover al miércoles, "no hay" trae pierna una vez y nunca en corta, pregunta pendiente, corta con 3 bloques.
 - `e2e/alternativas.spec.mjs` recorre A y B con pierna por bloques (segundo del par tras una serie del primero) y prueba la serie en alternativa que cuenta para el bloque.
+
+# Rutina v5 (RUTINA-FINAL.md, 7 oct en la noche)
+
+## Sin pares, por zonas
+- Se quitaron `bloque`, `secuenciaDePar`, los 15 s de cambio y la tarjeta de par. Cada ejercicio lleva `zona` (bancos, poleas, terraza); `listaDe(sesion, version, pierna)` da la lista en el orden del recorrido y `rutaDe` las zonas que se visitan. La cabecera de la sesión muestra "Poleas → Bancos → Terraza" con la zona actual resaltada; cada tarjeta dice "Poleas · 2 de 8"; al terminar la última serie de una zona el descanso dice "Ahora a bancos: press inclinado".
+- Corta: jalón, press principal y laterales a 3 series, con los laterales en bancos (A: Poleas → Bancos; B: Bancos → Poleas).
+- Goblet entra en A y B al empezar la terraza cuando la semana se quedó sin Frida. Salieron prensa, pec deck, barra Z, plancha, cruce de poleas y todas las alternativas "en máquina"; `NOMBRES_RETIRADOS` conserva sus nombres para Historial.
+
+## Registro de sesiones (src/logic/registro.ts)
+- Una sesión cuenta si está terminada o tiene una serie (`cuenta`). La que sigue es la contraria de la A o B más reciente por fecha. `cierresPendientes` cierra las abiertas de otros días (con series: `como` completa, corta o parcial; sin series se descartan) al arrancar la app y al empezar otra.
+- `diasSinRegistro`: días de gym (lunes a jueves, domingo si iba en menos de 3) sin nada desde la última sesión, máximo una semana atrás, que no estén en `settings.noFui`. Hoy pregunta uno por uno "¿Entrenaste el martes 6?" con A, B, Frida y No fui (la que tocaba marcada); en el día planeado de Frida, lo que no sea Frida deja la semana sin Frida. Cada respuesta muestra Deshacer.
+- "Pon al día tu semana" la primera vez de esta versión (`settings.semanaAlDiaV5`). La A del 7 oct 2026 se carga una sola vez (`settings.cargaInicialV5`) si no hay nada ese día.
+- "Registrar sesión" en Hoy y en Historial (`armarRegistro`): nunca en el futuro, una A o B por día (si ya hay, ofrece cambiarla). En Historial cada sesión muestra cómo quedó y se puede cambiar qué hice.
+- Hoy: "Hoy toca B · la última fue A el miércoles 7" y "Semana: 2 de 3".
+
+## Versión automática y recorte (src/logic/horario.ts, duracion.ts, sesion.ts)
+- Duración: 45 s por serie más su descanso, 1 min entre ejercicios, 2 al cambiar de zona; calentamiento 5 (4 corta), cierre 10 (5 con pierna o corta, 20 bonus). A 63, B 62, con pierna 65, corta 30, CASA 12.
+- `versionAutomatica`: completa si inicio + calentamiento + pesas termina antes de la última pesa (21:10), si no corta, si no casa. Con estas duraciones: completa hasta las 20:17, corta hasta las 20:44. Hoy lo muestra ("8 ejercicios, unos 63 min · completa") y al tocar Empezar se recalcula con la hora real; si no alcanza ni la corta, una hoja ofrece casa o la corta de todas formas. Se quitaron "Completa hasta" y "Corta hasta" de Ajustes y la regla de 4 semanas.
+- En la sesión, línea de arriba "Empezaste 8:22 · va la corta · terminas pesas 8:50 · Cambiar a completa". `recortar` corre al cambiar de paso o de serie: si lo que falta no cabe, quita abdomen, luego brazos, luego press militar o aperturas (`RECORTE_ORDEN`), guarda `sesion.recortados`, avisa con Deshacer y la línea dice "se quitó crunch y curl con mancuernas".
+- "Ocupado: después" (`posponer`): manda el ejercicio al final de su zona o, si la zona ya terminó, al final de la sesión; queda en `sesion.orden` y `sesion.pospuestos`. La segunda vez abre las alternativas.
+
+## Fotos y fichas
+- Nuevas: Triceps_Pushdown_-_Rope_Attachment, Crunches, Tricep_Dumbbell_Kickback (al revés en la fuente: Inicio es la `-2`, con prueba). FICHAS.md solo tiene lo que está en la rutina (30 fichas); triceps-polea, curl-alternado, crunch, triceps-patada, remo-polea y remo-mancuerna con el texto de la sección 11 recortado a 80 palabras.
+
+## Pruebas de punta a punta
+- `e2e/comun.mjs`: `reloj()` instala el reloj falso en el miércoles 7 oct 2026 a las 7 pm (avanza en tiempo real); `?seed=` deja la app sin carga inicial, sin "Pon al día" y con la semana anterior contestada (`?fresco=1` la deja como instalación nueva; `?registro=fecha:tipo` registra una sesión).
+- `e2e/registro.spec.mjs` cubre la sección 14 del registro; `alternativas.spec.mjs` recorre A y B con goblet, "Ocupado: después" y el recorte; `frida.spec.mjs` usa la semana del 14 de septiembre con una B el domingo 13.

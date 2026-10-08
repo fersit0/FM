@@ -70,7 +70,7 @@ test('editar y borrar una sesión pasada desde Historial', async ({ page }) => {
   await page.getByRole('button', { name: 'Cerrar' }).click()
   await page.getByRole('button', { name: 'Historial' }).click()
   await page.locator('.lista .fila').first().click()
-  await page.locator('.hoja-fondo.abierta .fila', { hasText: /, A / }).first().click()
+  await page.locator('.hoja-fondo.abierta .fila', { hasText: /, A parcial/ }).first().click()
   const reps = page.locator('.hoja-fondo.abierta').getByLabel('Reps').first()
   await reps.fill('9')
   await reps.blur()

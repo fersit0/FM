@@ -8,7 +8,7 @@ import { minutosCalentamiento, minutosCierre } from '../logic/duracion'
 import { listaDeSesion, posponer, recortar, segundosRestantes, hechosDe } from '../logic/sesion'
 import { comoQuedo } from '../logic/registro'
 import { sugerirPeso, subioDePeso, porSesion } from '../logic/progresion'
-import { claveFecha, formatoHora, minutosDe } from '../logic/fechas'
+import { claveFecha, minutosDe } from '../logic/fechas'
 import { unidadDe, incrementoDe, pesoDeSet, pesoInicial, aKg, convertir, formatoPeso, redondearAPaso, type Unidad } from '../logic/unidades'
 import { useWakeLock } from '../hooks/useWakeLock'
 import { useAlto } from '../hooks/useAlto'
@@ -34,8 +34,8 @@ export function rangoDe(e: Ejercicio | Alternativa): string {
 }
 /** diámetro del spec acotado al espacio disponible */
 const acotar = (d: number, alto: number, ancho: number) => Math.max(88, Math.min(d, alto - 4, ancho - 8))
-/** "8:22": sin am/pm, la sesión siempre es de tarde */
-const horaDe = (ms: number) => formatoHora(new Date(ms).getHours() * 60 + new Date(ms).getMinutes()).replace(/ [ap]m$/, '')
+/** "8:22": siempre con minutos y sin am/pm, la sesión siempre es de tarde */
+const horaDe = (ms: number) => { const d = new Date(ms); const h = d.getHours() % 12 || 12; return `${h}:${String(d.getMinutes()).padStart(2, '0')}` }
 
 export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }: Props) {
   const { settings, sets } = datos
@@ -266,10 +266,11 @@ export function SerieEditable({ set, datos }: { set: SetLog; datos: Datos }) {
   )
 }
 
-/** Línea de arriba: "Empezaste 8:22 · va la corta · terminas pesas 8:50" con el botón para cambiar de versión */
+/** Línea de arriba: "Empezaste 8:22 · va la corta · terminas pesas 8:50 · Cambiar a completa"; toda la línea es el botón */
 function Linea({ texto, otraVersion, onCambiar }: { texto: string | null; otraVersion?: Version; onCambiar?: () => void }) {
   if (!texto) return null
-  return <p className="t-nota tenue sesion-linea">{texto}{onCambiar && otraVersion && <>{' · '}<button onClick={onCambiar}>Cambiar a {otraVersion}</button></>}</p>
+  if (!onCambiar || !otraVersion) return <p className="t-nota tenue sesion-linea">{texto}</p>
+  return <button className="t-nota tenue sesion-linea" onClick={onCambiar} aria-label={`${texto}. Cambiar a ${otraVersion}`}>{texto}{' · '}<span className="subrayado">Cambiar a {otraVersion}</span></button>
 }
 
 // ---------- 7.1 Calentamiento y cierre ----------
@@ -424,7 +425,7 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
           <BotonTexto subrayado onClick={onTecnica}>Técnica</BotonTexto>
         </div>
         <p className="t-nota tenue sesion-zona">{zona}{ej.indice + 1} de {lista.length}</p>
-        {esAlternativa && <p className="t-nota tenue sesion-alternativa">{'caso' in item ? `${item.caso}. ` : ''}<button onClick={onVolverOriginal}>Volver al original</button></p>}
+        {esAlternativa && <p className="t-nota tenue sesion-alternativa">{'caso' in item && <span className="caso">{item.caso}. </span>}<button onClick={onVolverOriginal}>Volver al original</button></p>}
         {aviso && <p className="t-cuerpo tenue sesion-aviso">{aviso}</p>}
         <div className="sesion-foto"><Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="toque" /></div>
       </div>
