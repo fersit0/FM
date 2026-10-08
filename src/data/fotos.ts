@@ -3,14 +3,18 @@
 type Par = { a: string; b?: string; referencia?: boolean }
 const par = (id: string): Par => ({ a: id, b: `${id}-2` })
 export const FOTOS_BASE: Record<string, Par> = {
-  // A
-  jalon: par('Wide-Grip_Lat_Pulldown'), 'remo-polea': par('Seated_Cable_Rows'), 'press-inclinado': par('Incline_Dumbbell_Press'), 'press-militar': par('Dumbbell_Shoulder_Press'),
-  'triceps-cabeza': par('Seated_Triceps_Press'), laterales: par('Side_Lateral_Raise'), 'curl-alternado': par('Dumbbell_Alternate_Bicep_Curl'), crunch: par('Crunches'),
-  // B
-  'press-plano': par('Dumbbell_Bench_Press'), 'aperturas-mancuernas': par('Dumbbell_Flyes'), 'remo-pecho-apoyado': par('Dumbbell_Incline_Row'), 'jalon-cerrado': par('Close-Grip_Front_Lat_Pulldown'),
-  'triceps-polea': par('Triceps_Pushdown_-_Rope_Attachment'), 'curl-martillo': par('Hammer_Curls'), 'elevacion-piernas': par('Flat_Bench_Lying_Leg_Raise'),
-  // pierna sin Frida
-  goblet: par('Goblet_Squat'), 'sentadilla-mancuernas': par('Dumbbell_Squat'),
+  // A: pecho y pierna
+  'press-inclinado': par('Incline_Dumbbell_Press'), 'aperturas-inclinadas': par('Incline_Dumbbell_Flyes'), laterales: par('Side_Lateral_Raise'), 'triceps-cabeza': par('Seated_Triceps_Press'),
+  goblet: par('Goblet_Squat'), crunch: par('Crunches'),
+  // el puente en la fuente es sin peso: va con la etiqueta "Referencia" porque Fer lo hace con una mancuerna sobre la cadera
+  'puente-gluteo': { ...par('Butt_Lift_Bridge'), referencia: true }, 'puente-sin-peso': par('Butt_Lift_Bridge'),
+  // B: torso completo
+  'press-plano': par('Dumbbell_Bench_Press'), 'jalon-cerrado': par('Close-Grip_Front_Lat_Pulldown'), 'remo-polea': par('Seated_Cable_Rows'),
+  'triceps-polea': par('Triceps_Pushdown_-_Rope_Attachment'), 'curl-alternado': par('Dumbbell_Alternate_Bicep_Curl'), 'elevacion-piernas': par('Flat_Bench_Lying_Leg_Raise'),
+  // C: espalda y hombro
+  jalon: par('Wide-Grip_Lat_Pulldown'), 'press-militar': par('Dumbbell_Shoulder_Press'), 'curl-martillo': par('Hammer_Curls'),
+  // alternativas
+  'aperturas-mancuernas': par('Dumbbell_Flyes'), 'remo-pecho-apoyado': par('Dumbbell_Incline_Row'), 'sentadilla-mancuernas': par('Dumbbell_Squat'),
   // alternativas
   'remo-mancuerna': par('One-Arm_Dumbbell_Row'), 'press-piso': par('Dumbbell_Floor_Press'), 'press-militar-pie': par('Standing_Dumbbell_Press'), 'laterales-sentado': par('Seated_Side_Lateral_Raise'),
   // Tricep_Dumbbell_Kickback viene al revés en la fuente: la foto 0 tiene el brazo estirado; Inicio es la de codo doblado (-2)
@@ -24,7 +28,7 @@ export const FOTOS_BASE: Record<string, Par> = {
 /** Encuadre por foto para que no se corten cabeza, manos ni máquina (object-position) */
 export const ENCUADRE: Record<string, string> = {
   'press-inclinado': '50% 30%', jalon: '50% 20%', 'press-militar': '50% 25%', 'press-militar-pie': '50% 20%', 'remo-pecho-apoyado': '50% 55%',
-  'jalon-cerrado': '50% 25%', 'triceps-polea': '50% 40%', 'triceps-patada': '45% 40%', crunch: '50% 50%',
+  'jalon-cerrado': '50% 25%', 'triceps-polea': '50% 40%', 'triceps-patada': '45% 40%', crunch: '50% 50%', 'aperturas-inclinadas': '50% 25%', 'puente-gluteo': '50% 55%', 'puente-sin-peso': '50% 55%',
 }
 export function urlsFotoBase(clave: string): { a: string; b?: string; referencia?: boolean } | null {
   const f = FOTOS_BASE[clave]
