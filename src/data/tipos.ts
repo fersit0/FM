@@ -35,6 +35,10 @@ export interface Ejercicio extends Detalle {
   nombre: string
   sesion: Letra
   orden: number
+  /** número de bloque dentro de la sesión; dos ejercicios con el mismo bloque son un par */
+  bloque: number
+  /** solo entra cuando toca pierna en A o B (semana sin Frida) */
+  pierna?: boolean
   series: number
   repsMin: number
   repsMax: number
@@ -60,6 +64,8 @@ export interface Sesion {
   cambios?: { ejercicioId: string; alternativaId: string }[]
   /** Semana ligera: 2 series por ejercicio con el mismo peso */
   ligera?: boolean
+  /** esta sesión trajo su bloque de pierna (goblet o prensa a 3 series) */
+  pierna?: boolean
 }
 
 export interface SetLog {
@@ -124,6 +130,8 @@ export interface Settings {
   idsDesconocidos?: string[]
   /** último respaldo exportado o importado (YYYY-MM-DD): se recuerda cada 2 semanas */
   ultimoRespaldo?: string
+  /** día de Frida por semana (clave = lunes YYYY-MM-DD): fecha planeada, o null si esa semana no hay; sin entrada = lunes */
+  fridaPlan?: Record<string, string | null>
 }
 
 export interface Cintura {

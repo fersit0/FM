@@ -24,9 +24,58 @@ export function casaDisponible(sesiones: Sesion[], fecha: Date): boolean {
   return casaDeSemana(sesiones, fecha) < CASA_MAX
 }
 
-/** Pierna según Frida: goblet y prensa a 3 series si en la semana no hay FRIDA, 2 si la hay */
-export function seriesPierna(sesiones: Sesion[], fecha: Date): number {
-  return sesionesDeSemana(sesiones, fecha).some((s) => s.tipo === 'FRIDA') ? 2 : 3
+// ---------- Pierna con Frida (RUTINA-FINAL.md, 2) ----------
+/** Plan por semana: clave = lunes (YYYY-MM-DD); valor = fecha planeada o null si esa semana no hay. Sin entrada = lunes. */
+export type PlanFrida = Record<string, string | null>
+
+export function claveSemana(fecha: Date): string {
+  return claveFecha(inicioSemana(fecha))
+}
+/** Día de Frida planeado para la semana de `fecha`: lunes salvo que se haya movido; null si "esta semana no hay" */
+export function diaFridaPlaneado(plan: PlanFrida | undefined, fecha: Date): string | null {
+  const semana = claveSemana(fecha)
+  const v = plan?.[semana]
+  return v === undefined ? semana : v
+}
+export interface EstadoFrida {
+  /** fecha planeada esta semana, o null si no hay */
+  planeada: string | null
+  /** fecha en que ya se registró FRIDA esta semana */
+  hecha: string | null
+  /** el día planeado ya pasó sin respuesta: hay que preguntar */
+  pendiente: string | null
+  /** hoy es el día planeado y todavía no está registrada */
+  hoyEsFrida: boolean
+}
+export function estadoFrida(sesiones: Sesion[], plan: PlanFrida | undefined, hoy: Date): EstadoFrida {
+  const frida = sesionesDeSemana(sesiones, hoy).find((s) => s.tipo === 'FRIDA')
+  const planeada = diaFridaPlaneado(plan, hoy)
+  const hoyClave = claveFecha(hoy)
+  if (frida) return { planeada, hecha: frida.fecha, pendiente: null, hoyEsFrida: false }
+  if (planeada === null) return { planeada, hecha: null, pendiente: null, hoyEsFrida: false }
+  if (planeada === hoyClave) return { planeada, hecha: null, pendiente: null, hoyEsFrida: true }
+  if (planeada < hoyClave) return { planeada, hecha: null, pendiente: planeada, hoyEsFrida: false }
+  return { planeada, hecha: null, pendiente: null, hoyEsFrida: false }
+}
+/** Ya hubo pierna en A o B esta semana */
+export function piernaHechaEnSemana(sesiones: Sesion[], fecha: Date): boolean {
+  return sesionesDeSemana(sesiones, fecha).some((s) => (s.tipo === 'A' || s.tipo === 'B') && !!s.pierna)
+}
+/**
+ * La sesión A o B que se abre hoy trae pierna solo si la semana se quedó sin Frida ("Esta semana no hay" o "No hubo"),
+ * todavía no hubo pierna esta semana y la versión no es corta. Con Frida hecha, planeada o pendiente de respuesta, no.
+ */
+export function tocaPierna(sesiones: Sesion[], plan: PlanFrida | undefined, hoy: Date, version: 'completa' | 'corta' | 'bonus'): boolean {
+  if (version === 'corta') return false
+  const e = estadoFrida(sesiones, plan, hoy)
+  if (e.hecha || e.planeada !== null) return false
+  return !piernaHechaEnSemana(sesiones, hoy)
+}
+/** Días de la semana de `fecha` a los que se puede mover Frida: de hoy en adelante, hasta el domingo */
+export function diasParaMoverFrida(fecha: Date): string[] {
+  const ini = inicioSemana(fecha)
+  const hoy = claveFecha(fecha)
+  return Array.from({ length: 7 }, (_, i) => claveFecha(sumarDias(ini, i))).filter((d) => d >= hoy)
 }
 
 /** La siguiente sesión propia es la que NO se hizo la última vez. Frida y CASA no afectan. */
@@ -119,16 +168,19 @@ export function seriesPara(
   seriesExtra: boolean,
   ligera = false,
   extraIds: string[] = ['press-inclinado', 'jalon', 'press-plano', 'remo-polea'],
-  /** series de pierna según Frida (goblet y prensa) */
-  pierna?: number,
 ): number {
   if (version === 'corta' || ligera) return 2
   if (seriesExtra && extraIds.includes(ejercicioId)) return 4
-  if (pierna !== undefined && (ejercicioId === 'goblet' || ejercicioId === 'prensa')) return pierna
   return seriesBase
 }
 
-/** Ejercicios que entran según la versión: corta = solo 1 a 4 */
-export function entraEnVersion(orden: number, version: 'completa' | 'corta' | 'bonus'): boolean {
-  return version !== 'corta' || orden <= 4
+/**
+ * Orden de las series dentro de un bloque: en un par se alternan (0, 1, 0, 1...) y las de más del que tiene más series
+ * se hacen solas al final. Devuelve la secuencia de índices de ejercicio.
+ */
+export function secuenciaDePar(series: number[]): number[] {
+  const out: number[] = []
+  const max = Math.max(0, ...series)
+  for (let r = 0; r < max; r++) for (let i = 0; i < series.length; i++) if (r < series[i]) out.push(i)
+  return out
 }

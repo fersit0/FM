@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { siguienteSesion, estadoSemana, avisoRescate, semanasCumplidas, tocaProponerSeriesExtra, seriesPara, entraEnVersion, casaDeSemana, casaDisponible, seriesPierna } from './semana'
+import { siguienteSesion, estadoSemana, avisoRescate, semanasCumplidas, tocaProponerSeriesExtra, seriesPara, casaDeSemana, casaDisponible, estadoFrida, tocaPierna, diaFridaPlaneado, diasParaMoverFrida, secuenciaDePar } from './semana'
+import { bloquesDe, alternativasDisponibles, ejerciciosDe, buscarEjercicio } from '../data/ejercicios'
+import { duracionEstimada } from './duracion'
 import { SETTINGS_DEFAULT, type Sesion } from '../data/tipos'
 import { inicioSemana, claveFecha } from './fechas'
 
@@ -97,15 +99,6 @@ describe('regla de 4 semanas', () => {
     expect(seriesPara('press-inclinado', 3, 'completa', false, true)).toBe(2)
     expect(seriesPara('remo-polea', 3, 'bonus', true)).toBe(4)
   })
-  it('goblet y prensa a 3 series sin Frida y a 2 con Frida', () => {
-    const sin = [sesion('2026-09-22', 'A')]
-    const con = [sesion('2026-09-21', 'FRIDA'), sesion('2026-09-22', 'A')]
-    const jueves = new Date('2026-09-24T20:00:00')
-    expect(seriesPierna(sin, jueves)).toBe(3)
-    expect(seriesPierna(con, jueves)).toBe(2)
-    expect(seriesPara('goblet', 2, 'completa', false, false, undefined, seriesPierna(sin, jueves))).toBe(3)
-    expect(seriesPara('prensa', 2, 'completa', false, false, undefined, seriesPierna(con, jueves))).toBe(2)
-  })
   it('CASA no cuenta para la meta, no mueve la alternancia y se topa en 2', () => {
     const s = [sesion('2026-09-22', 'A'), sesion('2026-09-23', 'CASA'), sesion('2026-09-24', 'CASA')]
     const d = new Date('2026-09-25T20:00:00')
@@ -115,9 +108,107 @@ describe('regla de 4 semanas', () => {
     expect(casaDisponible(s, d)).toBe(false)
     expect(casaDisponible([s[0]], d)).toBe(true)
   })
-  it('la corta solo lleva ejercicios 1 a 4', () => {
-    expect(entraEnVersion(4, 'corta')).toBe(true)
-    expect(entraEnVersion(5, 'corta')).toBe(false)
-    expect(entraEnVersion(7, 'completa')).toBe(true)
+  it('la corta lleva los bloques 1, 2 y el par de laterales, a 2 series', () => {
+    const a = bloquesDe('A', 'corta')
+    expect(a.map((b) => b.numero)).toEqual([1, 2, 5])
+    expect(a[2].ejercicios.map((e) => e.id)).toEqual(['laterales', 'remo-pecho-apoyado'])
+    const b = bloquesDe('B', 'corta')
+    expect(b.map((x) => x.numero)).toEqual([1, 2, 4])
+    expect(seriesPara('laterales', 3, 'corta', false)).toBe(2)
+    // en corta nunca hay pierna, aunque se pida
+    expect(bloquesDe('A', 'corta', true).some((x) => x.ejercicios.some((e) => e.pierna))).toBe(false)
+  })
+})
+
+describe('pierna con Frida', () => {
+  const lunes = '2026-09-21'
+  const mar = new Date('2026-09-22T19:00:00')
+  const mie = new Date('2026-09-23T19:00:00')
+  it('lunes por defecto; el día planeado Hoy muestra FRIDA', () => {
+    expect(diaFridaPlaneado(undefined, mar)).toBe(lunes)
+    const e = estadoFrida([], undefined, new Date('2026-09-21T10:00:00'))
+    expect(e.hoyEsFrida).toBe(true)
+    expect(e.pendiente).toBeNull()
+  })
+  it('con Frida registrada el lunes, A y B no traen pierna', () => {
+    const s = [sesion(lunes, 'FRIDA')]
+    expect(estadoFrida(s, undefined, mar).hecha).toBe(lunes)
+    expect(tocaPierna(s, undefined, mar, 'completa')).toBe(false)
+  })
+  it('movida al miércoles: el martes no hay pierna y el miércoles Hoy muestra FRIDA', () => {
+    const plan = { [lunes]: '2026-09-23' }
+    expect(tocaPierna([], plan, mar, 'completa')).toBe(false)
+    expect(estadoFrida([], plan, mar).hoyEsFrida).toBe(false)
+    expect(estadoFrida([], plan, mie).hoyEsFrida).toBe(true)
+  })
+  it('"Esta semana no hay": la siguiente completa trae pierna y la que sigue ya no; no se arrastra a la otra semana', () => {
+    const plan = { [lunes]: null }
+    expect(tocaPierna([], plan, mar, 'completa')).toBe(true)
+    expect(tocaPierna([], plan, mar, 'bonus')).toBe(true)
+    const conPierna = [{ ...sesion('2026-09-22', 'A'), pierna: true }]
+    expect(tocaPierna(conPierna, plan, mie, 'completa')).toBe(false)
+    expect(tocaPierna([], plan, new Date('2026-09-29T19:00:00'), 'completa')).toBe(false)
+  })
+  it('el día planeado pasó sin respuesta: se pregunta, y "No hubo" activa la pierna', () => {
+    const e = estadoFrida([], undefined, mar)
+    expect(e.pendiente).toBe(lunes)
+    expect(tocaPierna([], undefined, mar, 'completa')).toBe(false)
+    expect(tocaPierna([], { [lunes]: null }, mar, 'completa')).toBe(true)
+  })
+  it('en corta nunca hay pierna', () => {
+    expect(tocaPierna([], { [lunes]: null }, mar, 'corta')).toBe(false)
+  })
+  it('si ya hubo pierna y luego se registra Frida, nada cambia', () => {
+    const s = [{ ...sesion('2026-09-22', 'A'), pierna: true }, sesion('2026-09-24', 'FRIDA')]
+    expect(tocaPierna(s, { [lunes]: null }, new Date('2026-09-25T19:00:00'), 'completa')).toBe(false)
+    expect(estadoSemana(s, mie).hechas).toBe(2)
+  })
+  it('se puede mover de hoy en adelante dentro de la semana', () => {
+    expect(diasParaMoverFrida(mie)).toEqual(['2026-09-23', '2026-09-24', '2026-09-25', '2026-09-26', '2026-09-27'])
+  })
+  it('los bloques de pierna solo entran cuando toca', () => {
+    expect(bloquesDe('A').some((b) => b.ejercicios.some((e) => e.id === 'goblet'))).toBe(false)
+    expect(bloquesDe('A', 'completa', true).map((b) => b.numero)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(bloquesDe('B', 'completa', true)[2].ejercicios[0].id).toBe('prensa')
+  })
+})
+
+describe('bloques en par', () => {
+  it('alterna series y las de más se hacen solas', () => {
+    expect(secuenciaDePar([3, 3])).toEqual([0, 1, 0, 1, 0, 1])
+    expect(secuenciaDePar([2, 3])).toEqual([0, 1, 0, 1, 1])
+    expect(secuenciaDePar([2])).toEqual([0, 0])
+  })
+  it('A y B tienen los pares del archivo', () => {
+    const pares = (l: 'A' | 'B') => bloquesDe(l).filter((b) => b.ejercicios.length === 2).map((b) => b.ejercicios.map((e) => e.id))
+    expect(pares('A')).toEqual([['laterales', 'remo-pecho-apoyado'], ['curl-z', 'triceps-polea']])
+    expect(pares('B')).toEqual([['jalon-cerrado', 'laterales'], ['curl-martillo', 'triceps-cabeza']])
+  })
+  it('cada sesión tiene un jalón y un remo distintos y laterales comparte id', () => {
+    const a = ejerciciosDe('A').map((e) => e.id), b = ejerciciosDe('B').map((e) => e.id)
+    expect(a).toContain('laterales'); expect(b).toContain('laterales')
+    expect(a).not.toContain('remo-mancuerna'); expect(b).not.toContain('remo-mancuerna')
+    expect(b).toContain('jalon-cerrado'); expect(b).toContain('aperturas-maquina'); expect(b).toContain('triceps-cabeza')
+  })
+  it('una alternativa se oculta si su id ya está en la sesión', () => {
+    const bloques = bloquesDe('B')
+    const aperturas = buscarEjercicio('aperturas-maquina')!
+    expect(alternativasDisponibles(aperturas, bloques).map((a) => a.id)).toContain('press-pecho-maquina')
+    const cambios = [{ ejercicioId: 'press-plano', alternativaId: 'press-pecho-maquina' }]
+    expect(alternativasDisponibles(aperturas, bloques, cambios).map((a) => a.id)).not.toContain('press-pecho-maquina')
+    // el propio bloque no se bloquea a sí mismo
+    expect(alternativasDisponibles(buscarEjercicio('press-plano')!, bloques, cambios).map((a) => a.id)).toContain('press-pecho-maquina')
+  })
+})
+
+describe('duración estimada', () => {
+  it('A ≈ 57, B ≈ 55, con pierna ≈ 60, corta ≈ 30', () => {
+    expect(duracionEstimada(bloquesDe('A'), 'completa')).toBe(57)
+    expect(duracionEstimada(bloquesDe('B'), 'completa')).toBe(55)
+    expect(duracionEstimada(bloquesDe('A', 'completa', true), 'completa', { pierna: true })).toBeGreaterThanOrEqual(59)
+    expect(duracionEstimada(bloquesDe('A', 'completa', true), 'completa', { pierna: true })).toBeLessThanOrEqual(61)
+    expect(duracionEstimada(bloquesDe('A', 'corta'), 'corta')).toBeGreaterThanOrEqual(25)
+    expect(duracionEstimada(bloquesDe('A', 'corta'), 'corta')).toBeLessThanOrEqual(33)
+    expect(duracionEstimada(bloquesDe('CASA'), 'completa', { casa: true })).toBe(12)
   })
 })
