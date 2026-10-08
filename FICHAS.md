@@ -15,7 +15,7 @@ Errores: <error>, <corrección>. <error>, <corrección>.
 Cuidado: ...
 ```
 
-Máximo 2 errores, cada uno con su corrección separada por la primera coma. Máximo 80 palabras por ficha (lo revisa `src/data/fichas.test.ts`). Las dos que dio Fer como tono (press inclinado y jalón) van tal cual aunque pasen de 80. Solo hay fichas de lo que está en la rutina (RUTINA-FINAL.md v5).
+Máximo 2 errores, cada uno con su corrección separada por la primera coma. Máximo 80 palabras por ficha (lo revisa `src/data/fichas.test.ts`). Las dos que dio Fer como tono (press inclinado y jalón) van tal cual aunque pasen de 80. Solo hay fichas de lo que está en la rutina (RUTINA-FINAL.md v6).
 
 ---
 
@@ -172,6 +172,15 @@ Imagina: que la espalda baja está pegada al piso con cinta.
 Errores: arquear la espalda, no bajes tanto. Bajar con impulso, frena las piernas.
 Cuidado: si molesta la espalda baja, crunch.
 
+## aperturas-inclinadas — Aperturas inclinadas con mancuernas
+Para qué: pecho de arriba, el de la playera.
+Lo sientes: arriba del pecho, al abrir y al cerrar.
+Prepárate: el mismo banco del press, a 30°. Mancuernas arriba del pecho, palmas viéndose, codos apenas doblados.
+Movimiento: abre en arco en 2 a 3 segundos hasta la altura del pecho, no más. Sube por el mismo arco hasta juntarlas.
+Imagina: que abrazas un árbol grueso.
+Errores: doblar los codos, déjalos fijos. Bajar de más, para a la altura del pecho.
+Cuidado: empieza ligero; si molesta el hombro, lagartijas.
+
 ## aperturas-mancuernas — Aperturas con mancuernas en banco plano
 Para qué: pecho, cuando no hay máquina.
 Lo sientes: el pecho estirándose al abrir y apretando al cerrar.
@@ -209,13 +218,31 @@ Errores: echarte encima del cable, párate derecho. Subir las manos a la cara, p
 Cuidado: si molesta el codo, tríceps con mancuerna sobre la cabeza.
 
 ## goblet — Sentadilla goblet
-Para qué: muslos y glúteo, la base de todo.
-Lo sientes: en los muslos al bajar y en el glúteo al subir.
-Prepárate: mancuerna vertical pegada al pecho, pies al ancho de hombros, puntas un poco afuera.
-Movimiento: baja en 2 a 3 segundos como si te sentaras, hasta muslos paralelos. Pecho arriba, talones pegados. Sube empujando el piso.
-Imagina: que te sientas en una silla atrás de ti.
-Errores: talones despegados, abre más las puntas. Rodillas hacia adentro, empújalas afuera.
+Para qué: piernas y glúteo; lo que más gasta.
+Lo sientes: en los muslos y el glúteo.
+Prepárate: pies algo más abiertos que los hombros, puntas afuera. Mancuerna parada al pecho, a dos manos.
+Movimiento: baja en 2 a 3 segundos como si te sentaras en una silla baja, pecho arriba, hasta que los codos rocen las rodillas. Sube empujando.
+Imagina: que separas el piso con los pies.
+Errores: rodillas que se juntan, empújalas afuera. Talones despegados, peso en todo el pie.
 Cuidado: si molesta la rodilla, baja menos.
+
+## puente-gluteo — Puente de glúteo con mancuerna, en colchoneta
+Para qué: glúteo; postura y pantalón.
+Lo sientes: glúteo, no espalda baja.
+Prepárate: acostado, rodillas dobladas, pies al ancho de la cadera; mancuerna acostada sobre la cadera, a dos manos.
+Movimiento: empuja con los talones hasta que rodillas, cadera y hombros queden en línea. Aprieta arriba y baja en 2 a 3 segundos.
+Imagina: que aprietas una moneda entre los glúteos.
+Errores: arquear la espalda baja, para en la línea recta. Empujar con las puntas, talones.
+Cuidado: si molesta la espalda baja, sin mancuerna y menos altura.
+
+## puente-sin-peso — Puente de glúteo sin mancuerna
+Para qué: glúteo, sin mancuerna.
+Lo sientes: glúteo, no espalda baja.
+Prepárate: acostado en colchoneta, rodillas dobladas, pies al ancho de la cadera, brazos a los lados.
+Movimiento: empuja con los talones hasta que rodillas, cadera y hombros queden en línea. Aprieta un segundo y baja en 2 a 3 segundos. Son 20.
+Imagina: que aprietas una moneda entre los glúteos.
+Errores: arquear la espalda baja, para en la línea recta. Empujar con las puntas, talones.
+Cuidado: si molesta la espalda baja, menos altura.
 
 ## sentadilla-mancuernas — Sentadilla con dos mancuernas
 Para qué: muslos y glúteo cuando una mancuerna ya no alcanza.
