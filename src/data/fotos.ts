@@ -17,11 +17,13 @@ export const FOTOS_BASE: Record<string, Par> = {
   'prensa-corta': par('Leg_Press'), 'curl-cuerda': par('Cable_Hammer_Curls_-_Rope_Attachment'), 'elevacion-piernas-piso': par('Flat_Bench_Lying_Leg_Raise'), 'elevacion-rodillas': par('Flat_Bench_Lying_Leg_Raise'),
   'lagartijas-inclinadas': par('Incline_Push-Up'), 'remo-mancuerna-casa': par('One-Arm_Dumbbell_Row'),
   eliptica: par('Elliptical_Trainer'), bici: par('Bicycling_Stationary'),
+  // Butterfly viene al revés en la fuente: la foto 0 tiene los brazos cerrados; Inicio es la de brazos abiertos (-2)
+  'jalon-cerrado': par('Close-Grip_Front_Lat_Pulldown'), 'aperturas-maquina': { a: 'Butterfly-2', b: 'Butterfly' }, 'aperturas-mancuernas': par('Dumbbell_Flyes'), 'cruce-poleas': par('Cable_Crossover'),
 }
 /** Encuadre por foto para que no se corten cabeza, manos ni máquina (object-position) */
 export const ENCUADRE: Record<string, string> = {
   'press-inclinado': '50% 30%', jalon: '50% 20%', 'press-militar': '50% 25%', 'press-militar-pie': '50% 20%', prensa: '40% 50%', 'remo-pecho-apoyado': '50% 55%',
-  'dominadas-asistidas': '50% 15%', 'triceps-polea': '55% 40%', 'curl-polea': '50% 40%', 'curl-cuerda': '55% 40%', 'remo-alto-maquina': '50% 35%', 'press-hombro-maquina': '50% 20%',
+  'dominadas-asistidas': '50% 15%', 'jalon-cerrado': '50% 25%', 'aperturas-maquina': '50% 30%', 'cruce-poleas': '50% 30%', 'triceps-polea': '55% 40%', 'curl-polea': '50% 40%', 'curl-cuerda': '55% 40%', 'remo-alto-maquina': '50% 35%', 'press-hombro-maquina': '50% 20%',
 }
 export function urlsFotoBase(clave: string): { a: string; b?: string; referencia?: boolean } | null {
   const f = FOTOS_BASE[clave]

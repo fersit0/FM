@@ -1,19 +1,8 @@
 // Pesos en lb por serie: paso del ejercicio con − y +, cifra exacta con el teclado, kg/lb que se queda guardado,
 // cada serie con su propio peso, borrador que sobrevive a cerrar la app, y CASA en kg.
 import { test, expect } from '@playwright/test'
+import { limpiar, empezarSesion as aSerie } from './comun.mjs'
 
-async function limpiar(page) {
-  await page.goto('?seed=0')
-  await page.waitForTimeout(600)
-  await page.evaluate(() => localStorage.clear())
-  await page.goto('')
-  await expect(page.getByRole('button', { name: /^Empezar/ })).toBeVisible()
-}
-async function aSerie(page) {
-  await page.getByRole('button', { name: /^Empezar/ }).click()
-  await page.getByRole('button', { name: 'Saltar' }).click()
-  await expect(page.getByText(/Serie 1 de/)).toBeVisible()
-}
 async function seguirSiHaceFalta(page) {
   const seguir = page.getByRole('button', { name: 'Seguir sesión' })
   if (await seguir.isVisible().catch(() => false)) await seguir.click()
@@ -36,19 +25,19 @@ test('press inclinado arranca en 30 lb y sube de 5 en 5; kg/lb se queda guardado
   await page.getByRole('button', { name: /^Menos 5 lb/ }).click()
   await page.getByRole('button', { name: /^Menos 5 lb/ }).click()
   await expect(cifra(page)).toHaveText('25')
-  // a kilos: 25 lb son 11.3, redondeado al paso de 2.5
+  // a kilos: 25 lb son 11.3, redondeado al paso de 1
   await unidad(page).click()
   await expect(unidad(page)).toHaveText('kg')
-  await expect(cifra(page)).toHaveText('12.5')
-  await page.getByRole('button', { name: /^Más 2.5 kg/ }).click()
-  await expect(cifra(page)).toHaveText('15')
+  await expect(cifra(page)).toHaveText('11')
+  await page.getByRole('button', { name: /^Más 1 kg/ }).click()
+  await expect(cifra(page)).toHaveText('12')
   await page.reload()
   await seguirSiHaceFalta(page)
   await expect(unidad(page)).toHaveText('kg')
-  await expect(cifra(page)).toHaveText('15')
+  await expect(cifra(page)).toHaveText('12')
   await unidad(page).click()
   await expect(unidad(page)).toHaveText('lb')
-  await expect(cifra(page)).toHaveText('35')
+  await expect(cifra(page)).toHaveText('25')
 })
 
 test('tocar la cifra abre el teclado y acepta el exacto', async ({ page }) => {
@@ -60,7 +49,7 @@ test('tocar la cifra abre el teclado y acepta el exacto', async ({ page }) => {
   await campo.fill('17.5')
   await campo.press('Enter')
   await expect(cifra(page)).toHaveText('17.5')
-  await expect(page.locator('.circulo-equivalencia')).toHaveText('7.5 kg')
+  await expect(page.locator('.circulo-equivalencia')).toHaveText('8 kg')
 })
 
 test('cada serie con su propio peso: la nueva arranca con el de la anterior y cambiarla no toca la primera', async ({ page }) => {

@@ -35,6 +35,8 @@ export function segundosDeBloque(b: Bloque, version: 'completa' | 'corta' | 'bon
 /** Minutos totales estimados, redondeados */
 export function duracionEstimada(bloques: Bloque[], version: 'completa' | 'corta' | 'bonus', opciones: { pierna?: boolean; seriesExtra?: boolean; ligera?: boolean; casa?: boolean } = {}): number {
   const { pierna = false, seriesExtra = false, ligera = false, casa = false } = opciones
+  // CASA son 12 minutos por definición (series cortas con 1 min entre ellas)
+  if (casa) return 12
   let seg = 0
   for (const b of bloques) seg += segundosDeBloque(b, version, seriesExtra, ligera) + SEG_TRANSICION
   seg -= bloques.length ? SEG_TRANSICION : 0

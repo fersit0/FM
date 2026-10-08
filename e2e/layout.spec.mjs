@@ -9,7 +9,7 @@ const DISPOSITIVOS = [
   { nombre: 'iPhone 15', w: 393, h: 852, top: 59, bottom: 34, safari: 672 },
   { nombre: 'iPhone 16 Pro Max', w: 430, h: 932, top: 59, bottom: 34, safari: 752 },
 ]
-const SELECTORES = ['.sesion-cabecera', '.sesion-titulo-fila h1', '.sesion-foto', '.sesion-arriba .t-sub', '.sesion-aviso', '.sesion-alternativa', '.sesion .circulo', '.sesion-medio > button', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo', '.inicio-arriba', '.inicio-texto', '.inicio-pie .boton', '.inicio-pie .secundario', '.barra']
+const SELECTORES = ['.sesion-cabecera', '.sesion-titulo-fila h1', '.sesion-foto', '.sesion-arriba .t-sub', '.sesion-aviso', '.sesion-alternativa', '.sesion-par', '.sesion .circulo', '.sesion-medio > button', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo', '.inicio-arriba', '.inicio-texto', '.inicio-pie .boton', '.inicio-pie .secundario', '.barra']
 
 async function revisar(page, nombre) {
   const r = await page.evaluate((sels) => {
@@ -102,7 +102,7 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     // jalón con la alternativa de nombre más largo
     await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
     await page.getByText('Saltar ejercicio', { exact: true }).click()
-    await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Jalón al pecho en polea')
+    await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Jalón al pecho en polea, agarre ancho')
     await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
     await page.getByText('Cambiar por alternativa', { exact: true }).click()
     await page.locator('.hoja-fondo.abierta').getByRole('button', { name: 'Dominadas asistidas en máquina o con liga' }).click()
@@ -123,6 +123,17 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await expect(page.getByRole('button', { name: 'Siguiente ejercicio' })).toBeVisible()
     await page.waitForTimeout(700)
     await revisar(page, 'ejercicio completo con Siguiente ejercicio')
+    // tarjeta de par (laterales + remo con pecho apoyado) y los 15 s de cambio
+    await page.getByRole('button', { name: 'Siguiente ejercicio' }).click()
+    await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
+    await page.getByText('Saltar ejercicio', { exact: true }).click()
+    await expect(page.locator('.sesion-par')).toBeVisible()
+    await page.waitForTimeout(700)
+    await revisar(page, 'tarjeta de par')
+    await page.getByRole('button', { name: 'Serie hecha' }).click()
+    await expect(page.locator('h1', { hasText: 'Cambio' })).toBeVisible()
+    await page.waitForTimeout(700)
+    await revisar(page, 'cambio de par')
     await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
     await page.getByText('Terminar sesión', { exact: true }).click()
     await expect(page.getByText('Listo.')).toBeVisible()

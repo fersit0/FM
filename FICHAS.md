@@ -28,7 +28,7 @@ Imagina: que quieres juntar los bíceps arriba.
 Errores: arquear la espalda baja, deja el glúteo pegado al banco. Rebotar abajo, haz una pausa de un segundo.
 Cuidado: si duele el frente del hombro, cambia a press en el piso.
 
-## jalon — Jalón al pecho en polea
+## jalon — Jalón al pecho en polea, agarre ancho
 Para qué: dorsal, lo que abre la espalda en V.
 Lo sientes: a los costados, abajo de las axilas. No en bíceps ni en cuello.
 Prepárate: rodillo apretando los muslos, agarre un poco más abierto que los hombros, pecho arriba y apenas inclinado hacia atrás.
@@ -118,19 +118,19 @@ Imagina: que arrancas una podadora.
 Errores: girar el torso, pecho viendo al piso. Jalar al hombro, codo a la cadera.
 Cuidado: sin banco, mano libre en el mancuernero.
 
-## remo-pecho-apoyado — Remo con pecho apoyado, codos abiertos
-Para qué: espalda alta y atrás del hombro; endereza la postura.
+## remo-pecho-apoyado — Remo con pecho apoyado en banco inclinado
+Para qué: espalda media y alta; endereza la postura.
 Lo sientes: entre los omóplatos.
-Prepárate: banco a 30 o 45°, boca abajo con el pecho apoyado y la barbilla fuera del respaldo, mancuernas colgando.
-Movimiento: jala abriendo los codos a 90° hasta la altura de la espalda. Aprieta un segundo y baja en 2 a 3 segundos.
-Imagina: que haces alas con los codos.
-Errores: despegar el pecho, baja el peso. Encoger los hombros, bájalos.
-Cuidado: empieza ligero; 15 lb por mano ya se sienten.
+Prepárate: banco a 30 o 45°, pecho apoyado, barbilla fuera del respaldo. Mancuernas colgando, palmas viéndose.
+Movimiento: jala los codos atrás, a unos 45° del cuerpo, hasta pasar la espalda. Aprieta un segundo y baja en 2 a 3 segundos.
+Imagina: tus manos son ganchos; jalas con los codos.
+Errores: despegar el pecho, baja el peso. Encoger los hombros, bájalos antes de jalar.
+Cuidado: si molesta la espalda baja, pásate a la máquina.
 
 ## prensa — Prensa de pierna
 Para qué: muslos y glúteo con la espalda apoyada.
 Lo sientes: en muslos y glúteo. No en rodillas ni espalda baja.
-Prepárate: pies al ancho de hombros a media plataforma, espalda baja y glúteos pegados. Suelta los seguros con las piernas estiradas.
+Prepárate: pies al ancho de hombros a media plataforma, espalda baja y glúteos pegados, seguros sueltos.
 Movimiento: baja en 2 a 3 segundos hasta 90° en las rodillas. Empuja con todo el pie sin trabar.
 Imagina: que empujas la pared con los talones.
 Errores: despegar la cadera, baja menos. Trabar las rodillas, para antes de estirar.
@@ -316,14 +316,14 @@ Imagina: que los codos están clavados a las costillas.
 Errores: inclinarte hacia atrás, quédate vertical y baja el peso. Codos hacia adelante, mantenlos atrás.
 Cuidado: si duele la muñeca, usa la cuerda.
 
-## triceps-cabeza — Extensión con mancuerna sobre la cabeza, sentado
-Para qué: tríceps, sobre todo la parte larga de atrás.
-Lo sientes: atrás del brazo, estirándose abajo.
-Prepárate: sentado con respaldo, una mancuerna a dos manos por el disco de arriba, brazos estirados sobre la cabeza.
-Movimiento: baja detrás de la cabeza en 2 a 3 segundos doblando solo los codos y estira sin abrirlos.
-Imagina: que los codos apuntan al techo.
-Errores: abrir los codos, ciérralos hacia las orejas. Arquear la espalda baja, aprieta el abdomen.
-Cuidado: si molesta el hombro o el codo, baja menos.
+## triceps-cabeza — Extensión de tríceps con mancuerna sobre la cabeza, sentado
+Para qué: tríceps, sobre todo la cabeza larga.
+Lo sientes: atrás del brazo.
+Prepárate: respaldo derecho, espalda pegada, una mancuerna a dos manos por el disco de arriba, brazos estirados sobre la cabeza.
+Movimiento: baja detrás de la cabeza en 2 a 3 segundos doblando solo los codos. Sube hasta estirar.
+Imagina: tu brazo es una bisagra y solo se mueve el codo.
+Errores: abrir los codos, apúntalos al techo. Arquear la espalda baja, pégala al respaldo.
+Cuidado: si molesta el codo o el hombro, polea alta.
 
 ## fondos-banco — Fondos en banco
 Para qué: tríceps y un poco de pecho, sin equipo.
@@ -442,3 +442,38 @@ Imagina: que arrancas una podadora.
 Errores: girar el torso, pecho viendo al piso. Jalar al hombro, codo a la cadera.
 Cuidado: si la silla se mueve, usa la cama.
 
+## jalon-cerrado — Jalón al pecho con agarre cerrado
+Para qué: dorsal, la V de la espalda.
+Lo sientes: a los costados, abajo de las axilas.
+Prepárate: misma barra del jalón, manos al ancho de los hombros, rodillas trabadas, pecho arriba.
+Movimiento: jala al pecho alto con los codos pegados al cuerpo. Pausa corta y sube en 2 a 3 segundos hasta estirar.
+Imagina: que llevas los codos a las bolsas del pantalón.
+Errores: echarte atrás, torso casi derecho. Quedarte corto arriba, estira completo.
+Cuidado: si molesta el hombro o el codo, agarre en V.
+
+## aperturas-maquina — Aperturas en máquina
+Para qué: la forma del pecho.
+Lo sientes: el pecho apretando, no el hombro.
+Prepárate: la máquina de dos manijas que se juntan al frente (Pec Deck). Manijas a la altura del pecho, espalda pegada, codos casi fijos.
+Movimiento: junta en arco, aprieta un segundo y regresa en 2 a 3 segundos hasta la línea del cuerpo.
+Imagina: que abrazas un barril.
+Errores: abrir más atrás de los hombros, para en la línea del cuerpo. Doblar los codos, déjalos fijos.
+Cuidado: si molesta el hombro, press en máquina.
+
+## aperturas-mancuernas — Aperturas con mancuernas en banco plano
+Para qué: pecho, cuando no hay máquina.
+Lo sientes: el pecho estirándose al abrir y apretando al cerrar.
+Prepárate: acostado en banco plano, mancuernas arriba del pecho, palmas viéndose, codos apenas doblados.
+Movimiento: abre en arco en 2 a 3 segundos hasta la altura del pecho, no más. Sube por el mismo arco.
+Imagina: que abrazas un árbol grueso.
+Errores: doblar los codos y hacerlo press, déjalos fijos. Bajar de más, para a la altura del pecho.
+Cuidado: empieza ligero; si molesta el hombro, press en máquina.
+
+## cruce-poleas — Cruce de poleas de pie
+Para qué: pecho, sin máquina ni banco.
+Lo sientes: el pecho apretando al juntar.
+Prepárate: entre las poleas altas, una manija en cada mano, un pie adelante, torso apenas inclinado.
+Movimiento: junta las manos al frente y un poco abajo, codos apenas doblados y fijos. Aprieta un segundo y regresa en 2 a 3 segundos.
+Imagina: que abrazas un barril.
+Errores: doblar los brazos para jalar, déjalos fijos. Dejar que el cable te jale, controla la vuelta.
+Cuidado: no abras más allá de la línea de los hombros.

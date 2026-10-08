@@ -11,6 +11,7 @@ export const CALENTAMIENTO = {
 export const CIERRE = {
   nombre: 'Cierre', minCompleta: 10, minConPierna: 5, minCorta: 5, minBonus: 20,
   texto: 'Elíptica o saco, 10 min (5 si hubo pierna). Saco: 4 rounds de 2 min con 1 de descanso. Corta: 5 min. Bonus: 20 min.',
+  saco: 'Saco: 4 rounds de 2 min con 1 de descanso.',
 }
 export const REGLAS_GLOBALES: { titulo: string; texto: string }[] = [
   { titulo: 'Esfuerzo', texto: 'Terminar cada serie con 1 o 2 repeticiones en reserva. Si la última salió fácil, el peso era chico. Si no llegaste al mínimo del rango, era grande.' },

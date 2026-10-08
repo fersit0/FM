@@ -10,6 +10,8 @@ export interface SesionActiva {
   /** descanso: cuándo termina (ms) */
   descansoFin?: number
   descansoSeg?: number
+  /** el descanso en curso son los 15 s para cambiarse de ejercicio dentro de un par */
+  cambio?: boolean
   /** se pidió aviso con Atajos para este descanso: no duplicar el sonido */
   avisado?: boolean
   /** peso y reps que se estaban ajustando, para retomar exacto si iOS cierra la app */

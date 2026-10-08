@@ -4,6 +4,9 @@ import { EJERCICIOS } from './ejercicios'
 import { FOTOS_BASE } from './fotos'
 
 describe('fotos de la biblioteca', () => {
+  it('aperturas-maquina muestra los brazos abiertos como Inicio (Butterfly viene al revés)', () => {
+    expect(FOTOS_BASE['aperturas-maquina']).toEqual({ a: 'Butterfly-2', b: 'Butterfly' })
+  })
   const claves = new Set<string>()
   for (const e of EJERCICIOS) {
     claves.add(e.ilustracion)
