@@ -150,7 +150,7 @@ export function semanasCumplidas(sesiones: Sesion[], ahora: Date): number {
 }
 
 /**
- * Regla de las 4 semanas: al acumular 4 semanas cumplidas, proponer 4 series en A1, A2, B1 y B2.
+ * Regla de las 4 semanas: al acumular 4 semanas cumplidas, proponer 4 series en press inclinado, jalón, press plano y remo en polea.
  * Si se pospuso, vuelve a proponer cuando haya una semana cumplida más.
  */
 export function tocaProponerSeriesExtra(cumplidas: number, settings: Settings): boolean {

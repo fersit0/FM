@@ -28,7 +28,7 @@ export function Ejercicios({ datos }: { datos: Datos }) {
       <h1 className="t-titulo">Ejercicios</h1>
       {(['A', 'B', 'CASA'] as const).map((letra) => (
         <Grupo key={letra} titulo={letra === 'CASA' ? NOMBRE_SESION.CASA : `${letra}: ${NOMBRE_SESION[letra]}`}>
-          {ejerciciosDe(letra).map((e, i) => <Fila key={e.id} num={i + 1} texto={e.nombre} dato={ultimoPeso(e)} onClick={() => setAbierto(e)} />)}
+          {ejerciciosDe(letra).map((e) => <Fila key={e.id} num={e.bloque} texto={e.nombre} detalle={e.pierna ? 'Solo cuando toca pierna' : ejerciciosDe(letra).filter((x) => x.bloque === e.bloque).length > 1 ? 'En par' : undefined} dato={ultimoPeso(e)} onClick={() => setAbierto(e)} />)}
         </Grupo>
       ))}
       <Grupo titulo="Reglas"><Fila texto="Calentamiento, cierre y reglas de cada serie" onClick={() => setReglas(true)} /></Grupo>

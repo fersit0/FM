@@ -86,7 +86,7 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
       </Grupo>
 
       <Grupo titulo="Sesión">
-        <Fila texto="4 series en A1, A2, B1 y B2" detalle={settings.seriesExtra ? 'Regla de las 4 semanas aceptada' : 'Se propone al acumular 4 semanas cumplidas'}>
+        <Fila texto="4 series en press inclinado, jalón, press plano y remo" detalle={settings.seriesExtra ? 'Regla de las 4 semanas aceptada' : 'Se propone al acumular 4 semanas cumplidas'}>
           <Interruptor valor={settings.seriesExtra} onCambiar={(v) => set('seriesExtra', v)} etiqueta="4 series" />
         </Fila>
         <Fila texto="Día de pesaje">

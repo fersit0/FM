@@ -165,7 +165,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
         </Grupo>
       </Hoja>
       <Hoja abierta={hojaExtra} titulo="Cuatro semanas cumplidas" onCerrar={() => setHojaExtra(false)}>
-        <p className="t-cuerpo">Press de banca, jalón, press inclinado y remo pasan de 3 a 4 series. Se puede apagar en ajustes.</p>
+        <p className="t-cuerpo">Press inclinado, jalón, press plano y remo en polea pasan de 3 a 4 series. Se puede apagar en ajustes.</p>
         <Grupo>
           <Fila texto="Aceptar" onClick={() => { datos.setSettings({ ...settings, seriesExtra: true }); setHojaExtra(false) }} />
           <Fila texto="Después" onClick={() => { datos.setSettings({ ...settings, reglaPospuestaEn: cumplidas }); setHojaExtra(false) }} />

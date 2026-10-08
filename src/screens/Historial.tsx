@@ -4,7 +4,6 @@ import type { Sesion } from '../data/tipos'
 import { usePantalla } from '../design/pantallaActiva'
 import { semanasHistorial, tocaPesarse, tocaFoto, promedioSemanal, type SemanaHistorial } from '../logic/progreso'
 import { claveFecha, fechaCorta, DIAS_NOMBRE, desdeClave, sumarDias, inicioSemana } from '../logic/fechas'
-import { ejerciciosDe } from '../data/ejercicios'
 import { Grupo, Fila, Hoja, BotonTexto, Pez } from '../components/fm'
 import { SerieEditable } from './Sesion'
 import { Linea } from '../components/Linea'
@@ -102,8 +101,8 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
 
 function DetalleSesion({ datos, sesion, onBorrada }: { datos: Datos; sesion: Sesion; onBorrada: () => void }) {
   const propios = datos.sets.filter((s) => s.sessionId === sesion.id)
-  const orden = ejerciciosDe(sesion.tipo as 'A' | 'B' | 'CASA').map((e) => e.id)
-  const ordenados = [...propios].sort((a, b) => orden.indexOf(a.exerciseId.split('-')[0]) - orden.indexOf(b.exerciseId.split('-')[0]) || a.numSerie - b.numSerie)
+  // en el orden en que se hicieron (los pares alternan ejercicios)
+  const ordenados = [...propios].sort((a, b) => a.hora - b.hora)
   return (
     <>
       {ordenados.length === 0 ? <p className="t-cuerpo tenue">Sin series registradas. Toca los valores para editar.</p> : (
