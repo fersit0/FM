@@ -1,45 +1,44 @@
-// Duración estimada de una sesión (RUTINA-FINAL.md, 3): 45 s por serie, descansos completos, 15 s de cambio en los pares,
-// 1 min de transición entre bloques, calentamiento y cierre según versión y pierna.
-import type { Bloque } from '../data/ejercicios'
-import { CALENTAMIENTO, CIERRE, CAMBIO_PAR_SEG } from '../data/ejercicios'
-import { seriesPara, secuenciaDePar } from './semana'
+// Duración estimada (RUTINA-FINAL.md, 3): 45 s por serie, descansos completos, 1 min entre ejercicios y 2 min al
+// cambiar de zona, calentamiento y cierre según versión y pierna. Puro, sin React.
+import type { Ejercicio } from '../data/tipos'
+import { CALENTAMIENTO, CIERRE } from '../data/ejercicios'
+import { seriesPara } from './semana'
 
 export const SEG_POR_SERIE = 45
-export const SEG_TRANSICION = 60
+export const SEG_ENTRE_EJERCICIOS = 60
+export const SEG_CAMBIO_ZONA = 120
+type Version = 'completa' | 'corta' | 'bonus'
 
-export function minutosCalentamiento(version: 'completa' | 'corta' | 'bonus', casa = false): number {
+export function minutosCalentamiento(version: Version, casa = false): number {
   if (casa) return 0
   return version === 'corta' ? CALENTAMIENTO.minCorta : CALENTAMIENTO.minCompleta
 }
-export function minutosCierre(version: 'completa' | 'corta' | 'bonus', pierna = false, casa = false): number {
+export function minutosCierre(version: Version, pierna = false, casa = false): number {
   if (casa) return 0
   if (version === 'corta') return CIERRE.minCorta
   if (version === 'bonus') return CIERRE.minBonus
   return pierna ? CIERRE.minConPierna : CIERRE.minCompleta
 }
-/** Segundos de un bloque: series × (45 s + descanso); en un par, cada ronda suma los 15 s de cambio */
-export function segundosDeBloque(b: Bloque, version: 'completa' | 'corta' | 'bonus', seriesExtra: boolean, ligera = false): number {
-  const series = b.ejercicios.map((e) => seriesPara(e.id, e.series, version, seriesExtra, ligera))
-  const descanso = b.ejercicios[0].descansoSeg
-  if (b.ejercicios.length === 1) return series[0] * (SEG_POR_SERIE + descanso)
-  const seq = secuenciaDePar(series)
-  let total = 0
-  for (let i = 0; i < seq.length; i++) {
-    total += SEG_POR_SERIE
-    const sigue = seq[i + 1]
-    if (sigue === undefined) total += descanso
-    else total += sigue !== seq[i] && i % 2 === 0 ? CAMBIO_PAR_SEG : descanso
-  }
-  return total
+/** Segundos de un ejercicio: series × (45 s + su descanso) */
+export function segundosDeEjercicio(e: Pick<Ejercicio, 'series' | 'descansoSeg'>, ligera = false, seriesHechas = 0): number {
+  return Math.max(0, seriesPara(e.series, ligera) - seriesHechas) * (SEG_POR_SERIE + e.descansoSeg)
 }
-/** Minutos totales estimados, redondeados */
-export function duracionEstimada(bloques: Bloque[], version: 'completa' | 'corta' | 'bonus', opciones: { pierna?: boolean; seriesExtra?: boolean; ligera?: boolean; casa?: boolean } = {}): number {
-  const { pierna = false, seriesExtra = false, ligera = false, casa = false } = opciones
-  // CASA son 12 minutos por definición (series cortas con 1 min entre ellas)
-  if (casa) return 12
+/** Segundos de pesas de una lista en orden: ejercicios más 1 min entre ellos (2 si cambia la zona) */
+export function segundosPesas(lista: Ejercicio[], ligera = false): number {
   let seg = 0
-  for (const b of bloques) seg += segundosDeBloque(b, version, seriesExtra, ligera) + SEG_TRANSICION
-  seg -= bloques.length ? SEG_TRANSICION : 0
-  const min = seg / 60 + minutosCalentamiento(version, casa) + minutosCierre(version, pierna, casa) + (casa ? 0 : bloques.length ? 1 : 0)
-  return Math.round(min)
+  for (let i = 0; i < lista.length; i++) {
+    seg += segundosDeEjercicio(lista[i], ligera)
+    if (i > 0) seg += lista[i - 1].zona && lista[i].zona && lista[i - 1].zona !== lista[i].zona ? SEG_CAMBIO_ZONA : SEG_ENTRE_EJERCICIOS
+  }
+  return seg
+}
+/** Minutos desde que se toca Empezar hasta la última pesa: calentamiento más pesas (sin cierre) */
+export function minutosHastaUltimaPesa(lista: Ejercicio[], version: Version, ligera = false): number {
+  return minutosCalentamiento(version) + segundosPesas(lista, ligera) / 60
+}
+/** Minutos totales estimados, redondeados. CASA son 12 por definición. */
+export function duracionEstimada(lista: Ejercicio[], version: Version, opciones: { pierna?: boolean; ligera?: boolean; casa?: boolean } = {}): number {
+  const { pierna = false, ligera = false, casa = false } = opciones
+  if (casa) return 12
+  return Math.round(minutosHastaUltimaPesa(lista, version, ligera) + minutosCierre(version, pierna))
 }

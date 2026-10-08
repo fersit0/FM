@@ -3,27 +3,28 @@
 type Par = { a: string; b?: string; referencia?: boolean }
 const par = (id: string): Par => ({ a: id, b: `${id}-2` })
 export const FOTOS_BASE: Record<string, Par> = {
-  'press-inclinado': par('Incline_Dumbbell_Press'), jalon: par('Wide-Grip_Lat_Pulldown'), 'press-militar': par('Dumbbell_Shoulder_Press'), laterales: par('Side_Lateral_Raise'),
-  goblet: par('Goblet_Squat'), 'curl-z': par('EZ-Bar_Curl'), 'triceps-polea': par('Triceps_Pushdown'), plancha: { a: 'Plank-2' },
-  'press-plano': par('Dumbbell_Bench_Press'), 'remo-polea': par('Seated_Cable_Rows'), 'remo-mancuerna': par('One-Arm_Dumbbell_Row'), 'remo-pecho-apoyado': par('Dumbbell_Incline_Row'),
-  prensa: par('Leg_Press'), 'curl-martillo': par('Hammer_Curls'), 'elevacion-piernas': par('Flat_Bench_Lying_Leg_Raise'),
-  'laterales-casa': par('Side_Lateral_Raise'), lagartijas: par('Pushups'), 'remo-liga': { ...par('Seated_Cable_Rows'), referencia: true }, 'plancha-casa': { a: 'Plank-2' },
-  'press-inclinado-maquina': par('Leverage_Incline_Chest_Press'), 'lagartijas-pies-banco': par('Push-Ups_With_Feet_Elevated'), 'press-piso': par('Dumbbell_Floor_Press'),
-  'dominadas-asistidas': par('Band_Assisted_Pull-Up'), 'press-militar-pie': par('Standing_Dumbbell_Press'), 'press-hombro-maquina': par('Machine_Shoulder_Military_Press'), 'press-militar-neutro': par('Dumbbell_Shoulder_Press'),
-  'laterales-sentado': par('Seated_Side_Lateral_Raise'), 'laterales-polea': par('Cable_Seated_Lateral_Raise'), 'laterales-liga': par('Lateral_Raise_-_With_Bands'),
-  'sentadilla-mancuernas': par('Dumbbell_Squat'), 'sentadilla-banco': par('Bodyweight_Squat'), 'curl-alternado': par('Dumbbell_Alternate_Bicep_Curl'), 'curl-polea': par('Standing_Biceps_Cable_Curl'),
-  'triceps-cabeza': par('Seated_Triceps_Press'), 'fondos-banco': par('Bench_Dips'), 'plancha-rodillas': { a: 'Plank-2' }, 'dead-bug': par('Dead_Bug'),
-  'press-pecho-maquina': par('Leverage_Chest_Press'), 'remo-pecho-maquina': par('Leverage_Iso_Row'), 'remo-polea-una-mano': par('Seated_One-arm_Cable_Pulley_Rows'), 'remo-alto-maquina': par('Leverage_High_Row'),
-  'prensa-corta': par('Leg_Press'), 'curl-cuerda': par('Cable_Hammer_Curls_-_Rope_Attachment'), 'elevacion-piernas-piso': par('Flat_Bench_Lying_Leg_Raise'), 'elevacion-rodillas': par('Flat_Bench_Lying_Leg_Raise'),
-  'lagartijas-inclinadas': par('Incline_Push-Up'), 'remo-mancuerna-casa': par('One-Arm_Dumbbell_Row'),
+  // A
+  jalon: par('Wide-Grip_Lat_Pulldown'), 'remo-polea': par('Seated_Cable_Rows'), 'press-inclinado': par('Incline_Dumbbell_Press'), 'press-militar': par('Dumbbell_Shoulder_Press'),
+  'triceps-cabeza': par('Seated_Triceps_Press'), laterales: par('Side_Lateral_Raise'), 'curl-alternado': par('Dumbbell_Alternate_Bicep_Curl'), crunch: par('Crunches'),
+  // B
+  'press-plano': par('Dumbbell_Bench_Press'), 'aperturas-mancuernas': par('Dumbbell_Flyes'), 'remo-pecho-apoyado': par('Dumbbell_Incline_Row'), 'jalon-cerrado': par('Close-Grip_Front_Lat_Pulldown'),
+  'triceps-polea': par('Triceps_Pushdown_-_Rope_Attachment'), 'curl-martillo': par('Hammer_Curls'), 'elevacion-piernas': par('Flat_Bench_Lying_Leg_Raise'),
+  // pierna sin Frida
+  goblet: par('Goblet_Squat'), 'sentadilla-mancuernas': par('Dumbbell_Squat'),
+  // alternativas
+  'remo-mancuerna': par('One-Arm_Dumbbell_Row'), 'press-piso': par('Dumbbell_Floor_Press'), 'press-militar-pie': par('Standing_Dumbbell_Press'), 'laterales-sentado': par('Seated_Side_Lateral_Raise'),
+  // Tricep_Dumbbell_Kickback viene al revés en la fuente: la foto 0 tiene el brazo estirado; Inicio es la de codo doblado (-2)
+  'triceps-patada': { a: 'Tricep_Dumbbell_Kickback-2', b: 'Tricep_Dumbbell_Kickback' },
+  // CASA
+  'laterales-casa': par('Side_Lateral_Raise'), lagartijas: par('Pushups'), 'remo-liga': { ...par('Seated_Cable_Rows'), referencia: true },
+  'laterales-liga': par('Lateral_Raise_-_With_Bands'), 'lagartijas-inclinadas': par('Incline_Push-Up'), 'lagartijas-pies-banco': par('Push-Ups_With_Feet_Elevated'), 'remo-mancuerna-casa': par('One-Arm_Dumbbell_Row'), 'elevacion-piernas-piso': par('Flat_Bench_Lying_Leg_Raise'),
+  // calentamiento
   eliptica: par('Elliptical_Trainer'), bici: par('Bicycling_Stationary'),
-  // Butterfly viene al revés en la fuente: la foto 0 tiene los brazos cerrados; Inicio es la de brazos abiertos (-2)
-  'jalon-cerrado': par('Close-Grip_Front_Lat_Pulldown'), 'aperturas-maquina': { a: 'Butterfly-2', b: 'Butterfly' }, 'aperturas-mancuernas': par('Dumbbell_Flyes'), 'cruce-poleas': par('Cable_Crossover'),
 }
 /** Encuadre por foto para que no se corten cabeza, manos ni máquina (object-position) */
 export const ENCUADRE: Record<string, string> = {
-  'press-inclinado': '50% 30%', jalon: '50% 20%', 'press-militar': '50% 25%', 'press-militar-pie': '50% 20%', prensa: '40% 50%', 'remo-pecho-apoyado': '50% 55%',
-  'dominadas-asistidas': '50% 15%', 'jalon-cerrado': '50% 25%', 'aperturas-maquina': '50% 30%', 'cruce-poleas': '50% 30%', 'triceps-polea': '55% 40%', 'curl-polea': '50% 40%', 'curl-cuerda': '55% 40%', 'remo-alto-maquina': '50% 35%', 'press-hombro-maquina': '50% 20%',
+  'press-inclinado': '50% 30%', jalon: '50% 20%', 'press-militar': '50% 25%', 'press-militar-pie': '50% 20%', 'remo-pecho-apoyado': '50% 55%',
+  'jalon-cerrado': '50% 25%', 'triceps-polea': '50% 40%', 'triceps-patada': '45% 40%', crunch: '50% 50%',
 }
 export function urlsFotoBase(clave: string): { a: string; b?: string; referencia?: boolean } | null {
   const f = FOTOS_BASE[clave]

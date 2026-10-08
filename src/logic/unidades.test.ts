@@ -16,7 +16,7 @@ describe('unidades', () => {
   it('todo el gym en lb, casa en kg', () => {
     expect(unidadPorDefecto(buscarEjercicio('jalon')!)).toBe('lb')
     expect(unidadPorDefecto(buscarEjercicio('press-plano')!)).toBe('lb')
-    expect(unidadPorDefecto(buscarEjercicio('curl-z')!)).toBe('lb')
+    expect(unidadPorDefecto(buscarEjercicio('curl-alternado')!)).toBe('lb')
     expect(unidadPorDefecto(buscarEjercicio('laterales')!)).toBe('lb')
     expect(unidadPorDefecto(buscarEjercicio('laterales-casa')!)).toBe('kg')
     expect(unidadPorDefecto(buscarCualquiera('remo-mancuerna-casa')!.item)).toBe('kg')
@@ -38,24 +38,9 @@ describe('unidades', () => {
     expect(pesoDeSet(viejo, 'kg')).toBe(12)
     expect(pesoDeSet(viejo, 'lb')).toBe(25)
   })
-  it('pesos iniciales en lb del club y en la rejilla', () => {
-    expect(pesoInicial(buscarEjercicio('press-inclinado')!, 'lb')).toBe(30)
-    expect(pesoInicial(buscarEjercicio('jalon')!, 'lb')).toBe(90)
-    expect(pesoInicial(buscarEjercicio('press-militar')!, 'lb')).toBe(25)
-    expect(pesoInicial(buscarEjercicio('laterales')!, 'lb')).toBe(10)
-    expect(pesoInicial(buscarEjercicio('goblet')!, 'lb')).toBe(45)
-    expect(pesoInicial(buscarEjercicio('curl-z')!, 'lb')).toBe(45)
-    expect(pesoInicial(buscarEjercicio('triceps-polea')!, 'lb')).toBe(50)
-    expect(pesoInicial(buscarEjercicio('press-plano')!, 'lb')).toBe(35)
-    expect(pesoInicial(buscarEjercicio('remo-polea')!, 'lb')).toBe(90)
-    expect(pesoInicial(buscarCualquiera('remo-mancuerna')!.item, 'lb')).toBe(45)
-    expect(pesoInicial(buscarEjercicio('remo-pecho-apoyado')!, 'lb')).toBe(15)
-    expect(pesoInicial(buscarEjercicio('curl-martillo')!, 'lb')).toBe(20)
-    expect(pesoInicial(buscarEjercicio('jalon-cerrado')!, 'lb')).toBe(80)
-    expect(pesoInicial(buscarEjercicio('aperturas-maquina')!, 'lb')).toBe(40)
-    expect(pesoInicial(buscarEjercicio('triceps-cabeza')!, 'lb')).toBe(20)
-    expect(pesoInicial(buscarCualquiera('aperturas-mancuernas')!.item, 'lb')).toBe(15)
-    expect(pesoInicial(buscarEjercicio('prensa')!, 'lb')).toBe(0)
+  it('pesos iniciales en lb del club (RUTINA-FINAL.md, 10) y en la rejilla', () => {
+    const lb: Record<string, number> = { jalon: 90, 'remo-polea': 90, 'press-inclinado': 30, 'press-militar': 25, 'triceps-cabeza': 20, laterales: 10, 'curl-alternado': 20, 'press-plano': 35, 'aperturas-mancuernas': 15, 'remo-pecho-apoyado': 15, 'jalon-cerrado': 80, 'triceps-polea': 40, 'curl-martillo': 20, goblet: 45, 'triceps-patada': 10, 'remo-mancuerna': 45 }
+    for (const [id, v] of Object.entries(lb)) expect(pesoInicial(buscarCualquiera(id)!.item, 'lb'), id).toBe(v)
     expect(pesoInicial(buscarEjercicio('laterales-casa')!, 'kg')).toBe(4)
     // en kilos, a la rejilla de 1
     expect(pesoInicial(buscarEjercicio('press-plano')!, 'kg')).toBe(16)
