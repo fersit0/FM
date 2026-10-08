@@ -26,9 +26,9 @@ export async function sembrarSiToca(): Promise<void> {
     const st = leerSettings()
     const noFui: string[] = []
     for (let i = 1; i <= 7; i++) noFui.push(claveFecha(sumarDias(new Date(), -i)))
-    escribirSettings({ ...st, cargaInicialV5: true, semanaAlDiaV5: true, noFui })
+    escribirSettings({ ...st, cargaInicialV5: true, semanaAlDiaV5: true, semanaAlDiaV6: true, noFui })
   }
-  // frida=hecha: FRIDA registrada el lunes de esta semana; frida=no: "esta semana no hay" (la siguiente completa trae pierna)
+  // frida=hecha: FRIDA registrada el lunes de esta semana; frida=no: "esta semana no hay" (entra la sesión C)
   const lunes = claveFecha(inicioSemana(new Date()))
   if (frida === 'hecha' || seed === '1') await guardarSesion({ id: `frida-${lunes}`, fecha: lunes, tipo: 'FRIDA', version: 'completa', inicio: new Date(lunes + 'T20:00:00').getTime(), fin: new Date(lunes + 'T21:00:00').getTime(), terminada: true })
   if (frida === 'no') { const s = leerSettings(); escribirSettings({ ...s, fridaPlan: { ...(s.fridaPlan ?? {}), [lunes]: null } }) }
@@ -45,7 +45,7 @@ async function sembrar(): Promise<void> {
   const dow = lunesActual.getDay()
   lunesActual.setDate(lunesActual.getDate() - (dow === 0 ? 6 : dow - 1))
 
-  const pesoBase: Record<string, number> = { 'press-inclinado': 12, jalon: 40, 'press-militar': 10, laterales: 6, goblet: 16, 'curl-alternado': 8, 'triceps-polea': 18, 'press-plano': 14, 'remo-polea': 35, 'remo-mancuerna': 16, 'remo-pecho-apoyado': 6, 'curl-martillo': 10, 'jalon-cerrado': 36, 'aperturas-mancuernas': 7, 'triceps-cabeza': 9 }
+  const pesoBase: Record<string, number> = { 'press-inclinado': 12, jalon: 40, 'press-militar': 10, laterales: 6, goblet: 16, 'curl-alternado': 8, 'triceps-polea': 18, 'press-plano': 14, 'remo-polea': 35, 'remo-mancuerna': 16, 'remo-pecho-apoyado': 6, 'curl-martillo': 10, 'jalon-cerrado': 36, 'aperturas-inclinadas': 7, 'triceps-cabeza': 9, 'puente-gluteo': 16 }
 
   for (let w = 4; w >= 1; w--) {
     const lunes = new Date(lunesActual)
@@ -63,7 +63,7 @@ async function sembrar(): Promise<void> {
       if (tipo === 'FRIDA') continue
       // progreso: semana 4 y 3 mismo peso; semana 2 llega al tope; semana 1 sube
       const paso = 4 - w // 0..3
-      for (const e of ejerciciosDe(tipo).filter((x) => !x.pierna)) {
+      for (const e of ejerciciosDe(tipo)) {
         const base = pesoBase[e.id] ?? 10
         const conPeso = e.modo === 'peso'
         let peso: number | null = null

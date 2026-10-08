@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { versionAutomatica, estadoTiempo, estadoSiSalgo, limites, type Duraciones } from './horario'
+import { versionAutomatica, estadoTiempo, estadoSiSalgo, limites } from './horario'
 import { duracionEstimada, minutosHastaUltimaPesa, segundosPesas, segundosPorSerie, duracionesDe } from './duracion'
 import { listaDe } from '../data/ejercicios'
 import { SETTINGS_DEFAULT } from '../data/tipos'

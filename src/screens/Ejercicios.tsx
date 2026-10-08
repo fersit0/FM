@@ -26,9 +26,9 @@ export function Ejercicios({ datos }: { datos: Datos }) {
   return (
     <div className="pantalla con-barra">
       <h1 className="t-titulo">Ejercicios</h1>
-      {(['A', 'B', 'CASA'] as const).map((letra) => (
-        <Grupo key={letra} titulo={letra === 'CASA' ? NOMBRE_SESION.CASA : `${letra}: ${NOMBRE_SESION[letra]} · ${RUTA[letra].map((z) => ZONA_NOMBRE[z]).join(' → ')}`}>
-          {ejerciciosDe(letra).map((e, i) => <Fila key={e.id} num={i + 1} texto={e.nombre} detalle={e.pierna ? 'Solo cuando toca pierna' : e.zona ? ZONA_NOMBRE[e.zona] : undefined} dato={ultimoPeso(e)} onClick={() => setAbierto(e)} />)}
+      {(['A', 'B', 'C', 'CASA'] as const).map((letra) => (
+        <Grupo key={letra} titulo={letra === 'CASA' ? NOMBRE_SESION.CASA : `${letra}: ${NOMBRE_SESION[letra]} · ${RUTA[letra].map((z) => ZONA_NOMBRE[z]).join(' → ')}${letra === 'C' ? ' · solo semanas sin Frida' : ''}`}>
+          {ejerciciosDe(letra).map((e, i) => <Fila key={e.id} num={i + 1} texto={e.nombre} detalle={e.zona ? ZONA_NOMBRE[e.zona] : undefined} dato={ultimoPeso(e)} onClick={() => setAbierto(e)} />)}
         </Grupo>
       ))}
       <Grupo titulo="Reglas"><Fila texto="Calentamiento, cierre y reglas de cada serie" onClick={() => setReglas(true)} /></Grupo>
