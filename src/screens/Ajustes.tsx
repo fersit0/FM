@@ -78,17 +78,12 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
         <Fila texto="Salgo de la oficina a las" detalle={settings.horaSalida ? `Suma ${settings.minCarretera} de carretera y ${settings.minCasaClub} de casa al club` : 'Vacío: se usa la hora actual'}>
           <input type="time" value={settings.horaSalida ?? ''} onChange={(e) => set('horaSalida', e.target.value || undefined)} aria-label="Hora de salida" />
         </Fila>
-        <Fila texto="Última pesa"><input type="time" value={settings.horaTope} onChange={(e) => set('horaTope', e.target.value)} aria-label="Última pesa" /></Fila>
-        <Fila texto="Completa hasta"><input type="time" value={settings.horaCompleta} onChange={(e) => set('horaCompleta', e.target.value)} aria-label="Completa hasta" /></Fila>
-        <Fila texto="Corta hasta"><input type="time" value={settings.horaCorta} onChange={(e) => set('horaCorta', e.target.value)} aria-label="Corta hasta" /></Fila>
+        <Fila texto="Última pesa" detalle="La versión se decide sola: completa si sus pesas terminan antes, si no corta, si no casa"><input type="time" value={settings.horaTope} onChange={(e) => set('horaTope', e.target.value)} aria-label="Última pesa" /></Fila>
         <Fila texto="Minutos de carretera"><input inputMode="numeric" value={settings.minCarretera} onChange={(e) => set('minCarretera', Math.max(0, parseInt(e.target.value || '0', 10)))} aria-label="Minutos de carretera" style={{ width: 60 }} /></Fila>
         <Fila texto="Minutos de casa al club"><input inputMode="numeric" value={settings.minCasaClub} onChange={(e) => set('minCasaClub', Math.max(0, parseInt(e.target.value || '0', 10)))} aria-label="Minutos de casa al club" style={{ width: 60 }} /></Fila>
       </Grupo>
 
       <Grupo titulo="Sesión">
-        <Fila texto="4 series en press inclinado, jalón, press plano y remo" detalle={settings.seriesExtra ? 'Regla de las 4 semanas aceptada' : 'Se propone al acumular 4 semanas cumplidas'}>
-          <Interruptor valor={settings.seriesExtra} onCambiar={(v) => set('seriesExtra', v)} etiqueta="4 series" />
-        </Fila>
         <Fila texto="Día de pesaje">
           <select value={settings.diaPesaje} onChange={(e) => set('diaPesaje', parseInt(e.target.value, 10))} aria-label="Día de pesaje">
             {[1, 2, 3, 4, 5, 6, 0].map((d) => <option key={d} value={d}>{DIAS_NOMBRE[d]}</option>)}

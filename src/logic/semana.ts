@@ -1,6 +1,6 @@
 // Lógica de la semana (RUTINA-FINAL.md, 2). Puro, sin React.
 // Una sesión cuenta si está terminada o si tiene al menos una serie registrada (se cierra sola después).
-import type { Sesion, SetLog, Letra } from '../data/tipos'
+import type { Sesion, SetLog } from '../data/tipos'
 import { claveFecha, inicioSemana, sumarDias, minutosAhora } from './fechas'
 
 export const META = 3
@@ -93,7 +93,7 @@ export function ultimaPropia(sesiones: Sesion[], sets: SetLog[] = [], antesDe?: 
   return propias.length ? propias[propias.length - 1] : null
 }
 /** La que sigue se calcula siempre del historial: la contraria de la A o B más reciente; sin ninguna, A. Frida y CASA no la cambian. */
-export function siguienteSesion(sesiones: Sesion[], sets: SetLog[] = [], antesDe?: string): Letra {
+export function siguienteSesion(sesiones: Sesion[], sets: SetLog[] = [], antesDe?: string): 'A' | 'B' {
   const u = ultimaPropia(sesiones, sets, antesDe)
   if (!u) return 'A'
   return u.tipo === 'A' ? 'B' : 'A'

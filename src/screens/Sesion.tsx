@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import type { Sesion as SesionTipo, Ejercicio, Alternativa, SetLog, Version, Modo } from '../data/tipos'
+import type { Sesion as SesionTipo, Ejercicio, Alternativa, SetLog, Version, Modo, Zona } from '../data/tipos'
 import type { SesionActiva } from '../hooks/useSesionActiva'
-import { CALENTAMIENTO, CIERRE, CAMBIO_PAR_SEG, buscarCualquiera, itemDeRutina, bloquesDe, alternativasDisponibles } from '../data/ejercicios'
-import { seriesPara, estadoSemana, secuenciaDePar } from '../logic/semana'
+import { CALENTAMIENTO, CIERRE, buscarCualquiera, itemDeRutina, alternativasDisponibles, rutaDe, ZONA_NOMBRE, nombreDe } from '../data/ejercicios'
+import { seriesPara, estadoSemana } from '../logic/semana'
 import { minutosCalentamiento, minutosCierre } from '../logic/duracion'
+import { listaDeSesion, posponer, recortar, segundosRestantes, hechosDe } from '../logic/sesion'
+import { comoQuedo } from '../logic/registro'
 import { sugerirPeso, subioDePeso, porSesion } from '../logic/progresion'
-import { claveFecha } from '../logic/fechas'
+import { claveFecha, formatoHora, minutosDe } from '../logic/fechas'
 import { unidadDe, incrementoDe, pesoDeSet, pesoInicial, aKg, convertir, formatoPeso, redondearAPaso, type Unidad } from '../logic/unidades'
 import { useWakeLock } from '../hooks/useWakeLock'
 import { useAlto } from '../hooks/useAlto'
@@ -20,10 +22,9 @@ import { FichaHoja } from '../components/Ficha'
 import { Foto } from '../components/Foto'
 
 interface Props { datos: Datos; sesion: SesionTipo; activa: SesionActiva; setActiva: (a: SesionActiva | null) => void; onSalir: () => void; onTerminar: () => void }
-/** Un ejercicio dentro de un bloque: el de la rutina (base) y el que se hace (item: base o alternativa) */
-export type ItemBloque = { base: Ejercicio; item: Ejercicio | Alternativa; series: number }
-export type PasoBloque = { tipo: 'bloque'; numero: number; items: ItemBloque[]; indice: number }
-type Paso = { tipo: 'calentamiento' } | PasoBloque | { tipo: 'cierre' } | { tipo: 'resumen' }
+/** Un ejercicio de la sesión: el de la rutina (base), el que se hace (item: base o alternativa) y sus series */
+export type PasoEjercicio = { tipo: 'ejercicio'; base: Ejercicio; item: Ejercicio | Alternativa; series: number; indice: number }
+type Paso = { tipo: 'calentamiento' } | PasoEjercicio | { tipo: 'cierre' } | { tipo: 'resumen' }
 type Accion = { texto: string; deshacer: () => void | Promise<void> }
 
 export function rangoDe(e: Ejercicio | Alternativa): string {
@@ -33,25 +34,8 @@ export function rangoDe(e: Ejercicio | Alternativa): string {
 }
 /** diámetro del spec acotado al espacio disponible */
 const acotar = (d: number, alto: number, ancho: number) => Math.max(88, Math.min(d, alto - 4, ancho - 8))
-
-/** Series hechas en esta sesión para cada ejercicio del bloque. Cuentan por bloque de la rutina (ejercicioBaseId):
- *  una serie hecha en una alternativa cuenta igual, así se puede regresar al original y seguir con las que faltan. */
-export function hechosDeBloque(sets: SetLog[], sesionId: string, bloque: PasoBloque): SetLog[][] {
-  return bloque.items.map((it) => sets.filter((s) => s.sessionId === sesionId && s.ejercicioBaseId === it.base.id).sort((a, b) => a.hora - b.hora))
-}
-/** Qué ejercicio del bloque toca ahora (índice) o null si el bloque está completo */
-export function cualToca(bloque: PasoBloque, hechos: SetLog[][]): number | null {
-  const seq = secuenciaDePar(bloque.items.map((it) => it.series))
-  const n = hechos.reduce((a, h) => a + h.length, 0)
-  return n < seq.length ? seq[n] : null
-}
-/** Tras una serie del ejercicio `cual` con `n` series ya hechas en el bloque: 15 s de cambio si sigue el otro del par, si no el descanso del bloque */
-export function descansoTras(bloque: PasoBloque, cual: number, nTotal: number): { seg: number; cambio: boolean } {
-  const seq = secuenciaDePar(bloque.items.map((it) => it.series))
-  const sigue = seq[nTotal + 1]
-  if (sigue !== undefined && sigue !== cual) return { seg: CAMBIO_PAR_SEG, cambio: true }
-  return { seg: bloque.items[0].item.descansoSeg, cambio: false }
-}
+/** "8:22": sin am/pm, la sesión siempre es de tarde */
+const horaDe = (ms: number) => formatoHora(new Date(ms).getHours() * 60 + new Date(ms).getMinutes()).replace(/ [ap]m$/, '')
 
 export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }: Props) {
   const { settings, sets } = datos
@@ -59,37 +43,44 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
   const ligera = !!sesion.ligera
   const casa = sesion.tipo === 'CASA'
   useWakeLock(true)
-  const bloques = useMemo(() => bloquesDe(sesion.tipo as 'A' | 'B' | 'CASA', version, !!sesion.pierna), [sesion.tipo, version, sesion.pierna])
+  const lista = useMemo(() => listaDeSesion(sesion), [sesion])
+  const ruta = useMemo(() => rutaDe(lista), [lista])
   const pasos = useMemo<Paso[]>(() => {
-    const lista: Paso[] = bloques.map((b, i) => ({
-      tipo: 'bloque', numero: b.numero, indice: i,
-      items: b.ejercicios.map((base) => {
-        const cambio = sesion.cambios?.find((c) => c.ejercicioId === base.id)
-        const item = cambio ? (cambio.alternativaId === base.id ? base : base.alternativas.find((a) => a.id === cambio.alternativaId) ?? base) : itemDeRutina(base, settings.reemplazos)
-        const series = casa ? item.series : seriesPara(base.id, item.series, version, settings.seriesExtra, ligera)
-        return { base, item, series }
-      }),
-    }))
-    return casa ? [...lista, { tipo: 'resumen' }] : [{ tipo: 'calentamiento' }, ...lista, { tipo: 'cierre' }, { tipo: 'resumen' }]
-  }, [bloques, sesion.cambios, version, settings.seriesExtra, settings.reemplazos, ligera, casa])
-  const nBloques = bloques.length
+    const ejercicios: Paso[] = lista.map((base, indice) => {
+      const cambio = sesion.cambios?.find((c) => c.ejercicioId === base.id)
+      const item = cambio ? (cambio.alternativaId === base.id ? base : base.alternativas.find((a) => a.id === cambio.alternativaId) ?? base) : itemDeRutina(base, settings.reemplazos)
+      return { tipo: 'ejercicio', base, item, series: casa ? item.series : seriesPara(item.series, ligera), indice }
+    })
+    return casa ? [...ejercicios, { tipo: 'resumen' }] : [{ tipo: 'calentamiento' }, ...ejercicios, { tipo: 'cierre' }, { tipo: 'resumen' }]
+  }, [lista, sesion.cambios, settings.reemplazos, ligera, casa])
   const indice = Math.min(activa.paso, pasos.length - 1)
   const paso = pasos[indice]
-  const bloque = paso.tipo === 'bloque' ? paso : null
-  const hechos = useMemo(() => (bloque ? hechosDeBloque(sets, sesion.id, bloque) : []), [sets, sesion.id, bloque])
-  const toca = bloque ? cualToca(bloque, hechos) : null
-  // el ejercicio que se muestra: el que toca, o el último del bloque si ya está completo
-  const cual = toca ?? (bloque ? bloque.items.length - 1 : 0)
-  const actual = bloque ? bloque.items[cual] : null
+  const ej = paso.tipo === 'ejercicio' ? paso : null
+  const hechos = useMemo(() => (ej ? hechosDe(sets, sesion.id, ej.base.id) : []), [sets, sesion.id, ej])
   const [accion, setAccion] = useState<Accion | null>(null)
   const ir = useCallback((n: number) => {
-    setActiva({ ...activa, paso: Math.max(0, Math.min(pasos.length - 1, n)), timerFin: undefined, timerSeg: undefined, descansoFin: undefined, descansoSeg: undefined, avisado: undefined, cambio: undefined, borrador: undefined })
+    setActiva({ ...activa, paso: Math.max(0, Math.min(pasos.length - 1, n)), timerFin: undefined, timerSeg: undefined, descansoFin: undefined, descansoSeg: undefined, avisado: undefined, borrador: undefined })
   }, [activa, pasos.length, setActiva])
   const [menu, setMenu] = useState(false)
   const [tecnica, setTecnica] = useState(false)
   const [alternativas, setAlternativas] = useState(false)
   const [seriesHoy, setSeriesHoy] = useState(false)
   const cerrarAccion = useCallback(() => setAccion(null), [])
+  const descansando = activa.descansoFin !== undefined
+  const topeMs = useMemo(() => { const m = minutosDe(settings.horaTope); return new Date(sesion.fecha + 'T00:00:00').getTime() + m * 60000 }, [sesion.fecha, settings.horaTope])
+
+  // Recorte en el camino (RUTINA-FINAL.md, 3): si lo que falta ya no cabe antes de la última pesa, quita abdomen, brazos, press militar o aperturas
+  useEffect(() => {
+    if (casa || !ej) return
+    const disponibles = (topeMs - Date.now()) / 1000
+    const quitar = recortar(lista, ej.indice, hechos.length, disponibles, ligera)
+    if (quitar.length === 0) return
+    const antes = sesion.recortados
+    datos.guardarSesion({ ...sesion, recortados: [...(antes ?? []), ...quitar] })
+    setAccion({ texto: `Para terminar a tiempo se quitó ${quitar.map((id) => nombreDe(id).toLowerCase()).join(' y ')}.`, deshacer: () => datos.guardarSesion({ ...sesion, recortados: antes }) })
+    // solo al cambiar de paso o de serie
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indice, hechos.length, lista.length])
 
   const ultimoPesoDe = (it: Ejercicio | Alternativa) => {
     const g = porSesion(sets, it.id)
@@ -106,7 +97,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
     datos.setSettings({ ...settings, reemplazos })
   }
   async function cambiarVersion(v: Version, lig: boolean) {
-    await datos.guardarSesion({ ...sesion, version: v, ligera: lig, pierna: v === 'corta' ? false : sesion.pierna })
+    await datos.guardarSesion({ ...sesion, version: v, ligera: lig, pierna: v === 'corta' ? false : sesion.pierna, orden: undefined, recortados: undefined })
     setMenu(false)
   }
   async function descartar() {
@@ -120,25 +111,51 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
     setMenu(false)
     ir(pasos.length - 1)
   }
-  function saltarBloque() {
+  function saltar() {
     const desde = indice
     setMenu(false)
     ir(indice + 1)
-    setAccion({ texto: bloque && bloque.items.length > 1 ? 'Par saltado.' : 'Ejercicio saltado.', deshacer: () => ir(desde) })
+    setAccion({ texto: 'Ejercicio saltado.', deshacer: () => ir(desde) })
+  }
+  /** "Ocupado: después": al final de su zona o de la sesión; la segunda vez, directo a las alternativas */
+  async function ocupado() {
+    if (!ej) return
+    setMenu(false)
+    if (sesion.pospuestos?.includes(ej.base.id)) { setAlternativas(true); return }
+    const antes = { orden: sesion.orden, pospuestos: sesion.pospuestos }
+    const orden = posponer(lista, ej.indice)
+    const quedaEnZona = orden.indexOf(ej.base.id) < lista.length - 1 && lista.slice(ej.indice + 1).some((e) => e.zona === ej.base.zona)
+    await datos.guardarSesion({ ...sesion, orden, pospuestos: [...(sesion.pospuestos ?? []), ej.base.id] })
+    setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined, borrador: undefined })
+    setAccion({ texto: quedaEnZona && ej.base.zona ? `Después, al final de ${ZONA_NOMBRE[ej.base.zona].toLowerCase()}.` : 'Después, al final de la sesión.', deshacer: () => datos.guardarSesion({ ...sesion, ...antes }) })
   }
   async function elegirAlternativa(alt: Alternativa | null) {
-    if (!actual) return
-    const cambios = (sesion.cambios ?? []).filter((c) => c.ejercicioId !== actual.base.id)
-    cambios.push({ ejercicioId: actual.base.id, alternativaId: alt ? alt.id : actual.base.id })
+    if (!ej) return
+    const cambios = (sesion.cambios ?? []).filter((c) => c.ejercicioId !== ej.base.id)
+    cambios.push({ ejercicioId: ej.base.id, alternativaId: alt ? alt.id : ej.base.id })
     await datos.guardarSesion({ ...sesion, cambios })
     setTecnica(false)
     setAlternativas(false)
   }
-  const descansando = activa.descansoFin !== undefined
   const setsHoy = sets.filter((s) => s.sessionId === sesion.id).sort((a, b) => a.hora - b.hora)
   const minCal = minutosCalentamiento(version)
   const minCierre = minutosCierre(version, !!sesion.pierna)
-  const disponibles = actual ? alternativasDisponibles(actual.base, bloques, sesion.cambios, settings.reemplazos) : []
+  const disponibles = ej ? alternativasDisponibles(ej.base, lista, sesion.cambios, settings.reemplazos) : []
+  const pospuesto = !!ej && !!sesion.pospuestos?.includes(ej.base.id)
+  // "Empezaste 8:22 · va la corta · terminas pesas 8:50": la proyección se recalcula en cada paso
+  const linea = useMemo(() => {
+    if (casa || paso.tipo === 'resumen') return null
+    const i = ej ? ej.indice : paso.tipo === 'calentamiento' ? 0 : lista.length
+    const restante = paso.tipo === 'calentamiento' ? minCal * 60 + segundosRestantes(lista, 0, 0, ligera) : paso.tipo === 'cierre' ? 0 : segundosRestantes(lista, i, hechos.length, ligera, descansando ? Math.max(0, ((activa.descansoFin ?? 0) - Date.now()) / 1000) : 0)
+    const nombre = version === 'corta' ? 'la corta' : version === 'bonus' ? 'el bonus' : 'la completa'
+    const quitados = sesion.recortados?.length ? ` · se quitó ${sesion.recortados.map((id) => nombreDe(id).toLowerCase()).join(' y ')}` : ''
+    return `Empezaste ${horaDe(sesion.inicio)} · va ${nombre} · terminas pesas ${horaDe(Date.now() + restante * 1000)}${quitados}`
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [casa, paso, ej, lista, hechos.length, ligera, descansando, version, sesion.inicio, minCal, sesion.recortados])
+  const otraVersion: Version = version === 'corta' ? 'completa' : 'corta'
+  const zonaActual: Zona | undefined = ej?.base.zona
+  const sig = ej && indice + 1 < pasos.length ? pasos[indice + 1] : null
+  const siguienteEj = sig && sig.tipo === 'ejercicio' ? sig : null
 
   return (
     <div className="pantalla sesion">
@@ -147,33 +164,36 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
           <button className="icono-boton" onClick={() => setMenu(true)} aria-label="Opciones de la sesión">
             <svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" /></svg>
           </button>
-          <span className="t-nota tenue">{bloque ? `${bloque.indice + 1} de ${nBloques}` : ''}</span>
+          {casa ? <span className="t-nota tenue">{ej ? `${ej.indice + 1} de ${lista.length}` : ''}</span> : (
+            <span className="t-nota tenue sesion-ruta" aria-label="Recorrido por zonas">{ruta.map((z, i) => <span key={z}>{i > 0 && ' → '}<span className={z === zonaActual ? 'actual' : ''}>{ZONA_NOMBRE[z]}</span></span>)}</span>
+          )}
         </header>
       )}
-      {paso.tipo === 'calentamiento' && <PasoTiempo key="cal" titulo="Calentamiento" detalle={`Elíptica ${minCal} min, ritmo en el que puedes platicar.`} nota={CALENTAMIENTO.siOcupada} minutos={minCal} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
-      {bloque && actual && !descansando && (
-        <PasoSerie key={`${bloque.numero}-${actual.item.id}`} datos={datos} sesion={sesion} bloque={bloque} cual={cual} hechos={hechos} sets={sets} activa={activa} setActiva={setActiva} onTecnica={() => setTecnica(true)} onSiguiente={() => ir(indice + 1)} onSeries={() => setSeriesHoy(true)} onVolverOriginal={() => elegirAlternativa(null)}
-          onGuardado={(id) => setAccion({ texto: 'Serie guardada.', deshacer: async () => { await datos.borrarSet(id); setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined, cambio: undefined }) } })} />
+      {paso.tipo === 'calentamiento' && <PasoTiempo key="cal" titulo="Calentamiento" detalle={`Elíptica ${minCal} min, ritmo en el que puedes platicar.`} nota={CALENTAMIENTO.siOcupada} minutos={minCal} linea={linea} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
+      {ej && !descansando && (
+        <PasoSerie key={`${ej.base.id}-${ej.item.id}`} datos={datos} sesion={sesion} ej={ej} lista={lista} hechos={hechos} sets={sets} activa={activa} setActiva={setActiva} linea={linea} onCambiarVersion={casa ? undefined : () => cambiarVersion(otraVersion, ligera)} otraVersion={otraVersion} onTecnica={() => setTecnica(true)} onSiguiente={() => ir(indice + 1)} onSeries={() => setSeriesHoy(true)} onVolverOriginal={() => elegirAlternativa(null)}
+          onGuardado={(id) => setAccion((a) => (a && a.texto.startsWith('Para terminar') ? a : { texto: 'Serie guardada.', deshacer: async () => { await datos.borrarSet(id); setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined }) } }))} />
       )}
-      {bloque && descansando && activa.descansoFin !== undefined && (
-        <PasoDescanso key={`d${activa.descansoFin}`} bloque={bloque} hechos={hechos} sesion={sesion} fin={activa.descansoFin} total={activa.descansoSeg ?? bloque.items[0].item.descansoSeg} cambio={!!activa.cambio} avisado={!!activa.avisado} unidades={settings.unidades}
-          onMas={() => setActiva({ ...activa, descansoFin: (activa.descansoFin ?? Date.now()) + 15_000, descansoSeg: (activa.descansoSeg ?? bloque.items[0].item.descansoSeg) + 15 })}
+      {ej && descansando && activa.descansoFin !== undefined && (
+        <PasoDescanso key={`d${activa.descansoFin}`} ej={ej} hechos={hechos} siguiente={siguienteEj} fin={activa.descansoFin} total={activa.descansoSeg ?? ej.item.descansoSeg} avisado={!!activa.avisado} unidades={settings.unidades} linea={linea}
+          onMas={() => setActiva({ ...activa, descansoFin: (activa.descansoFin ?? Date.now()) + 15_000, descansoSeg: (activa.descansoSeg ?? ej.item.descansoSeg) + 15 })}
           onAvisar={() => { abrirAtajo(((activa.descansoFin ?? Date.now()) - Date.now()) / 1000); setActiva({ ...activa, avisado: true }) }}
-          onSaltar={() => { const antes = { ...activa }; setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined, cambio: undefined }); setAccion({ texto: activa.cambio ? 'Cambio saltado.' : 'Descanso saltado.', deshacer: () => setActiva(antes) }) }}
-          onSiguienteBloque={() => { const antes = { ...activa }; ir(indice + 1); setAccion({ texto: 'Descanso saltado.', deshacer: () => setActiva(antes) }) }} />
+          onSaltar={() => { const antes = { ...activa }; setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined }); setAccion({ texto: 'Descanso saltado.', deshacer: () => setActiva(antes) }) }}
+          onSiguienteEjercicio={() => { const antes = { ...activa }; ir(indice + 1); setAccion({ texto: 'Descanso saltado.', deshacer: () => setActiva(antes) }) }} />
       )}
-      {paso.tipo === 'cierre' && <PasoTiempo key="cierre" titulo="Cierre" detalle={`Elíptica o saco, ${minCierre} min.${sesion.pierna ? ' Hubo pierna: cierre corto.' : ''}`} nota={CIERRE.saco} minutos={minCierre} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
-      {paso.tipo === 'resumen' && <Resumen datos={datos} sesion={sesion} sets={sets} items={pasos.flatMap((p) => (p.tipo === 'bloque' ? p.items : []))} onTerminar={onTerminar} />}
+      {paso.tipo === 'cierre' && <PasoTiempo key="cierre" titulo="Cierre" detalle={`Saco en la terraza o elíptica, ${minCierre} min.${sesion.pierna ? ' Hubo pierna: cierre corto.' : ''}`} nota={CIERRE.saco} minutos={minCierre} linea={null} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
+      {paso.tipo === 'resumen' && <Resumen datos={datos} sesion={sesion} sets={sets} lista={lista} onTerminar={onTerminar} />}
 
       {accion && <Deshacer texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
 
       <Hoja abierta={menu} onCerrar={() => setMenu(false)}>
         <Grupo>
-          {actual && <Fila texto="Ver técnica" onClick={() => { setMenu(false); setTecnica(true) }} />}
-          {actual && <Fila texto="Cambiar por alternativa" detalle="Si la máquina está ocupada o no te late" onClick={() => { setMenu(false); setAlternativas(true) }} />}
+          {ej && <Fila texto="Ver técnica" onClick={() => { setMenu(false); setTecnica(true) }} />}
+          {ej && !casa && <Fila texto="Ocupado: después" detalle={pospuesto ? 'Ya se pospuso una vez: ahora la alternativa' : 'Lo manda al final de su zona'} onClick={ocupado} />}
+          {ej && <Fila texto="Cambiar por alternativa" detalle="Si sigue ocupado o no te late" onClick={() => { setMenu(false); setAlternativas(true) }} />}
           <Fila texto="Series de hoy" detalle={`${setsHoy.length} registradas, editar o borrar`} onClick={() => { setMenu(false); setSeriesHoy(true) }} />
-          {indice > 0 && <Fila texto={bloque && bloque.indice > 0 ? 'Ejercicio anterior' : 'Paso anterior'} onClick={() => { setMenu(false); ir(indice - 1) }} />}
-          {paso.tipo !== 'resumen' && <Fila texto={bloque ? (bloque.items.length > 1 ? 'Saltar el par' : 'Saltar ejercicio') : 'Saltar'} onClick={saltarBloque} />}
+          {indice > 0 && <Fila texto={ej && ej.indice > 0 ? 'Ejercicio anterior' : 'Paso anterior'} onClick={() => { setMenu(false); ir(indice - 1) }} />}
+          {paso.tipo !== 'resumen' && <Fila texto={ej ? 'Saltar ejercicio' : 'Saltar'} onClick={saltar} />}
           <Fila texto="Seguir después" detalle="Se queda guardada donde vas" onClick={() => { setMenu(false); onSalir() }} />
           <Fila texto="Terminar sesión" detalle="Guarda lo hecho y va al resumen" onClick={terminar} />
           <Fila texto="Descartar sesión" detalle="Se borran las series de hoy" onClick={descartar} />
@@ -181,7 +201,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
         {!casa && (
           <Grupo titulo="Versión">
             {(['completa', 'corta', 'bonus'] as Version[]).map((v) => (
-              <Fila key={v} texto={v === 'completa' ? 'Completa' : v === 'corta' ? 'Corta, bloques 1, 2 y laterales con 2 series' : 'Bonus, cierre de 20 min'} dato={version === v && !ligera ? 'Activa' : ''} onClick={() => cambiarVersion(v, false)} />
+              <Fila key={v} texto={v === 'completa' ? 'Completa' : v === 'corta' ? 'Corta: jalón, press y laterales' : 'Bonus, cierre de 20 min'} dato={version === v && !ligera ? 'Activa' : ''} onClick={() => cambiarVersion(v, false)} />
             ))}
             <Fila texto="Ligera, 2 series con el mismo peso" dato={ligera ? 'Activa' : ''} onClick={() => cambiarVersion(version === 'corta' ? 'completa' : version, !ligera)} />
           </Grupo>
@@ -192,25 +212,27 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
           <Grupo>{setsHoy.map((s) => <SerieEditable key={s.id} set={s} datos={datos} />)}</Grupo>
         )}
       </Hoja>
-      {actual && <FichaHoja abierta={tecnica} onCerrar={() => setTecnica(false)} base={actual.base} item={actual.item} datos={datos} series={actual.series} alternativas={disponibles} onElegirAlternativa={elegirAlternativa} />}
-      {actual && (
+      {ej && <FichaHoja abierta={tecnica} onCerrar={() => setTecnica(false)} base={ej.base} item={ej.item} datos={datos} series={ej.series} alternativas={disponibles} onElegirAlternativa={elegirAlternativa} />}
+      {ej && (
         <Hoja abierta={alternativas} titulo="Cambiar por" onCerrar={() => setAlternativas(false)}>
+          {!casa && !pospuesto && <p className="t-nota tenue">Si está ocupado, primero "Ocupado: después" en el menú: lo manda al final de su zona.</p>}
+          {pospuesto && <p className="t-nota tenue">Ya se pospuso una vez. Si sigue ocupado, cambia por la alternativa.</p>}
           <Grupo>
-            {[actual.base, ...disponibles].filter((a) => a.id !== actual.item.id).map((a) => {
-              const siempre = a.id === actual.base.id ? !settings.reemplazos?.[actual.base.id] : settings.reemplazos?.[actual.base.id] === a.id
+            {[ej.base, ...disponibles].filter((a) => a.id !== ej.item.id).map((a) => {
+              const siempre = a.id === ej.base.id ? !settings.reemplazos?.[ej.base.id] : settings.reemplazos?.[ej.base.id] === a.id
               return (
                 <div key={a.id} className="fila" style={{ alignItems: 'flex-start' }}>
                   <Foto clave={a.ilustracion} ejercicioId={a.id} propias={datos.fotosEjercicio} nombre={a.nombre} modo="chica" />
                   <span className="fila-texto" style={{ gap: 6 }}>
-                    <button className="t-cuerpo" style={{ textAlign: 'left', whiteSpace: 'normal' }} onClick={() => elegirAlternativa(a.id === actual.base.id ? null : (a as Alternativa))}>{a.nombre}</button>
+                    <button className="t-cuerpo" style={{ textAlign: 'left', whiteSpace: 'normal' }} onClick={() => elegirAlternativa(a.id === ej.base.id ? null : (a as Alternativa))}>{a.nombre}</button>
                     <span className="t-nota tenue">{'caso' in a ? `${a.caso}. ` : 'Original. '}{ultimoPesoDe(a)}</span>
-                    <button className="t-nota" style={{ textAlign: 'left', color: siempre ? 'var(--rojo)' : 'var(--texto-2)' }} onClick={() => usarSiempre(actual.base, a.id === actual.base.id ? null : a.id)}>{siempre ? 'Es la de siempre' : 'Usar siempre esta'}</button>
+                    <button className="t-nota" style={{ textAlign: 'left', color: siempre ? 'var(--rojo)' : 'var(--texto-2)' }} onClick={() => usarSiempre(ej.base, a.id === ej.base.id ? null : a.id)}>{siempre ? 'Es la de siempre' : 'Usar siempre esta'}</button>
                   </span>
                 </div>
               )
             })}
           </Grupo>
-          {hechos[cual]?.length > 0 && <p className="t-nota tenue">Las series que ya hiciste en este bloque cuentan igual: con la alternativa sigues en la serie {hechos[cual].length + 1}.</p>}
+          {hechos.length > 0 && <p className="t-nota tenue">Las series que ya hiciste cuentan igual: con la alternativa sigues en la serie {hechos.length + 1}.</p>}
         </Hoja>
       )}
     </div>
@@ -232,7 +254,7 @@ export function SerieEditable({ set, datos }: { set: SetLog; datos: Datos }) {
   }
   return (
     <div className="fila" style={{ flexWrap: 'wrap', gap: 8 }}>
-      <span className="fila-texto"><span className="t-cuerpo">{info?.item.nombre ?? set.exerciseId}</span><span className="t-nota tenue">Serie {set.numSerie}</span></span>
+      <span className="fila-texto"><span className="t-cuerpo">{nombreDe(set.exerciseId)}</span><span className="t-nota tenue">Serie {set.numSerie}</span></span>
       <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         {set.pesoKg !== null && <input inputMode="decimal" value={peso} onChange={(e) => setPeso(e.target.value)} onBlur={guardar} aria-label="Peso" style={{ width: 64, textAlign: 'right', borderBottom: '1px solid var(--separador)' }} />}
         {set.pesoKg !== null && <span className="t-nota tenue">{unidad}</span>}
@@ -244,8 +266,14 @@ export function SerieEditable({ set, datos }: { set: SetLog; datos: Datos }) {
   )
 }
 
+/** Línea de arriba: "Empezaste 8:22 · va la corta · terminas pesas 8:50" con el botón para cambiar de versión */
+function Linea({ texto, otraVersion, onCambiar }: { texto: string | null; otraVersion?: Version; onCambiar?: () => void }) {
+  if (!texto) return null
+  return <p className="t-nota tenue sesion-linea">{texto}{onCambiar && otraVersion && <>{' · '}<button onClick={onCambiar}>Cambiar a {otraVersion}</button></>}</p>
+}
+
 // ---------- 7.1 Calentamiento y cierre ----------
-function PasoTiempo({ titulo, detalle, nota, minutos, activa, setActiva, onListo }: { titulo: string; detalle: string; nota: string; minutos: number; activa: SesionActiva; setActiva: (a: SesionActiva) => void; onListo: () => void }) {
+function PasoTiempo({ titulo, detalle, nota, minutos, linea, activa, setActiva, onListo }: { titulo: string; detalle: string; nota: string; minutos: number; linea: string | null; activa: SesionActiva; setActiva: (a: SesionActiva) => void; onListo: () => void }) {
   usePantalla('calentamiento')
   const { W } = useMedidas()
   const [medio, alto, ancho] = useAlto<HTMLDivElement>()
@@ -259,6 +287,7 @@ function PasoTiempo({ titulo, detalle, nota, minutos, activa, setActiva, onListo
   return (
     <div className="panel">
       <div className="sesion-arriba">
+        <Linea texto={linea} />
         <h1 className="t-titulo">{titulo}</h1>
         <p className="t-sub tenue">{detalle}</p>
       </div>
@@ -287,26 +316,22 @@ function textoSerie(h: SetLog, modo: Modo, unidad: Unidad, paso: number): string
   return `${p ?? '—'} × ${h.reps}`
 }
 
-function PasoSerie({ datos, sesion, bloque, cual, hechos: hechosTodos, sets, activa, setActiva, onTecnica, onSiguiente, onGuardado, onSeries, onVolverOriginal }: { datos: Datos; sesion: SesionTipo; bloque: PasoBloque; cual: number; hechos: SetLog[][]; sets: SetLog[]; activa: SesionActiva; setActiva: (a: SesionActiva) => void; onTecnica: () => void; onSiguiente: () => void; onGuardado: (id: number) => void; onSeries: () => void; onVolverOriginal: () => void }) {
+function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, linea, otraVersion, onCambiarVersion, onTecnica, onSiguiente, onGuardado, onSeries, onVolverOriginal }: { datos: Datos; sesion: SesionTipo; ej: PasoEjercicio; lista: Ejercicio[]; hechos: SetLog[]; sets: SetLog[]; activa: SesionActiva; setActiva: (a: SesionActiva) => void; linea: string | null; otraVersion: Version; onCambiarVersion?: () => void; onTecnica: () => void; onSiguiente: () => void; onGuardado: (id: number) => void; onSeries: () => void; onVolverOriginal: () => void }) {
   usePantalla('serie')
   const { W } = useMedidas()
   const [medio, alto, ancho] = useAlto<HTMLDivElement>()
-  const { base, item, series } = bloque.items[cual]
-  const par = bloque.items.length > 1
+  const { base, item, series } = ej
   const { settings } = datos
   const unidad = unidadDe(item, settings.unidades)
   const otra: Unidad = unidad === 'kg' ? 'lb' : 'kg'
   const incremento = incrementoDe(item, unidad)
   const conPeso = item.modo === 'peso'
   const esAlternativa = item.id !== base.id
-  // series del bloque en esta sesión (cuentan aunque se hayan hecho en una alternativa)
-  const hechos = hechosTodos[cual]
-  const nTotal = hechosTodos.reduce((a, h) => a + h.length, 0)
   const historial = useMemo(() => sets.filter((s) => s.sessionId !== sesion.id), [sets, sesion.id])
   const sugerencia = useMemo(() => sugerirPeso(historial, item.id, item.repsMax, item.modo, item.repsMin), [historial, item.id, item.repsMax, item.modo, item.repsMin])
   const ultimaVez = useMemo(() => porSesion(historial, item.id).slice(-1)[0], [historial, item.id])
   const siguienteNum = hechos.length + 1
-  const completo = cualToca(bloque, hechosTodos) === null
+  const completo = hechos.length >= series
   // último set de este mismo ejercicio (no de la alternativa), para arrancar con su peso y reps
   const ultimo = [...hechos].reverse().find((s) => s.exerciseId === item.id)
   const primeraVez = sugerencia.tipo === 'inicial' && !ultimo
@@ -363,9 +388,8 @@ function PasoSerie({ datos, sesion, bloque, cual, hechos: hechosTodos, sets, act
     } catch { setError(true); return }
     setError(false)
     sonarClic()
-    if (nTotal + 1 >= secuenciaDePar(bloque.items.map((it) => it.series)).length) haptico.finEjercicio(); else haptico.serieHecha()
-    const d = descansoTras(bloque, cual, nTotal)
-    setActiva({ ...activa, descansoFin: ahora + d.seg * 1000, descansoSeg: d.seg, cambio: d.cambio, avisado: undefined, borrador: { itemId: item.id, peso, reps, unidad } })
+    if (siguienteNum >= series) haptico.finEjercicio(); else haptico.serieHecha()
+    setActiva({ ...activa, descansoFin: ahora + item.descansoSeg * 1000, descansoSeg: item.descansoSeg, avisado: undefined, borrador: { itemId: item.id, peso, reps, unidad } })
     onGuardado(id)
   }
   function confirmarTexto() {
@@ -373,28 +397,33 @@ function PasoSerie({ datos, sesion, bloque, cual, hechos: hechosTodos, sets, act
     if (!Number.isNaN(v) && v >= 0) setPeso(Math.round(v * 100) / 100)
     setEditando(false)
   }
+  // serie de aproximación: en el primer ejercicio de la sesión y en el primer press (RUTINA-FINAL.md, 3)
+  const primerPress = lista.findIndex((e) => e.id.startsWith('press')) === ej.indice
+  const aproximacion = conPeso && peso > 0 && (ej.indice === 0 || primerPress)
 
   let aviso: ReactNode = null
   if (error) aviso = <span onClick={serieHecha}>No se guardó la serie. Toca para reintentar.</span>
   else if (hechos.length > 0) {
-    aviso = <>{conPeso ? `Hechas en ${unidad}: ` : 'Hechas: '}{hechos.map((h) => textoSerie(h, item.modo, unidad, incremento) + (h.exerciseId !== item.id ? ` (${buscarCualquiera(h.exerciseId)?.item.nombre.toLowerCase() ?? 'otra'})` : '')).join(', ')}. <button onClick={onSeries}>Editar</button></>
+    aviso = <>{conPeso ? `Hechas en ${unidad}: ` : 'Hechas: '}{hechos.map((h) => textoSerie(h, item.modo, unidad, incremento) + (h.exerciseId !== item.id ? ` (${nombreDe(h.exerciseId).toLowerCase()})` : '')).join(', ')}. <button onClick={onSeries}>Editar</button></>
   } else {
     if (sugerencia.tipo === 'subir' && ultimaVez && pesoSugerido !== null) aviso = invertida ? `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Menos ayuda: ${formatoPeso(pesoSugerido, unidad)}.` : `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Sube a ${formatoPeso(pesoSugerido, unidad)}.`
     else if (sugerencia.tipo === 'bajar' && pesoSugerido !== null) aviso = `Dos veces seguidas bajaron las reps. Baja a ${formatoPeso(pesoSugerido, unidad)}.`
     else if (sugerencia.tipo === 'quedarse' && pesoBase !== null) aviso = `La vez pasada no llegaste al mínimo. Quédate en ${formatoPeso(pesoBase, unidad)} o baja.`
-    else if (primeraVez && conPeso) aviso = item.id.startsWith('prensa') ? 'Primera vez: tantea. Un disco de 45 por lado y 10 reps; si fue fácil, dos por lado; de ahí sube 25 por lado hasta que 12 cuesten.' : 'Primera vez: empieza con este y ajusta.'
-    else if (bloque.numero === 1 && conPeso && peso > 0) aviso = `Antes, una de aproximación con ${formatoPeso(redondearAPaso(peso / 2, incremento) || incremento, unidad)}, 10 reps. No se registra.`
+    else if (primeraVez && conPeso) aviso = 'Primera vez: empieza con este y ajusta.'
+    else if (aproximacion) aviso = `Antes, una de aproximación con ${formatoPeso(redondearAPaso(peso / 2, incremento) || incremento, unidad)}, 10 reps. No se registra.`
   }
+  const zona = base.zona ? `${ZONA_NOMBRE[base.zona]} · ` : ''
 
   return (
     <div className="panel">
       <div className="sesion-arriba">
+        <Linea texto={linea} otraVersion={otraVersion} onCambiar={onCambiarVersion} />
         <div className="sesion-titulo-fila"><TituloAjustable texto={item.nombre} /></div>
         <div className="sesion-titulo-fila">
           <p className="t-sub">{completo ? `${series} series hechas` : `Serie ${serieActual} de ${series}`}</p>
           <BotonTexto subrayado onClick={onTecnica}>Técnica</BotonTexto>
         </div>
-        {par && <p className="t-nota tenue sesion-par">Par con <span className="actual">{bloque.items[cual === 0 ? 1 : 0].item.nombre}</span>: una serie de cada uno y luego el descanso.</p>}
+        <p className="t-nota tenue sesion-zona">{zona}{ej.indice + 1} de {lista.length}</p>
         {esAlternativa && <p className="t-nota tenue sesion-alternativa">{'caso' in item ? `${item.caso}. ` : ''}<button onClick={onVolverOriginal}>Volver al original</button></p>}
         {aviso && <p className="t-cuerpo tenue sesion-aviso">{aviso}</p>}
         <div className="sesion-foto"><Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="toque" /></div>
@@ -429,18 +458,14 @@ function PasoSerie({ datos, sesion, bloque, cual, hechos: hechosTodos, sets, act
 }
 
 // ---------- 6.3 Descanso ----------
-function PasoDescanso({ bloque, hechos, fin, total, cambio, avisado, unidades, onMas, onAvisar, onSaltar, onSiguienteBloque }: { bloque: PasoBloque; hechos: SetLog[][]; sesion: SesionTipo; fin: number; total: number; cambio: boolean; avisado: boolean; unidades?: Record<string, Unidad>; onMas: () => void; onAvisar: () => void; onSaltar: () => void; onSiguienteBloque: () => void }) {
+function PasoDescanso({ ej, hechos, siguiente, fin, total, avisado, unidades, linea, onMas, onAvisar, onSaltar, onSiguienteEjercicio }: { ej: PasoEjercicio; hechos: SetLog[]; siguiente: PasoEjercicio | null; fin: number; total: number; avisado: boolean; unidades?: Record<string, Unidad>; linea: string | null; onMas: () => void; onAvisar: () => void; onSaltar: () => void; onSiguienteEjercicio: () => void }) {
   usePantalla('descanso')
   const { W } = useMedidas()
   const [medio, alto, ancho] = useAlto<HTMLDivElement>()
-  const toca = cualToca(bloque, hechos)
-  const ejercicioCompleto = toca === null
-  const sig = bloque.items[toca ?? 0]
-  const item = sig.item
+  const item = ej.item
+  const ejercicioCompleto = hechos.length >= ej.series
   const unidad = unidadDe(item, unidades)
-  const ultimo = [...hechos[toca ?? 0]].reverse().find((s) => s.exerciseId === item.id)
-  const siguiente = hechos[toca ?? 0].length + 1
-  const par = bloque.items.length > 1
+  const ultimo = [...hechos].reverse().find((s) => s.exerciseId === item.id)
   const restante = useCuentaRegresiva(fin)
   const termino = restante <= 0
   const tarde = restante < -3000
@@ -453,10 +478,14 @@ function PasoDescanso({ bloque, hechos, fin, total, cambio, avisado, unidades, o
   const dMax = acotar(0.96 * W, alto, ancho), dMin = Math.min(0.56 * W, dMax)
   const d = dMin + (dMax - dMin) * progreso
   const pesoUlt = ultimo ? pesoDeSet(ultimo, unidad, incrementoDe(item, unidad)) : null
-  const sigue = ejercicioCompleto ? 'Sigue: el siguiente ejercicio' : `${cambio ? 'Cámbiate: ' : 'Sigue: '}${par ? `${item.nombre}, ` : ''}serie ${siguiente}${pesoUlt !== null ? `, ${formatoPeso(pesoUlt, unidad)}` : ''}`
+  // al terminar la última serie de una zona, la app dice a cuál sigue
+  const cambiaZona = ejercicioCompleto && siguiente && siguiente.base.zona && siguiente.base.zona !== ej.base.zona
+  const sigue = ejercicioCompleto
+    ? siguiente ? `${cambiaZona ? `Ahora a ${ZONA_NOMBRE[siguiente.base.zona!].toLowerCase()}: ` : 'Sigue: '}${siguiente.item.nombre.toLowerCase()}` : 'Sigue: el cierre'
+    : `Sigue: serie ${hechos.length + 1}${pesoUlt !== null ? `, ${formatoPeso(pesoUlt, unidad)}` : ''}`
   return (
     <div className="panel">
-      <div className="sesion-arriba"><h1 className="t-descanso">{cambio ? 'Cambio' : 'Descanso'}</h1></div>
+      <div className="sesion-arriba"><Linea texto={linea} /><h1 className="t-descanso">Descanso</h1></div>
       <div className="sesion-medio" ref={medio}>
         <div className="circulo-sitio" style={{ width: dMax, height: dMax }}>
           <Circulo d={d} continuo style={{ position: 'absolute', left: (dMax - d) / 2, top: (dMax - d) / 2 }}>
@@ -467,13 +496,13 @@ function PasoDescanso({ bloque, hechos, fin, total, cambio, avisado, unidades, o
       </div>
       <div className="sesion-abajo">
         <p className="t-sub">{sigue}</p>
-        {!termino && !cambio && <div><BotonTexto onClick={onAvisar}>Avísame aunque me salga</BotonTexto></div>}
+        {!termino && <div><BotonTexto onClick={onAvisar}>Avísame aunque me salga</BotonTexto></div>}
         {termino ? (
-          <BotonPrincipal piedra onClick={ejercicioCompleto ? onSiguienteBloque : onSaltar}>{ejercicioCompleto ? 'Siguiente ejercicio' : 'Siguiente serie'}</BotonPrincipal>
+          <BotonPrincipal piedra onClick={ejercicioCompleto ? onSiguienteEjercicio : onSaltar}>{ejercicioCompleto ? 'Siguiente ejercicio' : 'Siguiente serie'}</BotonPrincipal>
         ) : (
           <div className="botones-fila">
             <BotonContorno onClick={onMas}>+15 s</BotonContorno>
-            <BotonContorno onClick={ejercicioCompleto ? onSiguienteBloque : onSaltar}>Saltar</BotonContorno>
+            <BotonContorno onClick={ejercicioCompleto ? onSiguienteEjercicio : onSaltar}>Saltar</BotonContorno>
           </div>
         )}
       </div>
@@ -482,7 +511,7 @@ function PasoDescanso({ bloque, hechos, fin, total, cambio, avisado, unidades, o
 }
 
 // ---------- 6.4 Resumen ----------
-function Resumen({ datos, sesion, sets, items, onTerminar }: { datos: Datos; sesion: SesionTipo; sets: SetLog[]; items: ItemBloque[]; onTerminar: () => void }) {
+function Resumen({ datos, sesion, sets, lista, onTerminar }: { datos: Datos; sesion: SesionTipo; sets: SetLog[]; lista: Ejercicio[]; onTerminar: () => void }) {
   usePantalla('resumen')
   const { W } = useMedidas()
   const [medio, alto, ancho] = useAlto<HTMLDivElement>()
@@ -496,16 +525,16 @@ function Resumen({ datos, sesion, sets, items, onTerminar }: { datos: Datos; ses
     const i = grupos.findIndex((g) => g[0].sessionId === sesion.id)
     const paso = info ? incrementoDe(info.item, unidad) : undefined
     const max = (g: SetLog[]) => Math.max(...g.map((s) => pesoDeSet(s, unidad, paso) ?? 0))
-    return { nombre: (info?.item.nombre ?? id).toLowerCase(), delta: Math.round((i > 0 ? max(grupos[i]) - max(grupos[i - 1]) : 0) * 10) / 10, unidad }
+    return { nombre: nombreDe(id).toLowerCase(), delta: Math.round((i > 0 ? max(grupos[i]) - max(grupos[i - 1]) : 0) * 10) / 10, unidad }
   })
   const minutos = Math.max(1, Math.round((fin - sesion.inicio) / 60000))
-  const hechosEj = items.filter((e) => propios.some((s) => s.ejercicioBaseId === e.base.id)).length
+  const hechosEj = lista.filter((e) => propios.some((s) => s.ejercicioBaseId === e.id)).length
   const cumpleSemana = sesion.tipo !== 'CASA' && estadoSemana([...datos.sesiones.filter((s) => s.id !== sesion.id), { ...sesion, terminada: true }], new Date(fin)).hechas === 3
   const etiqueta = sesion.tipo === 'CASA' ? 'Casa hecha. No cuenta para la meta, pero cuenta.' : cumpleSemana ? `${sesion.tipo} hecha. Con esta, semana cumplida.` : `${sesion.tipo} hecha. Mañana te vas a acordar.`
   const frase = subieron.length ? `Subiste en ${subieron.map((s) => `${s.nombre}, +${s.delta} ${s.unidad}`).join('; ')}.` : etiqueta
   const d = acotar(0.91 * W, alto, ancho)
   async function terminar() {
-    await datos.guardarSesion({ ...sesion, fin, terminada: true })
+    await datos.guardarSesion({ ...sesion, fin, terminada: true, como: comoQuedo(sesion, sets), origen: 'app' })
     haptico.finSesion()
     onTerminar()
   }

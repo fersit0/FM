@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Ejercicio, Alternativa } from '../data/tipos'
-import { ejerciciosDe, CALENTAMIENTO, CIERRE, REGLAS_GLOBALES, VERSION_CORTA_TEXTO, REGLA_ALTERNATIVA, NOMBRE_SESION } from '../data/ejercicios'
+import { ejerciciosDe, CALENTAMIENTO, CIERRE, REGLAS_GLOBALES, VERSION_CORTA_TEXTO, REGLA_ALTERNATIVA, NOMBRE_SESION, ZONA_NOMBRE, ZONA_DETALLE, RUTA } from '../data/ejercicios'
 import { porSesion } from '../logic/progresion'
 import { unidadDe, incrementoDe, pesoDeSet, formatoPeso } from '../logic/unidades'
 import { usePantalla } from '../design/pantallaActiva'
@@ -27,8 +27,8 @@ export function Ejercicios({ datos }: { datos: Datos }) {
     <div className="pantalla con-barra">
       <h1 className="t-titulo">Ejercicios</h1>
       {(['A', 'B', 'CASA'] as const).map((letra) => (
-        <Grupo key={letra} titulo={letra === 'CASA' ? NOMBRE_SESION.CASA : `${letra}: ${NOMBRE_SESION[letra]}`}>
-          {ejerciciosDe(letra).map((e) => <Fila key={e.id} num={e.bloque} texto={e.nombre} detalle={e.pierna ? 'Solo cuando toca pierna' : ejerciciosDe(letra).filter((x) => x.bloque === e.bloque).length > 1 ? 'En par' : undefined} dato={ultimoPeso(e)} onClick={() => setAbierto(e)} />)}
+        <Grupo key={letra} titulo={letra === 'CASA' ? NOMBRE_SESION.CASA : `${letra}: ${NOMBRE_SESION[letra]} · ${RUTA[letra].map((z) => ZONA_NOMBRE[z]).join(' → ')}`}>
+          {ejerciciosDe(letra).map((e, i) => <Fila key={e.id} num={i + 1} texto={e.nombre} detalle={e.pierna ? 'Solo cuando toca pierna' : e.zona ? ZONA_NOMBRE[e.zona] : undefined} dato={ultimoPeso(e)} onClick={() => setAbierto(e)} />)}
         </Grupo>
       ))}
       <Grupo titulo="Reglas"><Fila texto="Calentamiento, cierre y reglas de cada serie" onClick={() => setReglas(true)} /></Grupo>
@@ -36,6 +36,7 @@ export function Ejercicios({ datos }: { datos: Datos }) {
       {abierto && alternativa && <FichaHoja abierta onCerrar={() => setAlternativa(null)} base={abierto} item={alternativa} datos={datos} conGrafica />}
       <Hoja abierta={reglas} altura="completa" titulo="Reglas" onCerrar={() => setReglas(false)}>
         <Grupo>
+          {(Object.keys(ZONA_NOMBRE) as (keyof typeof ZONA_NOMBRE)[]).map((z) => <Fila key={z} texto={ZONA_NOMBRE[z]} detalle={ZONA_DETALLE[z]} />)}
           <Fila texto="Calentamiento" detalle={`${CALENTAMIENTO.texto} ${CALENTAMIENTO.siOcupada}`} />
           <Fila texto="Cierre" detalle={CIERRE.texto} />
           <Fila texto="Versión corta" detalle={VERSION_CORTA_TEXTO} />
