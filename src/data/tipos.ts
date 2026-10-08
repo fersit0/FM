@@ -1,8 +1,10 @@
 // Modelo de datos (sección 12 del brief)
 
-export type SesionTipo = 'A' | 'B' | 'FRIDA' | 'CASA'
-export type Version = 'completa' | 'corta' | 'bonus'
-export type Letra = 'A' | 'B' | 'CASA'
+/** Sesiones de club (RUTINA-FINAL.md, 2): A pecho y pierna, B torso completo, C espalda y hombro (semanas sin Frida) */
+export type Club = 'A' | 'B' | 'C'
+export type SesionTipo = Club | 'FRIDA' | 'CASA'
+export type Version = 'completa' | 'corta'
+export type Letra = Club | 'CASA'
 /** Zonas del Club Britania (RUTINA-FINAL.md, 3) */
 export type Zona = 'bancos' | 'poleas' | 'terraza'
 /** Cómo quedó una sesión: completa, corta, parcial (se cerró sola con pocas series) o registrada sin detalle */
@@ -41,8 +43,6 @@ export interface Ejercicio extends Detalle {
   orden: number
   /** zona del gym donde se hace (CASA no tiene) */
   zona?: Zona
-  /** solo entra cuando toca pierna en A o B (semana sin Frida) */
-  pierna?: boolean
   series: number
   repsMin: number
   repsMax: number
@@ -68,8 +68,10 @@ export interface Sesion {
   cambios?: { ejercicioId: string; alternativaId: string }[]
   /** Semana ligera: 2 series por ejercicio con el mismo peso */
   ligera?: boolean
-  /** esta sesión trajo goblet a 3 series (semana sin Frida) */
-  pierna?: boolean
+  /** nota opcional (el día con Frida: "espalda y bíceps") */
+  nota?: string
+  /** se cerró con "Terminar aquí": lo que falta se queda fuera y el cierre es de 5 min */
+  terminoAqui?: boolean
   /** cómo quedó (RUTINA-FINAL.md, 2): se calcula al cerrar; las registradas sin la app son 'registrada' */
   como?: Como
   /** 'app' si se hizo con la app; 'registro' si se registró después (Historial, pregunta de Hoy o carga inicial) */
@@ -146,8 +148,11 @@ export interface Settings {
   noFui?: string[]
   /** la A del 7 oct 2026 ya se cargó (RUTINA-FINAL.md, 2.8) */
   cargaInicialV5?: boolean
-  /** "Pon al día tu semana" ya se mostró (RUTINA-FINAL.md, 2.5) */
+  /** "Pon al día tu semana" ya se mostró (RUTINA-FINAL.md, 2.4); la v6 la vuelve a mostrar una vez por la sesión C */
   semanaAlDiaV5?: boolean
+  semanaAlDiaV6?: boolean
+  /** "Hoy prefiero A": la sesión elegida a mano para un día (RUTINA-FINAL.md, 2.7) */
+  sesionElegida?: { fecha: string; tipo: Club }
 }
 
 export interface Cintura {
