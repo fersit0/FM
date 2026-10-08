@@ -2,6 +2,7 @@
 // en cuatro iPhones, en Safari (viewport recortado por sus barras) y como app instalada (pantalla completa con
 // áreas seguras arriba y abajo), con el nombre más largo, una alternativa elegida y la foto grande.
 import { test, expect } from '@playwright/test'
+import { reloj, registrar } from './comun.mjs'
 
 const DISPOSITIVOS = [
   { nombre: 'iPhone SE', w: 375, h: 667, top: 20, bottom: 0, safari: 553 },
@@ -9,7 +10,7 @@ const DISPOSITIVOS = [
   { nombre: 'iPhone 15', w: 393, h: 852, top: 59, bottom: 34, safari: 672 },
   { nombre: 'iPhone 16 Pro Max', w: 430, h: 932, top: 59, bottom: 34, safari: 752 },
 ]
-const SELECTORES = ['.sesion-cabecera', '.sesion-titulo-fila h1', '.sesion-foto', '.sesion-arriba .t-sub', '.sesion-aviso', '.sesion-alternativa', '.sesion .circulo', '.sesion-medio > button', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo', '.inicio-arriba', '.inicio-texto', '.inicio-pie .boton', '.inicio-pie .secundario', '.barra']
+const SELECTORES = ['.sesion-cabecera', '.sesion-linea', '.sesion-titulo-fila h1', '.sesion-foto', '.sesion-arriba .t-sub', '.sesion-zona', '.sesion-aviso', '.sesion-alternativa', '.sesion .circulo', '.sesion-medio > button', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo', '.inicio-arriba', '.inicio-texto', '.inicio-pie .boton', '.inicio-pie .secundario', '.inicio-pie .dia-botones', '.dia-fila', '.barra']
 
 async function revisar(page, nombre) {
   const r = await page.evaluate((sels) => {
@@ -19,7 +20,7 @@ async function revisar(page, nombre) {
       if (b.width === 0 || b.height === 0) continue
       const st = getComputedStyle(el)
       if (st.visibility === 'hidden' || el.closest('.hoja-fondo:not(.abierta)')) continue
-      const cortado = el.scrollHeight > el.clientHeight + 1 && st.overflowY !== 'visible' && !el.classList.contains('sesion-foto') && !el.classList.contains('sesion-aviso') && !el.classList.contains('inicio')
+      const cortado = el.scrollHeight > el.clientHeight + 1 && st.overflowY !== 'visible' && !el.classList.contains('sesion-foto') && !el.classList.contains('sesion-aviso') && !el.classList.contains('sesion-linea') && !el.classList.contains('inicio')
       cajas.push({ s, x: b.left, y: b.top, r: b.right, b: b.bottom, cortado, fuera: b.left < -1 || b.top < -1 || b.right > innerWidth + 1 || b.bottom > innerHeight + 1 })
     }
     const problemas = []
@@ -36,7 +37,7 @@ async function revisar(page, nombre) {
       }
     }
     // Botón principal: completo, dentro de la pantalla y nadie encima
-    for (const el of document.querySelectorAll('.boton')) {
+    for (const el of document.querySelectorAll('.boton, .dia-boton')) {
       if (el.closest('.hoja-fondo:not(.abierta)')) continue
       const b = el.getBoundingClientRect()
       if (b.width === 0) continue
@@ -49,6 +50,9 @@ async function revisar(page, nombre) {
     if (document.querySelector('.sesion') && document.documentElement.scrollHeight > innerHeight + 1) problemas.push('la sesión hace scroll')
     const h1 = document.querySelector('.sesion-titulo-fila h1')
     if (h1 && h1.scrollWidth > h1.clientWidth + 1) problemas.push('título cortado')
+    // la línea de hora tiene que verse completa, con su botón
+    const linea = document.querySelector('.sesion-linea')
+    if (linea && linea.scrollHeight > linea.clientHeight + 1) problemas.push('línea de hora cortada')
     return problemas
   }, SELECTORES)
   expect(r, `${nombre}: ${r.join('; ')}`).toEqual([])
@@ -65,16 +69,27 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
         document.addEventListener('DOMContentLoaded', () => { const st = document.createElement('style'); st.textContent = `html { --safe-top: ${top}px !important; --safe-bottom: ${bottom}px !important }`; document.head.appendChild(st) })
       }, { top: d.top, bottom: d.bottom })
     }
-    await page.goto('?seed=1')
+    await reloj(page)
+    await page.goto('?seed=1&fresco=1')
     await page.waitForTimeout(800)
     await page.evaluate(() => localStorage.removeItem('gym-app:sesion-activa'))
     await page.goto('')
-    // una B hoy para que toque A y salga el nombre más largo (A1) con aviso de subir peso
-    await page.getByRole('button', { name: 'Historial' }).click()
-    await page.getByRole('button', { name: /Fui este día/ }).click()
-    await page.getByLabel('Qué hice').selectOption('B')
-    await page.getByRole('button', { name: 'Guardar' }).click()
-    await page.getByRole('button', { name: 'Hoy' }).click()
+    // "Pon al día tu semana" y la pregunta por un día
+    await expect(page.getByText('Pon al día tu semana')).toBeVisible()
+    await page.waitForTimeout(500)
+    await revisar(page, 'pon al día tu semana')
+    await page.getByRole('button', { name: 'Listo' }).click()
+    // de nuevo con el historial sembrado y el martes sin contestar: pregunta por el martes
+    await page.goto('?seed=1')
+    await page.waitForTimeout(800)
+    await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('gym-app:settings')); s.noFui = []; localStorage.setItem('gym-app:settings', JSON.stringify(s)) })
+    await page.goto('')
+    await expect(page.getByText(/¿Entrenaste el/)).toBeVisible()
+    await page.waitForTimeout(500)
+    await revisar(page, 'pregunta por un día')
+    await page.getByRole('button', { name: 'No fui' }).click()
+    // una B hoy para que toque A y salga el jalón con aviso
+    await registrar(page, null, 'B')
     await expect(page.locator('h1')).toContainText('A:')
     await page.waitForTimeout(500)
     await revisar(page, 'inicio')
@@ -86,8 +101,9 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await page.waitForTimeout(600)
     await revisar(page, 'calentamiento corriendo')
     await page.getByRole('button', { name: 'Ya terminé' }).click()
-    await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Press inclinado con mancuernas')
+    await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Jalón al pecho, agarre ancho')
     await expect(page.locator('.sesion-aviso')).toBeVisible()
+    await expect(page.locator('.sesion-linea')).toContainText('Cambiar a corta')
     await page.waitForTimeout(700)
     if (instalada && d.h >= 800) expect(await page.locator('.sesion-foto img').first().boundingBox().then((b) => b?.height ?? 0)).toBeGreaterThan(100)
     await revisar(page, 'serie 1')
@@ -99,30 +115,28 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await expect(page.getByText(/Serie 2 de/)).toBeVisible()
     await page.waitForTimeout(700)
     await revisar(page, 'serie 2')
-    // jalón con la alternativa de nombre más largo
-    await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
-    await page.getByText('Saltar ejercicio', { exact: true }).click()
-    await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Jalón al pecho en polea')
+    // la alternativa de nombre más largo
     await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
     await page.getByText('Cambiar por alternativa', { exact: true }).click()
-    await page.locator('.hoja-fondo.abierta').getByRole('button', { name: 'Dominadas asistidas en máquina o con liga' }).click()
-    await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Dominadas asistidas en máquina o con liga')
+    await page.locator('.hoja-fondo.abierta').getByRole('button', { name: 'Remo a una mano con mancuerna, jalando hacia la cadera' }).click()
+    await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Remo a una mano con mancuerna, jalando hacia la cadera')
     await page.waitForTimeout(700)
     await revisar(page, 'alternativa con nombre largo')
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       await page.getByRole('button', { name: 'Serie hecha' }).click()
       await expect(page.locator('h1', { hasText: 'Descanso' })).toBeVisible()
       await page.getByRole('button', { name: 'Saltar' }).click()
       await expect(page.locator('h1', { hasText: 'Descanso' })).toHaveCount(0)
     }
-    await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Press militar sentado con mancuernas')
+    await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Remo sentado en máquina')
     await page.waitForTimeout(700)
-    await revisar(page, 'tercer ejercicio')
+    await revisar(page, 'segundo ejercicio')
     await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
     await page.getByText('Ejercicio anterior', { exact: true }).click()
     await expect(page.getByRole('button', { name: 'Siguiente ejercicio' })).toBeVisible()
     await page.waitForTimeout(700)
     await revisar(page, 'ejercicio completo con Siguiente ejercicio')
+    await page.getByRole('button', { name: 'Siguiente ejercicio' }).click()
     await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
     await page.getByText('Terminar sesión', { exact: true }).click()
     await expect(page.getByText('Listo.')).toBeVisible()

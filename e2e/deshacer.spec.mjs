@@ -1,17 +1,10 @@
 import { test, expect } from '@playwright/test'
+import { limpiar, empezarSesion } from './comun.mjs'
 
-async function aSerie(page) {
-  await page.goto('?seed=0')
-  await page.waitForTimeout(600)
-  await page.evaluate(() => localStorage.clear())
-  await page.goto('')
-  await page.getByRole('button', { name: /^Empezar/ }).click()
-  await page.getByRole('button', { name: 'Saltar' }).click()
-  await expect(page.getByText(/Serie 1 de/)).toBeVisible()
-}
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (d) => d.accept())
-  await aSerie(page)
+  await limpiar(page)
+  await empezarSesion(page)
 })
 
 test('deshacer serie hecha regresa con los mismos valores', async ({ page }) => {
@@ -77,11 +70,13 @@ test('editar y borrar una sesión pasada desde Historial', async ({ page }) => {
   await page.getByRole('button', { name: 'Cerrar' }).click()
   await page.getByRole('button', { name: 'Historial' }).click()
   await page.locator('.lista .fila').first().click()
-  await page.locator('.hoja-fondo.abierta .fila').first().click()
+  await page.locator('.hoja-fondo.abierta .fila', { hasText: /, A parcial/ }).first().click()
   const reps = page.locator('.hoja-fondo.abierta').getByLabel('Reps').first()
   await reps.fill('9')
   await reps.blur()
   await page.waitForTimeout(400)
   await page.getByRole('button', { name: 'Borrar sesión' }).click()
-  await expect(page.getByText('Todavía no hay señal', { exact: false })).toBeVisible()
+  await expect(page.locator('.hoja-fondo.abierta')).toHaveCount(0)
+  // queda solo la Frida de la semana
+  await expect(page.locator('.t-listo.num')).toHaveText('1')
 })

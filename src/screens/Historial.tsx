@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import type { Sesion } from '../data/tipos'
+import type { Sesion, SesionTipo } from '../data/tipos'
 import { usePantalla } from '../design/pantallaActiva'
 import { semanasHistorial, tocaPesarse, tocaFoto, promedioSemanal, type SemanaHistorial } from '../logic/progreso'
 import { claveFecha, fechaCorta, DIAS_NOMBRE, desdeClave, sumarDias, inicioSemana } from '../logic/fechas'
-import { ejerciciosDe } from '../data/ejercicios'
-import { Grupo, Fila, Hoja, BotonTexto, Pez } from '../components/fm'
+import { Grupo, Fila, Hoja, BotonTexto, Pez, Deshacer } from '../components/fm'
+import { RegistrarHoja, textoDia } from '../components/Registrar'
 import { SerieEditable } from './Sesion'
 import { Linea } from '../components/Linea'
 import { haptico } from '../lib/haptics'
@@ -23,8 +23,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
   const [fotos, setFotos] = useState(false)
   const [cinturaAbierta, setCinturaAbierta] = useState(false)
   const [agregar, setAgregar] = useState(false)
-  const [fechaNueva, setFechaNueva] = useState(() => claveFecha(ahora))
-  const [tipoNuevo, setTipoNuevo] = useState<'A' | 'B' | 'FRIDA' | 'CASA'>('A')
+  const [accion, setAccion] = useState<{ texto: string; deshacer: () => void | Promise<void> } | null>(null)
   const hayAlgo = datos.sesiones.some((s) => s.terminada)
   return (
     <div className="pantalla con-barra">
@@ -54,7 +53,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
         </>
       )}
       <Grupo titulo="Se me olvidó registrar">
-        <Fila texto="Fui este día" detalle="Agrega una sesión con fecha y qué hiciste" onClick={() => setAgregar(true)} />
+        <Fila texto="Registrar sesión" detalle="Una sesión hecha sin la app, con fecha y qué hiciste" onClick={() => setAgregar(true)} />
       </Grupo>
       <Grupo titulo="Cuerpo">
         <Fila texto="Peso corporal" dato={datos.peso.length ? `${datos.peso[datos.peso.length - 1].kg} kg` : 'Sin registro'} onClick={() => setPeso(true)} />
@@ -66,33 +65,16 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
         {semana && (semana.sesiones.length === 0 ? <p className="t-cuerpo tenue">Sin sesiones esa semana.</p> : (
           <Grupo>
             {semana.sesiones.map((s) => (
-              <Fila key={s.id} texto={`${DIAS_NOMBRE[desdeClave(s.fecha).getDay()]} ${desdeClave(s.fecha).getDate()}, ${s.tipo === 'FRIDA' ? 'lunes con Frida' : s.tipo === 'CASA' ? 'casa' : `${s.tipo} ${s.ligera ? 'ligera' : s.version}`}`} dato={s.fin ? `${Math.max(1, Math.round((s.fin - s.inicio) / 60000))} min` : ''} onClick={s.tipo === 'FRIDA' ? undefined : () => setSesion(s)} />
+              <Fila key={s.id} texto={`${textoDia(s.fecha)}, ${etiquetaDe(s)}`} dato={s.origen === 'registro' || s.como === 'registrada' ? 'registrada' : s.fin ? `${Math.max(1, Math.round((s.fin - s.inicio) / 60000))} min` : ''} onClick={() => setSesion(s)} />
             ))}
           </Grupo>
         ))}
       </Hoja>
-      <Hoja abierta={sesion !== null} altura="completa" titulo={sesion ? `${sesion.tipo}, ${fechaCorta(sesion.fecha)}` : ''} onCerrar={() => setSesion(null)}>
-        {sesion && <DetalleSesion datos={datos} sesion={sesion} onBorrada={() => { setSesion(null); setSemana(null) }} />}
+      <Hoja abierta={sesion !== null} altura="completa" titulo={sesion ? `${sesion.tipo === 'FRIDA' ? 'Frida' : sesion.tipo}, ${fechaCorta(sesion.fecha)}` : ''} onCerrar={() => setSesion(null)}>
+        {sesion && <DetalleSesion datos={datos} sesion={datos.sesiones.find((s) => s.id === sesion.id) ?? sesion} onBorrada={() => { setSesion(null); setSemana(null) }} />}
       </Hoja>
-      <Hoja abierta={agregar} titulo="Fui este día" onCerrar={() => setAgregar(false)}>
-        <Grupo>
-          <Fila texto="Fecha"><input type="date" value={fechaNueva} max={claveFecha(ahora)} onChange={(e) => setFechaNueva(e.target.value)} aria-label="Fecha" /></Fila>
-          <Fila texto="Qué hice">
-            <select value={tipoNuevo} onChange={(e) => setTipoNuevo(e.target.value as 'A' | 'B' | 'FRIDA' | 'CASA')} aria-label="Qué hice">
-              <option value="A">Cuerpo completo A</option>
-              <option value="B">Cuerpo completo B</option>
-              <option value="FRIDA">Lunes con Frida</option>
-              <option value="CASA">Casa</option>
-            </select>
-          </Fila>
-        </Grupo>
-        <BotonTexto onClick={async () => {
-          if (!fechaNueva) return
-          const inicio = new Date(fechaNueva + 'T19:30:00').getTime()
-          await datos.guardarSesion({ id: `manual-${fechaNueva}-${tipoNuevo}-${inicio}`, fecha: fechaNueva, tipo: tipoNuevo, version: 'completa', inicio, fin: inicio + 60 * 60000, terminada: true, cambios: [] })
-          setAgregar(false)
-        }}>Guardar</BotonTexto>
-      </Hoja>
+      <RegistrarHoja datos={datos} ahora={ahora} abierta={agregar} onCerrar={() => setAgregar(false)} onGuardado={(s, reemplazada) => setAccion({ texto: `${textoDia(s.fecha)}: ${etiquetaDe(s)} registrada.`, deshacer: async () => { if (reemplazada) await datos.guardarSesion(reemplazada); else await datos.borrarSesion(s.id) } })} />
+      {accion && <Deshacer texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={() => setAccion(null)} />}
       <PesoHoja datos={datos} ahora={ahora} abierta={peso} onCerrar={() => setPeso(false)} />
       <FotosHoja datos={datos} ahora={ahora} abierta={fotos} onCerrar={() => setFotos(false)} />
       <CinturaHoja datos={datos} ahora={ahora} abierta={cinturaAbierta} onCerrar={() => setCinturaAbierta(false)} />
@@ -100,13 +82,27 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
   )
 }
 
+/** "A completa", "B corta", "A parcial", "A registrada", "Frida", "casa" */
+function etiquetaDe(s: Sesion): string {
+  if (s.tipo === 'FRIDA') return 'Frida'
+  if (s.tipo === 'CASA') return 'casa'
+  return `${s.tipo} ${s.ligera ? 'ligera' : s.como ?? (s.origen === 'registro' ? 'registrada' : s.version)}`
+}
+
 function DetalleSesion({ datos, sesion, onBorrada }: { datos: Datos; sesion: Sesion; onBorrada: () => void }) {
   const propios = datos.sets.filter((s) => s.sessionId === sesion.id)
-  const orden = ejerciciosDe(sesion.tipo as 'A' | 'B' | 'CASA').map((e) => e.id)
-  const ordenados = [...propios].sort((a, b) => orden.indexOf(a.exerciseId.split('-')[0]) - orden.indexOf(b.exerciseId.split('-')[0]) || a.numSerie - b.numSerie)
+  const ordenados = [...propios].sort((a, b) => a.hora - b.hora)
+  const como = sesion.como === 'registrada' || sesion.origen === 'registro' ? 'Registrada sin la app' : sesion.como === 'parcial' ? 'Parcial: se cerró con pocas series' : sesion.como === 'corta' ? 'Corta' : sesion.como === 'completa' ? 'Completa' : sesion.terminada ? 'Hecha con la app' : 'Abierta'
   return (
     <>
-      {ordenados.length === 0 ? <p className="t-cuerpo tenue">Sin series registradas. Toca los valores para editar.</p> : (
+      <Grupo>
+        <Fila texto="Qué hice" detalle={como}>
+          <select value={sesion.tipo} onChange={(e) => datos.guardarSesion({ ...sesion, tipo: e.target.value as SesionTipo })} aria-label="Qué hice">
+            <option value="A">A</option><option value="B">B</option><option value="FRIDA">Frida</option><option value="CASA">Casa</option>
+          </select>
+        </Fila>
+      </Grupo>
+      {ordenados.length === 0 ? <p className="t-cuerpo tenue">Sin series registradas.</p> : (
         <Grupo>{ordenados.map((s) => <SerieEditable key={s.id} set={s} datos={datos} />)}</Grupo>
       )}
       <BotonTexto onClick={async () => { if (!confirm('¿Borrar esta sesión y sus series?')) return; await datos.borrarSesion(sesion.id); onBorrada() }}>Borrar sesión</BotonTexto>

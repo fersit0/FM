@@ -6,9 +6,9 @@ import { ejerciciosDe } from '../data/ejercicios'
 export type Unidad = 'kg' | 'lb'
 const LB = 0.45359237
 
-/** Paso real de cada unidad cuando no se conoce el ejercicio: 5 lb, 2.5 kg */
+/** Paso real de cada unidad: 5 lb; en kg (CASA) de 1 en 1 */
 export function pasoPorDefecto(unidad: Unidad): number {
-  return unidad === 'lb' ? 5 : 2.5
+  return unidad === 'lb' ? 5 : 1
 }
 export function redondearAPaso(valor: number, paso: number): number {
   return Math.round(Math.round(valor / paso) * paso * 100) / 100
@@ -33,10 +33,9 @@ export function unidadPorDefecto(item: Ejercicio | Alternativa): Unidad {
 export function unidadDe(item: Ejercicio | Alternativa, unidades?: Record<string, Unidad>): Unidad {
   return unidades?.[item.id] ?? unidadPorDefecto(item)
 }
-/** Paso del ejercicio: lb de 5 en 5, kg de 2.5, laterales en kg de 1 */
-export function incrementoDe(item: Ejercicio | Alternativa, unidad: Unidad): number {
-  if (unidad === 'lb') return 5
-  return ['laterales', 'laterales-sentado', 'laterales-casa'].includes(item.id) ? 1 : 2.5
+/** Paso del ejercicio: lb de 5 en 5, kg de 1 en 1 (RUTINA-FINAL.md, 10) */
+export function incrementoDe(_item: Ejercicio | Alternativa, unidad: Unidad): number {
+  return unidad === 'lb' ? 5 : 1
 }
 
 /** Peso de un set en la unidad pedida: exacto si se registró en esa unidad, si no convertido y redondeado al paso */
@@ -49,16 +48,13 @@ export function pesoDeSet(s: SetLog, unidad: Unidad, paso = pasoPorDefecto(unida
 
 /** Pesos iniciales sin historial (RUTINA-FINAL.md, 10). Gym en lb, mancuernas por mano; CASA en kg. */
 const INICIAL_LB: Record<string, number> = {
-  'press-inclinado': 30, jalon: 90, 'press-militar': 25, laterales: 10, goblet: 45, 'curl-z': 45, 'triceps-polea': 50,
-  'press-plano': 35, 'remo-polea': 90, 'remo-mancuerna': 45, 'remo-pecho-apoyado': 15, 'curl-martillo': 20,
-  'press-inclinado-maquina': 45, 'press-piso': 30, 'dominadas-asistidas': 90, 'press-militar-pie': 20, 'press-hombro-maquina': 45, 'press-militar-neutro': 25,
-  'laterales-sentado': 10, 'laterales-polea': 10, 'sentadilla-mancuernas': 25, 'curl-alternado': 20, 'curl-polea': 35, 'triceps-cabeza': 25,
-  'press-pecho-maquina': 45, 'remo-pecho-maquina': 55, 'remo-polea-una-mano': 35, 'remo-alto-maquina': 55, 'curl-cuerda': 35,
+  jalon: 90, 'remo-polea': 90, 'press-inclinado': 30, 'press-militar': 25, 'triceps-cabeza': 20, laterales: 10, 'curl-alternado': 20,
+  'press-plano': 35, 'aperturas-mancuernas': 15, 'remo-pecho-apoyado': 15, 'jalon-cerrado': 80, 'triceps-polea': 40, 'curl-martillo': 20,
+  goblet: 45, 'sentadilla-mancuernas': 25, 'triceps-patada': 10, 'remo-mancuerna': 45, 'press-piso': 30, 'press-militar-pie': 20, 'laterales-sentado': 10,
 }
 const INICIAL_KG: Record<string, number> = { 'laterales-casa': 4, 'remo-mancuerna-casa': 12 }
-/** Peso inicial sin historial, en la rejilla del ejercicio. Prensa no lleva sugerencia: la ficha explica el tanteo. */
+/** Peso inicial sin historial, en la rejilla del ejercicio (RUTINA-FINAL.md, 10) */
 export function pesoInicial(item: Ejercicio | Alternativa, unidad: Unidad): number {
-  if (item.id === 'prensa' || item.id === 'prensa-corta') return 0
   const inc = incrementoDe(item, unidad)
   let v: number
   if (INICIAL_LB[item.id] !== undefined) v = convertir(INICIAL_LB[item.id], 'lb', unidad, inc)

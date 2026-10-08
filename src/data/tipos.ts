@@ -3,6 +3,10 @@
 export type SesionTipo = 'A' | 'B' | 'FRIDA' | 'CASA'
 export type Version = 'completa' | 'corta' | 'bonus'
 export type Letra = 'A' | 'B' | 'CASA'
+/** Zonas del Club Britania (RUTINA-FINAL.md, 3) */
+export type Zona = 'bancos' | 'poleas' | 'terraza'
+/** Cómo quedó una sesión: completa, corta, parcial (se cerró sola con pocas series) o registrada sin detalle */
+export type Como = 'completa' | 'corta' | 'parcial' | 'registrada'
 
 /** Cómo se cuenta una serie: reps con peso, segundos sostenidos, o al tope con peso corporal */
 export type Modo = 'peso' | 'tiempo' | 'corporal'
@@ -35,6 +39,10 @@ export interface Ejercicio extends Detalle {
   nombre: string
   sesion: Letra
   orden: number
+  /** zona del gym donde se hace (CASA no tiene) */
+  zona?: Zona
+  /** solo entra cuando toca pierna en A o B (semana sin Frida) */
+  pierna?: boolean
   series: number
   repsMin: number
   repsMax: number
@@ -60,6 +68,18 @@ export interface Sesion {
   cambios?: { ejercicioId: string; alternativaId: string }[]
   /** Semana ligera: 2 series por ejercicio con el mismo peso */
   ligera?: boolean
+  /** esta sesión trajo goblet a 3 series (semana sin Frida) */
+  pierna?: boolean
+  /** cómo quedó (RUTINA-FINAL.md, 2): se calcula al cerrar; las registradas sin la app son 'registrada' */
+  como?: Como
+  /** 'app' si se hizo con la app; 'registro' si se registró después (Historial, pregunta de Hoy o carga inicial) */
+  origen?: 'app' | 'registro'
+  /** orden actual de los ejercicios (ids base); cambia con "Ocupado: después". Sin él, el de la rutina. */
+  orden?: string[]
+  /** ids que ya se mandaron al final una vez: la segunda vez se ofrece la alternativa */
+  pospuestos?: string[]
+  /** ids quitados por el recorte en el camino (RUTINA-FINAL.md, 3) */
+  recortados?: string[]
 }
 
 export interface SetLog {
@@ -101,17 +121,13 @@ export interface FotoEjercicio {
 }
 
 export interface Settings {
+  /** última pesa (HH:MM): la versión se decide con la duración estimada contra esta hora */
   horaTope: string
-  horaCompleta: string
-  horaCorta: string
   minCarretera: number
   minCasaClub: number
   /** 0 = domingo ... 6 = sábado */
   diaPesaje: number
-  seriesExtra: boolean
   tema: 'oscuro' | 'claro'
-  /** cuántas semanas cumplidas había cuando se pospuso la regla de 4 semanas */
-  reglaPospuestaEn?: number
   /** "Salgo de la oficina a las" (HH:MM) o vacío */
   horaSalida?: string
   /** alternativas que sustituyen a un ejercicio en la rutina ("Usar siempre esta") */
@@ -124,6 +140,14 @@ export interface Settings {
   idsDesconocidos?: string[]
   /** último respaldo exportado o importado (YYYY-MM-DD): se recuerda cada 2 semanas */
   ultimoRespaldo?: string
+  /** día de Frida por semana (clave = lunes YYYY-MM-DD): fecha planeada, o null si esa semana no hay; sin entrada = lunes */
+  fridaPlan?: Record<string, string | null>
+  /** días de gym contestados con "No fui" (YYYY-MM-DD), para preguntar una sola vez */
+  noFui?: string[]
+  /** la A del 7 oct 2026 ya se cargó (RUTINA-FINAL.md, 2.8) */
+  cargaInicialV5?: boolean
+  /** "Pon al día tu semana" ya se mostró (RUTINA-FINAL.md, 2.5) */
+  semanaAlDiaV5?: boolean
 }
 
 export interface Cintura {
@@ -133,11 +157,8 @@ export interface Cintura {
 
 export const SETTINGS_DEFAULT: Settings = {
   horaTope: '21:10',
-  horaCompleta: '20:05',
-  horaCorta: '20:25',
   minCarretera: 60,
   minCasaClub: 30,
   diaPesaje: 0,
-  seriesExtra: false,
   tema: 'oscuro',
 }
