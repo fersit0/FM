@@ -1,281 +1,263 @@
-# RUTINA-FINAL.md · versión 3 (7 oct 2026)
+# RUTINA-FINAL.md · versión 5 (7 oct 2026, noche)
 
-Para Claude Code. Este archivo es la única fuente de verdad de la rutina de FM y lo autoriza Fer. Sustituye completas a las versiones anteriores (29 sep y versión 2 del 7 oct) y a cualquier mensaje suelto sobre la pierna con Frida. Donde choque con BRIEF.md, NOTAS o cualquier otra cosa en el repo, manda este archivo. En CLAUDE.md debe seguir la línea: "La rutina, los ejercicios, las alternativas y las fotos salen de RUTINA-FINAL.md".
+Para Claude Code. Este archivo es la única fuente de verdad de la rutina de FM y lo autoriza Fer. Sustituye completas a todas las versiones anteriores (29 sep y versiones 2, 3 y 4 del 7 oct). Fer probó la A el 7 oct y describió su gym; esta versión sale de eso. Donde choque con BRIEF.md, NOTAS o cualquier otra cosa en el repo, manda este archivo. En CLAUDE.md debe seguir la línea: "La rutina, los ejercicios, las alternativas y las fotos salen de RUTINA-FINAL.md".
 
 ## 0. Prompt para pegarle a Code
 
 ```
-Lee RUTINA-FINAL.md (versión 3) en la raíz del proyecto; si ahí hay otra versión, reemplázala por esta. Es la única fuente de verdad y manda sobre la versión 2 y sobre cualquier mensaje mío anterior de la pierna con Frida. Aplica lo de la sección 1. Lo que ya esté hecho no lo rehagas, y la migración de la sección 9 no se toca. Orden: 1) pierna con día de Frida y bloques en par, en src/logic con pruebas; 2) sesiones A y B con sus alternativas; 3) unidades en lb; 4) fotos y fichas nuevas; 5) versión corta; 6) lo que falte de la sección 15. Respeta el spec de diseño del repo. Rama nueva, commits chicos y sin push hasta que te diga. Al final dime qué cambió, qué de la sección 15 ya estaba y qué hiciste, cuánto dura cada sesión según tu cálculo, y enséñame capturas a 390 px de Hoy, sesión A, sesión B, una tarjeta de par y la ficha de aperturas-maquina.
+Lee RUTINA-FINAL.md (versión 5) en la raíz del proyecto; reemplaza a cualquier versión anterior (3 o 4). Probé la A en el gym y cambié cosas: series seguidas en vez de pares, ejercicios agrupados por zona de mi gym, alternativas sencillas, versión corta automática según la hora y un registro de sesiones que no dependa de que me acuerde. Si ya implementaste la v3 o la v4, ajústala a esta en vez de empezar de cero; lo que no cambia (pierna con día de Frida, lb, fotos, sección 15) se queda. Orden: 1) registro de sesiones de la sección 2, con la A del 7 oct ya cargada, en src/logic con pruebas; 2) sesiones A y B sin pares, por zona, con sus alternativas; 3) versión automática y recorte, en src/logic con pruebas; 4) botón "Ocupado: después"; 5) fotos y fichas nuevas; 6) lo que falte de la sección 15. Commits chicos en una rama y sin push hasta que te diga. Al final dime qué cambió, cuánto dura cada sesión según tu cálculo, y enséñame capturas a 390 px de Hoy, la pantalla "Pon al día tu semana", sesión A, sesión B, la versión corta y la ficha de tríceps con cuerda.
 ```
 
-## 1. Qué cambia contra lo que hay en la app
+## 1. Qué cambia contra la versión 3
 
-- **Pierna una vez por semana, con día de Frida movible.** El día de pierna es el día `FRIDA`: lunes por defecto, y se puede mover o cancelar desde Hoy. Mientras la semana tenga Frida hecha o planeada, A y B no traen pierna. Si la semana se queda sin Frida, solo la siguiente sesión completa trae pierna a 3 series (sección 2).
-- **Sin redundancias dentro de una sesión.** Cada sesión tiene un jalón y un remo distintos. `remo-mancuerna` sale de B y queda como alternativa; `remo-pecho-apoyado` pasa a A.
-- **Entran `aperturas-maquina` y `jalon-cerrado` en B**: forma del pecho, y dorsal dos veces por semana con otro agarre.
-- **`triceps-cabeza` pasa a ejercicio principal en B**; en A sigue `triceps-polea`.
-- **Bloques en par** (sección 3). Ahorran unos 8 minutos por sesión.
-- **Cardio:** 5 min al abrir y 10 al cerrar; 20 solo en bonus; 5 si la sesión trae pierna.
-- **Versión corta nueva** (sección 3).
-- **Todo lo del gym en lb**, mancuernas y barras incluidas, porque en el club casi todo está en lb. Solo CASA sigue en kg (sección 10).
-- **Técnica que coincide con la foto:** `remo-pecho-apoyado` ahora va con codos a unos 45° y `jalon-cerrado` con la barra larga al ancho de los hombros (sección 8).
-- **Fichas nuevas en el formato de FICHAS.md** (sección 11).
+- **Sin pares.** Todas las series de un ejercicio seguidas, con su descanso, y luego el siguiente. Se quitan los bloques en par de la lógica, la pantalla y las pruebas.
+- **Por zona del gym** (sección 3): bancos, poleas y terraza. Cada sesión recorre las zonas en orden y visita cada una una sola vez. Cada ejercicio muestra su zona.
+- **Solo equipo que Fer ubica y sabe usar:** bancos planos y reclinables, mancuernas, la máquina de jalón al pecho, la máquina de remo sentado, la polea de pie con cuerda para tríceps, colchonetas y el saco. Salen el pec deck, la prensa y todas las alternativas "en máquina".
+- **Cambios de ejercicio:** curl con barra Z → curl con mancuernas (`curl-alternado`). Tríceps en polea alta → tríceps con cuerda en la polea de pie (`triceps-polea`, misma historia, foto y ficha nuevas). Plancha → crunch en colchoneta (`crunch`). `remo-polea` pasa a A, `remo-pecho-apoyado` a B y `triceps-cabeza` a A. `jalon-cerrado` sube a 3 series. Aperturas con mancuernas en lugar de máquina.
+- **Alternativas sencillas** (sección 7): solo mancuernas, banco, colchoneta o el cuerpo. Antes de cambiar de ejercicio, "Ocupado: después".
+- **Versión automática:** la app decide completa o corta con la hora real al empezar, y recorta si se atrasa (sección 3).
+- **Registro de sesiones a prueba de olvidos** (sección 2): la que sigue se calcula del historial, la sesión se cierra sola, la app pregunta por los días sin registro y se puede registrar una sesión hecha sin la app.
+- **Duración:** alrededor de una hora con calentamiento y cierre. Sale la regla de 4 semanas.
 
-## 2. Semana
+## 2. Semana y registro de sesiones
 
 | Día | Qué toca |
 |---|---|
 | Lunes | `FRIDA`: pierna en Foro 4 (el Club Britania cierra los lunes). Es el día planeado por defecto y se puede mover. |
-| Martes a jueves | A o B, la que siga. La alternancia ignora `FRIDA` y `CASA`. |
+| Martes a jueves | A o B, la que siga. |
 | Viernes y sábado | Sin gym. No bloquees si Fer registra algo. |
 | Domingo | Rescate antes de las 3 pm si el jueves en la noche iba en menos de 3. |
 
 - Meta: 3 sesiones por semana, de lunes a domingo. Cuentan `FRIDA`, A y B.
 - Bonus: con 3 hechas, una cuarta opcional: la que sigue, con cierre de 20 min.
-- `CASA`: máximo 2 por semana, no cuenta para la meta y no mueve la alternancia. Se ofrece cuando el horario ya no alcanza o en días sin gym. Muestra "llevas X de 2".
+- `CASA`: máximo 2 por semana, no cuenta para la meta y no cambia la que sigue. Se ofrece cuando la hora ya no alcanza o en días sin gym. Muestra "llevas X de 2".
 
-**Pierna con Frida** (en `src/logic`, con pruebas):
+**Registro de sesiones** (en `src/logic`, con pruebas). Tiene que funcionar aunque Fer se olvide de abrir la app, de terminar la sesión o de registrar.
+
+1. **Una sola lista de sesiones** con fecha, tipo (A, B, `FRIDA`, `CASA`), cómo quedó (completa, corta, parcial o registrada sin detalle) y si vino de la app o se registró después. Todo lo demás se calcula de esa lista; no hay contadores guardados aparte.
+2. **La que sigue se calcula siempre del historial:** es la contraria de la A o B más reciente por fecha; si no hay ninguna, A. `FRIDA` y `CASA` no la cambian. Si Fer edita o borra una sesión, la que sigue se recalcula sola.
+3. **La sesión se cierra sola.** No hace falta tocar "Terminar": una sesión con al menos una serie registrada cuenta como hecha. Se cierra al final del día o al empezar otra, y queda como completa si se hizo la mayoría de las series, o como parcial si no. Las dos cuentan para la meta.
+4. **Días sin registro.** Al abrir la app, si desde la última sesión registrada pasó un día de gym (lunes a jueves, o domingo de rescate) sin nada, Hoy pregunta una sola vez por cada día, antes de armar la sesión: "¿Entrenaste el martes 6?" con botones "A", "B", "Frida" y "No fui", con la que tocaba ya marcada. Un toque y listo. Lo que conteste se puede cambiar en Historial.
+5. **Pon al día tu semana.** La primera vez que abra esta versión, en lugar de preguntar día por día, una pantalla con los días de esta semana hasta hoy y los mismos botones por día. El miércoles 7 oct ya aparece como A (sección 2, punto 8).
+6. **Registrar una sesión hecha sin la app:** en Hoy y en Historial, "Registrar sesión" con fecha (hoy por defecto, nunca en el futuro) y tipo. Máximo una A o B por día: si ese día ya tiene una, ofrece cambiarla en vez de duplicarla.
+7. **Sin diálogos de confirmación:** cada registro muestra "Deshacer" unos segundos. Todo se puede editar o borrar en Historial.
+8. **Carga inicial:** al instalar esta versión, si no hay ninguna sesión el 7 oct 2026, se agrega una A registrada después (Fer la hizo sin la app). Así hoy le toca B.
+9. **En Hoy, arriba y en una línea:** "Hoy toca B · la última fue A el miércoles 7" y "Semana: 2 de 3".
+
+**Pierna con Frida** (sin cambios contra la v3, en `src/logic` con pruebas):
 
 1. Cada semana tiene un día de Frida planeado: el lunes, salvo que Fer lo mueva. En Hoy, "Mover pierna con Frida" deja elegir otro día de esa semana o "Esta semana no hay".
-2. El día planeado, Hoy muestra `FRIDA` en lugar de A o B, con "Sí, fui", "Se movió a…" y "No hubo".
-3. Si ese día pasa sin respuesta, la siguiente vez que Fer abra la app, Hoy pregunta "¿Fuiste con Frida el [día]?" con las mismas tres opciones antes de armar la sesión. "Sí, fui" registra `FRIDA` en ese día.
-4. Mientras la semana tenga `FRIDA` hecha o planeada a futuro, A y B no traen pierna. Nada la reemplaza; la sesión queda más corta.
-5. Si la semana se queda sin Frida ("Esta semana no hay" o "No hubo"), la siguiente sesión A o B completa agrega su pierna a 3 series como bloque 3 (`goblet` en A, `prensa` en B) y el cierre baja a 5 min. Solo una vez por semana. En corta nunca: pasa a la siguiente completa de esa semana. No se arrastra a la semana siguiente.
-6. Si ya hubo pierna en A o B y después se registra `FRIDA`, no se cambia nada; solo cuenta para la meta.
+2. El día planeado, Hoy muestra `FRIDA` en lugar de A o B, con "Sí, fui", "Se movió a…" y "No hubo". La pregunta de días sin registro (punto 4 de arriba) incluye a Frida.
+3. Mientras la semana tenga `FRIDA` hecha o planeada a futuro, A y B no traen pierna.
+4. Si la semana se queda sin Frida, la siguiente sesión A o B completa agrega `goblet` 3 × 10-12 al empezar la terraza y el cierre baja a 5 min. Solo una vez por semana; en corta nunca; no se arrastra a la semana siguiente.
+5. Si ya hubo pierna en A o B y después se registra `FRIDA`, no se cambia nada.
 
-## 3. Horario, versiones y bloques en par
+## 3. Zonas, horario y versiones
 
-- Sin cambios: última pesa 21:10; completa si entra a las 20:05 o antes; corta hasta las 20:25; después no hay gym y se ofrece `CASA`. "Salgo a las" suma 60 min de carretera y 30 de casa al club.
-- **Completa:** calentamiento 5 min de elíptica (si está ocupada, bici fija), todos los bloques, cierre de 10 min en elíptica o saco (5 si hubo pierna).
-- **Corta (unos 30 min):** calentamiento 4 min; solo los bloques 1, 2 y el par de laterales, cada uno a 2 series; cierre de 5 min. Cuenta como sesión.
-- **Bonus:** completa con cierre de 20 min.
-- **Serie de aproximación:** en el bloque 1, 10 repeticiones con la mitad del peso. No se registra.
+**Zonas del Club Britania** (lo que Fer conoce y usa):
+- **Bancos** (adentro): bancos planos y reclinables, y mancuernas.
+- **Poleas:** la máquina de jalón al pecho, la máquina de remo sentado y la polea de pie con cuerda para tríceps.
+- **Terraza:** mancuernas, colchonetas y el saco de box.
+
+Cada ejercicio lleva su zona. La sesión se recorre por zonas en orden y cada zona se visita una sola vez. Arriba de la sesión se ve el recorrido, por ejemplo "Poleas → Bancos → Terraza", y al terminar la última serie de una zona la app dice a cuál sigue.
+
+- **Series seguidas:** cada ejercicio se termina completo antes de pasar al siguiente. El descanso corre al tocar la serie.
+- **Completa:** calentamiento 5 min de elíptica (si está ocupada, bici fija), todos los ejercicios, cierre de 10 min en el saco de la terraza o en la elíptica (5 si hubo pierna).
+- **Corta (unos 30 min):** calentamiento 4 min; el jalón, el press principal (inclinado en A, plano en B) y laterales, 3 series cada uno, haciendo los laterales en la zona de bancos para no subir a la terraza; cierre de 5 min. Cuenta como sesión.
+- **Serie de aproximación:** en el primer ejercicio de la sesión y en el primer press, 10 repeticiones con la mitad del peso. No se registra.
 - **Esfuerzo:** 1 o 2 repeticiones en reserva.
-- **Par:** dos ejercicios que no compiten por el mismo músculo. Una serie del primero, 15 s para cambiarse, una serie del segundo, y entonces corre el descanso del bloque. Si uno tiene más series, las de más se hacen solas con el mismo descanso. En la sesión se ve como una sola tarjeta con los dos ejercicios, el que toca resaltado, y el cronómetro arranca solo después del segundo. Cada ejercicio conserva su registro, su sugerencia de peso y sus alternativas.
-- **Duración estimada** (se muestra en Hoy; Code la verifica con su cálculo): A ≈ 57 min y B ≈ 55 min con calentamiento, cierre, descansos completos y 1 min de transición entre bloques. Con pierna, unos 60.
+- **Versión automática** (en `src/logic`, con pruebas): al tocar "Empezar", la app toma la hora real y calcula con la duración estimada si las pesas de la completa terminan antes de las 21:10 (última pesa; a las 22:00 cierran el agua). Si sí, completa. Si no, y la corta sí alcanza, corta. Si ninguna alcanza, ofrece `CASA`. Con las duraciones de abajo queda: completa si empieza a las 20:15 o antes, corta hasta las 20:40, después `CASA`. Arriba de la sesión se ve en una línea, por ejemplo "Empezaste 8:22 · va la corta · terminas pesas 8:50", con un botón para cambiar a la otra versión.
+- **Recorte en el camino:** si a media sesión la hora proyectada de la última pesa pasa de 21:10, la app quita lo que falta en este orden: abdomen, brazos, press militar o aperturas, y avisa en una línea qué quitó. Nunca quita el press principal, el jalón, el remo ni los laterales.
+- **"Ocupado: después":** manda ese ejercicio al final de su zona; si la zona ya se terminó, al final de la sesión. Cuando le vuelve a tocar y sigue ocupado, ofrece su alternativa de la sección 7.
+- **Duración estimada** (se muestra en Hoy; Code la verifica con su cálculo de 40-45 s por serie, descansos completos, 1 min entre ejercicios y 2 min al cambiar de zona): A ≈ 59 min y B ≈ 57 min con calentamiento y cierre. Con pierna, unos 62.
 
-## 4. Sesión A: pecho alto, dorsal y hombro
+## 4. Sesión A: dorsal, pecho alto y hombro · Poleas → Bancos → Terraza
 
-| Bloque | id | Nombre | Series × reps | Descanso | Modo | Foto |
-|---|---|---|---|---|---|---|
-| 1 | `press-inclinado` | Press inclinado con mancuernas | 3 × 8-10 (4 con la regla de 4 semanas) | 90 s | peso, lb | Incline_Dumbbell_Press |
-| 2 | `jalon` | Jalón al pecho en polea, agarre ancho | 3 × 10-12 (4 con la regla) | 75 s | peso, lb | Wide-Grip_Lat_Pulldown |
-| 3* | `goblet` | Sentadilla goblet (solo si toca pierna) | 3 × 10-12 | 90 s | peso, lb | Goblet_Squat |
-| 4 | `press-militar` | Press militar sentado con mancuernas | 2 × 8-10 | 90 s | peso, lb | Dumbbell_Shoulder_Press |
-| 5 par | `laterales` | Elevaciones laterales | 3 × 12-20 | 60 s tras el par | peso, lb | Side_Lateral_Raise |
-| 5 par | `remo-pecho-apoyado` | Remo con pecho apoyado en banco inclinado | 3 × 12-15 | | peso, lb | Dumbbell_Incline_Row |
-| 6 par | `curl-z` | Curl con barra Z | 2 × 10-12 | 60 s tras el par | peso, lb | EZ-Bar_Curl |
-| 6 par | `triceps-polea` | Extensión de tríceps en polea alta | 2 × 10-12 | | peso, lb | Triceps_Pushdown |
-| 7 | `plancha` | Plancha | 3 × 45 s | 45 s | tiempo | Plank |
+| # | Zona | id | Nombre | Series × reps | Descanso | Modo | Foto |
+|---|---|---|---|---|---|---|---|
+| 1 | Poleas | `jalon` | Jalón al pecho, agarre ancho | 3 × 10-12 | 75 s | peso, lb | Wide-Grip_Lat_Pulldown |
+| 2 | Poleas | `remo-polea` | Remo sentado en máquina | 3 × 10-12 | 75 s | peso, lb | Seated_Cable_Rows |
+| 3 | Bancos | `press-inclinado` | Press inclinado con mancuernas | 3 × 8-10 | 90 s | peso, lb | Incline_Dumbbell_Press |
+| 4 | Bancos | `press-militar` | Press militar sentado con mancuernas | 2 × 8-10 | 90 s | peso, lb | Dumbbell_Shoulder_Press |
+| 5 | Bancos | `triceps-cabeza` | Tríceps con mancuerna sobre la cabeza, sentado | 2 × 10-12 | 60 s | peso, lb | Seated_Triceps_Press |
+| 6 | Terraza | `laterales` | Elevaciones laterales | 3 × 12-20 | 60 s | peso, lb | Side_Lateral_Raise |
+| 7 | Terraza | `curl-alternado` | Curl con mancuernas | 2 × 10-12 | 60 s | peso, lb | Dumbbell_Alternate_Bicep_Curl |
+| 8 | Terraza | `crunch` | Crunch en colchoneta | 2 × 15-20 | 45 s | corporal | Crunches |
 
-Notas para la tarjeta del par: el remo con pecho apoyado usa el banco inclinado del bloque 1 (a 30-45°); en el par 6, lleva la barra Z a la polea.
+Cierre en el saco, ahí mismo en la terraza. Notas: en bancos, un banco reclinable a 30° para el 3 y casi derecho para el 4 y el 5.
 
-## 5. Sesión B: pecho, espalda media y brazo
+## 5. Sesión B: pecho, espalda media y brazo · Bancos → Poleas → Terraza
 
-| Bloque | id | Nombre | Series × reps | Descanso | Modo | Foto |
-|---|---|---|---|---|---|---|
-| 1 | `press-plano` | Press plano con mancuernas | 3 × 8-10 (4 con la regla) | 90 s | peso, lb | Dumbbell_Bench_Press |
-| 2 | `remo-polea` | Remo sentado en polea baja | 3 × 10-12 (4 con la regla) | 75 s | peso, lb | Seated_Cable_Rows |
-| 3* | `prensa` | Prensa de pierna (solo si toca pierna) | 3 × 10-12 | 90 s | peso, lb | Leg_Press |
-| 4 par | `jalon-cerrado` | Jalón al pecho con agarre cerrado | 2 × 10-12 | 60 s tras el par | peso, lb | Close-Grip_Front_Lat_Pulldown |
-| 4 par | `laterales` | Elevaciones laterales (el mismo de A) | 3 × 12-20 | | peso, lb | Side_Lateral_Raise |
-| 5 | `aperturas-maquina` | Aperturas en máquina (pec deck) | 2 × 12-15 | 60 s | peso, lb | Butterfly, con las fotos volteadas (sección 8) |
-| 6 par | `curl-martillo` | Curl martillo | 2 × 10-12 | 60 s tras el par | peso, lb | Hammer_Curls |
-| 6 par | `triceps-cabeza` | Extensión de tríceps con mancuerna sobre la cabeza, sentado | 2 × 10-12 | | peso, lb | Seated_Triceps_Press |
-| 7 | `elevacion-piernas` | Elevación de piernas acostado en banco | 3 × 12 | 45 s | corporal | Flat_Bench_Lying_Leg_Raise |
+| # | Zona | id | Nombre | Series × reps | Descanso | Modo | Foto |
+|---|---|---|---|---|---|---|---|
+| 1 | Bancos | `press-plano` | Press plano con mancuernas | 3 × 8-10 | 90 s | peso, lb | Dumbbell_Bench_Press |
+| 2 | Bancos | `aperturas-mancuernas` | Aperturas con mancuernas en banco plano | 2 × 12-15 | 60 s | peso, lb | Dumbbell_Flyes |
+| 3 | Bancos | `remo-pecho-apoyado` | Remo con pecho apoyado en banco reclinable | 3 × 12-15 | 60 s | peso, lb | Dumbbell_Incline_Row |
+| 4 | Poleas | `jalon-cerrado` | Jalón al pecho, manos al ancho de los hombros | 3 × 10-12 | 75 s | peso, lb | Close-Grip_Front_Lat_Pulldown |
+| 5 | Poleas | `triceps-polea` | Tríceps con cuerda en la polea de pie | 2 × 10-12 | 60 s | peso, lb | Triceps_Pushdown_-_Rope_Attachment |
+| 6 | Terraza | `laterales` | Elevaciones laterales (el mismo de A) | 3 × 12-20 | 60 s | peso, lb | Side_Lateral_Raise |
+| 7 | Terraza | `curl-martillo` | Curl martillo | 2 × 10-12 | 60 s | peso, lb | Hammer_Curls |
+| 8 | Terraza | `elevacion-piernas` | Elevación de piernas en colchoneta | 3 × 12 | 45 s | corporal | Flat_Bench_Lying_Leg_Raise |
 
-Notas: si el jalón y el remo están en la misma máquina doble, quédate ahí; lleva las mancuernas de laterales. En el par 6 todo va sentado en el mismo banco con respaldo.
+Cierre en el saco. Notas: del 1 al 3 es el mismo banco (plano y luego reclinado a 30-45°). El jalón cerrado usa la misma máquina y la misma barra del jalón ancho, solo cambian las manos.
 
 ## 5b. Por qué así (para que Code no lo "optimice")
 
-Series duras por semana con A y B: pecho 8 (10 con la regla), espalda 11 (13), hombro lateral 6 (12 con dos CASA), hombro de enfrente 2 más todo el press, bíceps 4, tríceps 4, core 6, pierna con Frida o 3 series de mantenimiento. Prioridad de Fer: torso (pecho, dorsal, espalda alta, hombro lateral, core). Los brazos se mantienen y crecen con lo que hay. No agregues series ni ejercicios para "completar".
+Series duras por semana con A y B: pecho 8, espalda 12, hombro lateral 6 (12 con dos CASA), hombro de enfrente 2 más todo el press, bíceps 4, tríceps 4, abdomen 5, pierna con Frida o 3 series de goblet. Prioridad de Fer: torso (pecho, dorsal, espalda alta, hombro lateral, abdomen). En cada sesión hay un jalón y un remo, nunca dos remos. Los brazos van al final para no cansar el bíceps antes de jalar ni el tríceps antes de empujar. No agregues series ni ejercicios para "completar": cada sesión tiene que caber en una hora.
 
 ## 6. Sesión CASA: 12 minutos, opcional
 
-Sin cambios. Un minuto de descanso entre series. Ids propios. Es lo único en kg.
+Un minuto de descanso entre series. Es lo único en kg. La plancha cambia por crunch.
 
 | # | id | Nombre | Series × reps | Modo | Foto |
 |---|---|---|---|---|---|
 | 1 | `laterales-casa` | Laterales con mancuernas de 4 a 5 kg | 3 × 15-20 | peso, kg | Side_Lateral_Raise |
 | 2 | `lagartijas` | Lagartijas dejando 2 en reserva | 3 series al tope | corporal | Pushups |
-| 3 | `remo-liga` | Remo con liga anclada en la puerta | 2 × 12-15 | corporal | Seated_Cable_Rows como referencia, marcada así, hasta que Fer suba la suya |
-| 4 | `plancha-casa` | Plancha | 2 × 45 s | tiempo | Plank |
+| 3 | `remo-liga` | Remo con liga anclada en la puerta | 2 × 12-15 | corporal | Seated_Cable_Rows como referencia, marcada así |
+| 4 | `crunch` | Crunch | 2 × 15-20 | corporal | Crunches |
 
 ## 7. Alternativas
 
-Formato: id · nombre · caso · foto. Si una alternativa usa el id de otro ejercicio, comparte su historial. A Fer no le gustan los pájaros, los remos de pie ni los ejercicios raros o de técnica difícil: no agregues alternativas de ese tipo. Una alternativa se oculta si ese mismo id ya está en la sesión, como ejercicio o como alternativa elegida en otro bloque, para que nunca se repita un movimiento el mismo día. Al elegir una alternativa cambia todo a ella (sección 15).
+Reglas: primero "Ocupado: después". Las alternativas solo usan mancuernas, banco, colchoneta o el cuerpo, y se hacen en la misma zona o en la terraza; nunca "en máquina" a secas ni nada que obligue a buscar aditamentos o a preguntar. A Fer no le gustan los pájaros, los remos de pie ni los ejercicios raros o de técnica difícil. Una alternativa se oculta si su id ya está en la sesión. Si una alternativa usa el id de otro ejercicio, comparte su historial. Al elegirla cambia todo a ella (sección 15).
+
+**jalon** y **jalon-cerrado** (máquina de jalón)
+- `remo-mancuerna` · Remo a una mano con mancuerna, jalando hacia la cadera · Solo si la máquina sigue ocupada al final · One-Arm_Dumbbell_Row
+
+**remo-polea** (máquina de remo)
+- `remo-pecho-apoyado` · Remo con pecho apoyado en banco reclinable · Máquina ocupada · Dumbbell_Incline_Row
 
 **press-inclinado**
-- `press-inclinado-maquina` · Press inclinado en máquina · Banco ocupado o no hay inclinado · Leverage_Incline_Chest_Press
-- `lagartijas-pies-banco` · Lagartijas con los pies en el banco · Sin mancuernas ni máquina (3 series al tope dejando 2) · Push-Ups_With_Feet_Elevated
-- `press-piso` · Press en el piso con mancuernas · Molestia de hombro · Dumbbell_Floor_Press
-
-**jalon**
-- `dominadas-asistidas` · Dominadas asistidas en máquina o con liga · Polea ocupada (3 × 6-10) · Band_Assisted_Pull-Up. En la máquina asistida más peso es más ayuda: la sugerencia baja el contrapeso, no lo sube.
-- `remo-mancuerna` · Remo a una mano · Sin polea · One-Arm_Dumbbell_Row
-
-**goblet**
-- `prensa` · Prensa de pierna · Mancuerna pesada ocupada o prefieres máquina
-- `sentadilla-mancuernas` · Sentadilla con dos mancuernas · La mancuerna más pesada ya no alcanza · Dumbbell_Squat
-- `sentadilla-banco` · Conservar texto y foto actuales
+- `press-plano` · Press plano con mancuernas · No hay banco reclinable libre
+- `press-piso` · Press en el piso con mancuernas, en colchoneta · Bancos ocupados o molestia de hombro · Dumbbell_Floor_Press
 
 **press-militar**
-- `press-militar-pie` · Press militar de pie con mancuernas · No hay banco con respaldo · Standing_Dumbbell_Press
-- `press-hombro-maquina` · Press de hombro en máquina · Mancuernas ocupadas · Machine_Shoulder_Military_Press
-- `press-militar-neutro` · Press con agarre neutro · Molestia de hombro · Dumbbell_Shoulder_Press
+- `press-militar-pie` · Press militar de pie, mismas mancuernas · No hay banco con respaldo · Standing_Dumbbell_Press
+
+**triceps-cabeza**
+- `triceps-patada` · Patada de tríceps con mancuerna, apoyado en el banco · Molestia de codo u hombro con el brazo arriba · Tricep_Dumbbell_Kickback (fotos volteadas, sección 8)
 
 **laterales**
-- `laterales-sentado` · Laterales sentado · Si te balanceas · Seated_Side_Lateral_Raise
-- `laterales-polea` · Lateral en polea · Mancuernas ocupadas · Cable_Seated_Lateral_Raise
-- `laterales-liga` · Laterales con liga · Sin mancuernas · Lateral_Raise_-_With_Bands
+- `laterales-sentado` · Laterales sentado en la orilla de un banco · Si te balanceas · Seated_Side_Lateral_Raise
 
-**remo-pecho-apoyado**
-- `remo-pecho-maquina` · Remo en máquina con pecho apoyado · Banco inclinado ocupado · Leverage_Iso_Row
-- `remo-alto-maquina` · Remo alto en máquina · Tampoco está la de remo con pecho apoyado · Leverage_High_Row
+**curl-alternado**
+- `curl-martillo` · Curl martillo, mismas mancuernas · Molestia de muñeca
 
-**curl-z**
-- `curl-alternado` · Curl alterno con mancuernas · Barra ocupada · Dumbbell_Alternate_Bicep_Curl
-- `curl-polea` · Curl en polea · Sin barra ni mancuernas · Standing_Biceps_Cable_Curl
-
-**triceps-polea**
-- `triceps-cabeza` · Extensión con mancuerna sobre la cabeza, sentado · Polea ocupada · Seated_Triceps_Press
-- `fondos-banco` · Fondos en banco · Sin polea ni mancuerna; no usar si molesta el hombro · Bench_Dips
-
-**plancha** y **plancha-casa**
-- `plancha-rodillas` · Plancha con rodillas apoyadas · No llegas a 45 s · Plank
-- `dead-bug` · Dead bug · Molestia de espalda baja o el piso no ayuda · Dead_Bug
+**crunch**
+- `elevacion-piernas` · Elevación de piernas en colchoneta · Molestia de cuello
 
 **press-plano**
-- `press-pecho-maquina` · Press de pecho en máquina · Banco ocupado · Leverage_Chest_Press
-- `press-piso` · Press en el piso con mancuernas · Sin banco
-- `lagartijas` · Lagartijas · Sin banco ni mancuernas (3 series al tope dejando 2) · Pushups
+- `press-piso` · Press en el piso con mancuernas · Bancos ocupados
+- `lagartijas` · Lagartijas · Sin mancuernas libres (3 series al tope dejando 2) · Pushups
 
-**remo-polea**
-- `remo-pecho-maquina` · Remo en máquina con pecho apoyado · Polea ocupada · Leverage_Iso_Row
-- `remo-mancuerna` · Remo a una mano apoyado en banco · Sin polea · One-Arm_Dumbbell_Row
+**aperturas-mancuernas**
+- `lagartijas` · Lagartijas · Banco ocupado o molestia de hombro al abrir
 
-**prensa**
-- `goblet` · Sentadilla goblet · Prensa ocupada o no la ubicas
-- `prensa-corta` · Conservar texto y foto actuales
+**remo-pecho-apoyado**
+- `remo-mancuerna` · Remo a una mano apoyado en un banco plano · No hay banco reclinable libre · One-Arm_Dumbbell_Row
 
-**jalon-cerrado** (nuevo)
-- `dominadas-asistidas` · Dominadas asistidas · Polea ocupada
-- `remo-polea-una-mano` · Remo sentado a una mano en polea · Solo queda libre la polea baja · Seated_One-arm_Cable_Pulley_Rows
-
-**aperturas-maquina** (nuevo)
-- `aperturas-mancuernas` · Aperturas con mancuernas en banco plano · No hay máquina o está ocupada · Dumbbell_Flyes
-- `cruce-poleas` · Cruce de poleas de pie · Banco y máquina ocupados · Cable_Crossover
-- `press-pecho-maquina` · Press de pecho en máquina · Molestia de hombro al abrir
+**triceps-polea** (polea de pie con cuerda)
+- `triceps-cabeza` · Tríceps con mancuerna sobre la cabeza · Polea ocupada
+- `triceps-patada` · Patada de tríceps · Te molesta el codo con el brazo arriba
 
 **curl-martillo**
-- `curl-cuerda` · Curl martillo en polea con cuerda · Mancuernas ocupadas · Cable_Hammer_Curls_-_Rope_Attachment
-- `curl-alternado` · Curl alterno con mancuernas · Otra opción con mancuernas
-
-**triceps-cabeza** (ahora principal en B)
-- `triceps-polea` · Extensión en polea alta · Te molesta el hombro o el codo arriba de la cabeza
-- `fondos-banco` · Fondos en banco · Sin mancuerna ni polea; no usar si molesta el hombro
+- `curl-alternado` · Curl con mancuernas · Otra opción con las mismas mancuernas
 
 **elevacion-piernas**
-- `elevacion-piernas-piso` · Conservar lo actual · Sin banco
-- `elevacion-rodillas` · Conservar lo actual · Te jala la espalda baja
-- `dead-bug` · Dead bug · Molestia de espalda baja
+- `crunch` · Crunch en colchoneta · Te jala la espalda baja
 
-**CASA** (sin cambios)
-- `laterales-casa` → `laterales-liga` · Sin mancuernas
-- `lagartijas` → `lagartijas-inclinadas` · Manos en la cama o una mesa firme · Si cuestan · Incline_Push-Up
-- `lagartijas` → `lagartijas-pies-banco` · Si ya haces más de 20
-- `remo-liga` → `remo-mancuerna-casa` · Remo a una mano apoyado en la cama o una silla · Sin liga · One-Arm_Dumbbell_Row
-- `plancha-casa` → `dead-bug`
+**goblet** (solo semanas sin Frida)
+- `sentadilla-mancuernas` · Sentadilla con dos mancuernas · La mancuerna pesada está ocupada o ya no alcanza · Dumbbell_Squat
+
+**CASA**: sin cambios (`laterales-liga`, `lagartijas-inclinadas`, `lagartijas-pies-banco`, `remo-mancuerna-casa`), y `crunch` → `elevacion-piernas-piso`.
+
+Salen de la rutina y de las alternativas: `curl-z`, `plancha`, `prensa`, `aperturas-maquina`, `cruce-poleas`, `press-pecho-maquina`, `press-inclinado-maquina`, `press-hombro-maquina`, `remo-pecho-maquina`, `remo-alto-maquina`, `laterales-polea`, `curl-polea`, `curl-cuerda`, `dominadas-asistidas`, `fondos-banco`, `remo-polea-una-mano`. Su historial no se borra y se sigue viendo en Historial.
 
 ## 8. Fotos
 
 Todo lo de antes sigue: fuente free-exercise-db, pipeline de 720 px, `<ID>.jpg` y `<ID>-2.jpg`, revisión una por una, recorte, precarga en el service worker.
 
-**Descargar nuevas:** Butterfly, Close-Grip_Front_Lat_Pulldown, Dumbbell_Flyes, Cable_Crossover. Seated_Triceps_Press, Leverage_Iso_Row y One-Arm_Dumbbell_Row ya deberían estar; si no, descárgalas. Verificado el 7 oct: todos los ids existen en `dist/exercises.json` con sus dos fotos.
+**Descargar nuevas** (verificadas el 7 oct, existen y corresponden): Triceps_Pushdown_-_Rope_Attachment, Crunches, Tricep_Dumbbell_Kickback. Dumbbell_Alternate_Bicep_Curl, Dumbbell_Flyes, Dumbbell_Floor_Press, One-Arm_Dumbbell_Row y Dumbbell_Squat ya deberían estar; si no, descárgalas.
 
-**Revisadas a ojo el 7 oct (dos veces):**
-- Butterfly: es el pec deck correcto, pero **las fotos vienen al revés**: la foto 0 tiene los brazos cerrados y la 1 abiertos. En la app, "Inicio" es la de brazos abiertos (`Butterfly-2.jpg`) y "Final" la de brazos cerrados.
-- Close-Grip_Front_Lat_Pulldown: vista de espaldas, **barra larga** con las manos al ancho de los hombros y el torso derecho. La ficha de `jalon-cerrado` ya dice eso. No uses V-Bar_Pulldown: el modelo se echa demasiado para atrás.
-- Dumbbell_Incline_Row: boca abajo en banco inclinado con los codos cerca del cuerpo. Por eso la ficha va con codos a unos 45°.
-- Cable_Crossover: foto 0 con los brazos abiertos (Inicio) y foto 1 con las manos juntas abajo (Final). Orden correcto.
-- Seated_Triceps_Press, Dumbbell_Flyes y Leverage_Iso_Row: correctas.
+**Revisadas a ojo el 7 oct:**
+- Triceps_Pushdown_-_Rope_Attachment: parado derecho frente a la polea con la cuerda; foto 0 manos al pecho (Inicio), foto 1 brazos estirados (Final). Correcta.
+- Tricep_Dumbbell_Kickback: **fotos al revés**: la foto 0 tiene el brazo estirado y la 1 el codo doblado. En la app, "Inicio" es `Tricep_Dumbbell_Kickback-2.jpg`.
+- Crunches: acostado en colchoneta; foto 1 con los hombros despegados. Correcta.
+- Dumbbell_Alternate_Bicep_Curl: de pie, alternando. Correcta.
+- No uses los pullover (Straight-Arm o Bent-Arm Dumbbell Pullover): el modelo va de través en el banco, que es más técnico.
 
 Prueba existente: recorrer la biblioteca y fallar si falta un archivo. Agrega los ids nuevos.
 
 ## 9. Migración
 
-La migración de ids viejos (A1, B4, etc.) ya corrió; no la cambies ni la vuelvas a correr. Esta versión no renombra nada: solo agrega `jalon-cerrado`, `aperturas-maquina`, `aperturas-mancuernas` y `cruce-poleas`. Los historiales de `remo-mancuerna`, `remo-pecho-apoyado`, `triceps-cabeza`, `goblet` y `prensa` se quedan como están y se siguen viendo donde aparezcan.
+La migración de ids viejos ya corrió; no la cambies ni la vuelvas a correr. Esta versión no renombra nada. Agrega `crunch` y `triceps-patada`. `triceps-polea` conserva su historial aunque cambien la foto y la técnica. Si la v3 o la v4 ya agregaron `aperturas-maquina`, `cruce-poleas` o los pares, se quitan de la rutina sin borrar datos. La A del 7 oct se carga como dice la sección 2, punto 8, una sola vez.
 
 ## 10. Reglas y progresión
 
 - Doble progresión por id: cuando salga el número alto del rango en todas las series, la siguiente vez sube el peso.
-- **Unidades:** todo lo del gym en lb por defecto, mancuernas y barras incluidas. En kg solo lo de CASA (`laterales-casa` y `remo-mancuerna-casa`). En la sesión, un toque cambia kg o lb de ese ejercicio y se queda guardado. Cada serie guarda la unidad en que se registró; el historial y la sugerencia se muestran convertidos a la unidad actual, redondeados al paso real, sin perder el dato original.
+- **Unidades:** todo lo del gym en lb por defecto. En kg solo lo de CASA (`laterales-casa` y `remo-mancuerna-casa`). En la sesión, un toque cambia kg o lb de ese ejercicio y se queda guardado. Cada serie guarda la unidad en que se registró y se convierte al mostrarla, sin perder el dato original.
 - **Incrementos:** en lb de 5 en 5; en kg (CASA) de 1 en 1. Si Fer escribe otro número (12, 17.5), se respeta.
-- `CON_SERIE_EXTRA = ['press-inclinado', 'jalon', 'press-plano', 'remo-polea']` (sin cambio).
-- Semana pesada: todo a 2 series con el mismo peso.
+- **Sin regla de 4 semanas:** `CON_SERIE_EXTRA = []`. La progresión es por peso y repeticiones, para no pasar de la hora.
 - Dolor: molestia muscular sí; dolor agudo en articulación, alternativa.
-- **Peso inicial sin historial** (si hay historial, manda el historial; mancuernas por mano): `press-inclinado` 30 lb, `jalon` 90 lb, `goblet` 45 lb, `press-militar` 25 lb, `laterales` 10 lb, `remo-pecho-apoyado` 15 lb, `curl-z` 45 lb con barra, `triceps-polea` 50 lb, `press-plano` 35 lb, `remo-polea` 90 lb, `jalon-cerrado` 80 lb, `aperturas-maquina` 40 lb, `curl-martillo` 20 lb, `triceps-cabeza` 20 lb (una mancuerna a dos manos), `aperturas-mancuernas` 15 lb, `remo-mancuerna` 45 lb, `laterales-casa` 4 kg.
-- `prensa` sin sugerencia. Tanteo en su ficha, en lb: un disco de 45 por lado y 10 repeticiones; si fue fácil, dos por lado; de ahí sube 25 por lado hasta que 12 cuesten.
+- **Peso inicial sin historial** (si hay historial, manda el historial; mancuernas por mano): `jalon` 90 lb, `remo-polea` 90 lb, `press-inclinado` 30 lb, `press-militar` 25 lb, `triceps-cabeza` 20 lb (una mancuerna a dos manos), `laterales` 10 lb, `curl-alternado` 20 lb, `press-plano` 35 lb, `aperturas-mancuernas` 15 lb, `remo-pecho-apoyado` 15 lb, `jalon-cerrado` 80 lb, `triceps-polea` 40 lb, `curl-martillo` 20 lb, `goblet` 45 lb, `triceps-patada` 10 lb, `remo-mancuerna` 45 lb, `laterales-casa` 4 kg.
 - Ajuste dentro de la sesión (texto en la ficha): si la primera serie pasó del número alto con 3 o más en reserva, sube un escalón; si no llegó al bajo, baja uno. Escalón: 5 lb por mano en mancuernas o una placa en máquina.
 
 ## 11. Fichas nuevas o que cambian
 
-Van en FICHAS.md con el mismo formato que todas: Para qué · Lo sientes · Prepárate · Movimiento · Imagina · Errores (máximo 2, cada uno con su corrección) · Cuidado. Máximo 80 palabras, de tú, sin jerga. Los pesos de arranque van en la sección 10, no en la ficha. Si FICHAS.md todavía no existe, créalo con este formato para todos los ejercicios y alternativas (sección 15).
+Formato de FICHAS.md, igual que todas: Para qué · Lo sientes · Prepárate · Movimiento · Imagina · Errores (máximo 2, con su corrección) · Cuidado. De tú, sin jerga. Pesos de arranque en la sección 10. Las fichas de `remo-pecho-apoyado`, `jalon-cerrado`, `aperturas-mancuernas` y `triceps-cabeza` de la v3 siguen igual.
 
-**remo-pecho-apoyado** (cambia)
-- Para qué: espalda media y alta; endereza la postura.
-- Lo sientes: entre los omóplatos.
-- Prepárate: banco a 30-45°, pecho apoyado, barbilla por fuera del respaldo, pies firmes. Mancuernas colgando, palmas viéndose.
-- Movimiento: jala los codos atrás, a unos 45° del cuerpo, hasta pasar la línea de la espalda. Aprieta un segundo y baja en 2 a 3 segundos.
-- Imagina: tus manos son ganchos y jalas con los codos.
-- Errores: despegar el pecho, baja el peso. Encoger los hombros, bájalos antes de jalar.
-- Cuidado: si molesta la espalda baja, remo en máquina con pecho apoyado.
+**triceps-polea** (cambia: polea de pie con cuerda)
+- Para qué: tríceps, la parte de atrás del brazo.
+- Lo sientes: atrás del brazo, arriba del codo. Si lo sientes en el pecho, te estás echando encima del cable.
+- Prepárate: en la polea de pie que ya tiene la cuerda, una punta en cada mano. Un paso atrás, parado derecho, codos pegados a los costados.
+- Movimiento: arranca con los antebrazos paralelos al piso y empuja hasta estirar, abriendo las manos abajo. Regresa en 2 a 3 segundos solo hasta 90°.
+- Imagina: que tus codos están pegados con cinta a las costillas.
+- Errores: echarte encima y empujar con hombro y pecho, párate derecho y baja el peso. Dejar subir las manos a la cara, para en 90°.
+- Cuidado: si molesta el codo, tríceps con mancuerna sobre la cabeza.
 
-**jalon-cerrado** (nueva)
-- Para qué: dorsal, la forma de V de la espalda.
-- Lo sientes: a los costados, abajo de las axilas.
-- Prepárate: misma máquina y barra larga del jalón, manos al ancho de los hombros, palmas al frente, rodillas trabadas, pecho arriba.
-- Movimiento: jala a la parte alta del pecho con los codos pegados al cuerpo. Pausa corta y sube en 2 a 3 segundos hasta estirar del todo.
-- Imagina: que llevas los codos a las bolsas del pantalón.
-- Errores: echarte atrás para mover más peso, torso casi derecho. Quedarte corto arriba, estira completo.
-- Cuidado: si molesta el hombro o el codo, agarre en V.
+**curl-alternado** (ahora principal en A)
+- Para qué: bíceps.
+- Lo sientes: al frente del brazo.
+- Prepárate: de pie, una mancuerna en cada mano, palmas al frente, codos pegados a las costillas.
+- Movimiento: sube una a la vez, o las dos, sin mover el codo, hasta que la mancuerna llegue al hombro. Baja en 2 a 3 segundos hasta estirar.
+- Imagina: que tus codos son bisagras clavadas a tus costados.
+- Errores: mecer el cuerpo para subir, baja el peso. Codos que se van al frente, déjalos pegados.
+- Cuidado: si molesta la muñeca, curl martillo.
 
-**aperturas-maquina** (nueva)
-- Ubícala: asiento con dos manijas a los lados que se juntan al frente; suele decir Pec Deck o Butterfly.
-- Para qué: la forma del pecho.
-- Lo sientes: el pecho apretando al juntar, no el hombro.
-- Prepárate: asiento con las manijas a la altura del pecho, espalda pegada, codos apenas doblados y fijos.
-- Movimiento: junta en arco, aprieta un segundo y regresa en 2 a 3 segundos hasta la línea del cuerpo.
-- Imagina: que abrazas un barril.
-- Errores: abrir más atrás de los hombros, para en la línea del cuerpo. Doblar los codos para empujar, déjalos fijos.
-- Cuidado: si molesta el hombro, press de pecho en máquina.
+**crunch** (nueva)
+- Para qué: abdomen.
+- Lo sientes: en el abdomen, no en el cuello.
+- Prepárate: acostado en colchoneta, rodillas dobladas, pies en el piso, manos tocando las sienes o cruzadas en el pecho.
+- Movimiento: despega los hombros del piso subiendo las costillas hacia la cadera, aprieta un segundo y baja lento sin descansar la cabeza.
+- Imagina: que acercas las costillas al ombligo.
+- Errores: jalar la cabeza con las manos, deja el cuello suelto. Subir hasta sentarte, basta con despegar los hombros.
+- Cuidado: si molesta la espalda baja, elevación de piernas con las rodillas dobladas.
 
-**aperturas-mancuernas** (nueva)
-- Para qué: pecho, cuando no hay máquina.
-- Lo sientes: el pecho estirándose al abrir y apretando al cerrar.
-- Prepárate: acostado en banco plano, mancuernas arriba del pecho, palmas viéndose, codos apenas doblados.
-- Movimiento: abre en arco en 2 a 3 segundos hasta que las mancuernas queden a la altura del pecho, no más. Sube por el mismo arco.
-- Imagina: que abrazas un árbol grueso.
-- Errores: doblar los codos y hacerlo press, déjalos fijos. Bajar de más, para a la altura del pecho.
-- Cuidado: empieza ligero; si molesta el hombro, press de pecho en máquina.
+**triceps-patada** (nueva)
+- Para qué: tríceps sin subir el brazo arriba de la cabeza.
+- Lo sientes: atrás del brazo.
+- Prepárate: una mano y una rodilla en el banco, espalda plana; en la otra mano la mancuerna, con el codo pegado al cuerpo y doblado a 90°.
+- Movimiento: estira el brazo hacia atrás hasta que quede recto, aprieta un segundo y regresa a 90° en 2 a 3 segundos.
+- Imagina: que solo se mueve el antebrazo, como bisagra.
+- Errores: columpiar la mancuerna con el hombro, codo fijo. Usar mucho peso, aquí poco basta.
+- Cuidado: si molesta el codo, baja el peso.
 
-**cruce-poleas** (nueva)
-- Para qué: pecho, cuando máquina y banco están ocupados.
-- Lo sientes: el pecho apretando al juntar.
-- Prepárate: entre las poleas altas, una manija en cada mano, un pie adelante, torso apenas inclinado.
-- Movimiento: junta las manos al frente y un poco abajo en arco, codos apenas doblados y fijos. Aprieta un segundo y regresa en 2 a 3 segundos hasta la línea de los hombros.
-- Imagina: que abrazas un barril.
-- Errores: doblar los brazos para jalar, déjalos fijos. Dejar que el cable te jale al regresar, controla la vuelta.
-- Cuidado: si molesta el hombro, no abras más allá de la línea de los hombros.
+**remo-polea** (revisa que diga esto; ahora en A)
+- Para qué: espalda media y dorsal; grosor de espalda y postura.
+- Lo sientes: entre los omóplatos y a los costados.
+- Prepárate: en la máquina de remo sentado, pies en la plataforma, rodillas apenas dobladas, con el agarre que tenga puesto y el pecho arriba.
+- Movimiento: jala hacia el abdomen con los codos pegados al cuerpo, aprieta los omóplatos un segundo y regresa en 2 a 3 segundos hasta estirar los brazos sin redondear la espalda.
+- Imagina: que guardas los codos en las bolsas de atrás.
+- Errores: echarte para atrás para jalar, torso casi quieto. Encoger los hombros, bájalos.
+- Cuidado: si molesta la espalda baja, remo con pecho apoyado.
 
-**triceps-cabeza** (ya existe; que diga esto)
-- Para qué: tríceps, sobre todo la cabeza larga, la más grande del brazo.
-- Lo sientes: atrás del brazo, arriba del codo.
-- Prepárate: banco con respaldo derecho, espalda pegada, una mancuerna con las dos manos por el disco de arriba, brazos estirados sobre la cabeza.
-- Movimiento: baja la mancuerna detrás de la cabeza en 2 a 3 segundos doblando solo los codos. Sube hasta estirar.
-- Imagina: tu brazo es una bisagra y solo se mueve el codo.
-- Errores: abrir los codos, apúntalos al techo. Arquear la espalda baja, pégala al respaldo.
-- Cuidado: si molesta el codo o el hombro, tríceps en polea alta.
+**remo-mancuerna** (revisa que diga esto; alternativa de los jalones y del remo con pecho apoyado)
+- Para qué: dorsal y espalda media.
+- Lo sientes: a los costados de la espalda, no en el bíceps.
+- Prepárate: una rodilla y la mano del mismo lado en un banco plano, espalda plana, la mancuerna colgando bajo el hombro.
+- Movimiento: jala el codo hacia la cadera, pegado al cuerpo, hasta pasar la línea de la espalda. Baja en 2 a 3 segundos hasta estirar.
+- Imagina: que guardas el codo en la bolsa del pantalón.
+- Errores: girar el torso para subir más, pecho viendo al piso. Jalar hacia el hombro, lleva el codo a la cadera.
+- Cuidado: si molesta la espalda baja, apoya bien la mano y baja el peso.
 
 ## 12. Seguimiento
 
@@ -285,19 +267,24 @@ Sin cambios: promedio de 7 días del peso, cintura cada lunes, foto cada 2 seman
 
 - Sin frases motivacionales, insignias ni rachas.
 - Prohibidos: pájaros, remo de pie con barra, peso muerto y press francés.
+- Nada de pares ni circuitos.
 - Ningún ejercicio fuera de este archivo. No borrar datos. No tocar el deploy.
 
 ## 14. Cómo verificar
 
 - `npm test`, build y e2e en verde.
-- Pierna: con Frida el lunes registrada, A y B no traen pierna; con Frida movida al miércoles, el martes A o B no trae pierna y el miércoles Hoy muestra `FRIDA`; con "Esta semana no hay", la siguiente completa trae pierna a 3 series y la que sigue ya no; con el día planeado pasado sin respuesta, al día siguiente Hoy pregunta antes de armar la sesión, y "No hubo" activa la pierna en la siguiente completa; en corta nunca hay pierna.
-- Par: alterna series y el descanso corre después del segundo; un par con 2 y 3 series termina con la serie suelta.
-- `laterales` comparte historial entre A y B; las alternativas nunca repiten un id que ya está en la sesión.
-- Unidades: todo lo del gym abre en lb y CASA en kg; cambiar la unidad no pierde ni altera series viejas.
-- La corta hace los bloques 1, 2 y el par de laterales a 2 series.
-- `aperturas-maquina` muestra la foto de brazos abiertos como Inicio.
+- Registro: con la A del 7 oct cargada, hoy toca B; si se borra esa A, vuelve a tocar A. Una sesión con una sola serie cuenta como hecha aunque nunca se toque "Terminar". Un martes sin registro hace que el miércoles Hoy pregunte por el martes antes de armar la sesión, una sola vez. No deja registrar dos A o B el mismo día ni fechas futuras. "Deshacer" revierte el último registro.
+- Pon al día tu semana: aparece una sola vez, con los días de la semana hasta hoy y el 7 oct como A.
+- Sesiones: A y B salen con 8 ejercicios en el orden y zona de las secciones 4 y 5, sin pares; cada zona se visita una vez; cada ejercicio termina sus series antes del siguiente.
+- Versión automática: empezar a las 20:10 da completa; a las 20:30, corta; a las 20:45, `CASA`. El botón cambia de versión.
+- Recorte: con la proyección pasada de 21:10, se quita primero abdomen, luego brazos, y nunca el press principal, el jalón, el remo ni los laterales.
+- "Ocupado: después" manda el ejercicio al final de su zona y, si sigue ocupado, ofrece la alternativa.
+- Pierna: con Frida el lunes, A y B sin pierna; con "Esta semana no hay", la siguiente completa trae goblet y la que sigue ya no; en corta nunca.
+- Unidades: todo lo del gym abre en lb y CASA en kg.
+- Las alternativas nunca repiten un id de la sesión y ninguna dice "en máquina".
+- `triceps-patada` muestra la foto de codo doblado como Inicio.
 - Cada ejercicio y cada alternativa tiene sus dos fotos.
-- Capturas a 390 px para Fer: Hoy con la duración estimada, sesión A, sesión B, una tarjeta de par y la ficha de `aperturas-maquina`.
+- Capturas a 390 px: Hoy con la que toca, la duración estimada y la versión; "Pon al día tu semana"; sesión A; sesión B; la corta; y la ficha de `triceps-polea`.
 - Commits chicos en una rama. Push solo cuando Fer lo apruebe. Al final, resumen corto de qué cambió.
 
 ## 15. Calidad de la app (pedido del 1 oct; si ya está, verifícalo y no lo rehagas)
@@ -306,4 +293,4 @@ Sin cambios: promedio de 7 días del peso, cintura cada lunes, foto cada 2 seman
 - **Peso por serie:** cada serie con su peso y sus reps; la nueva arranca con el peso de la anterior; botones − y + grandes con el paso del ejercicio; al tocar el número se abre el teclado numérico; cambiar la serie 2 no toca la 1; una serie registrada se puede editar o deshacer.
 - **Alternativas completas:** al elegir una cambia todo a ella (nombre, fotos, ficha, series y reps, unidad, sugerencia e historial propio) y con un toque se regresa al original. Prueba que recorra cada ejercicio con cada alternativa y falle si aparece texto o foto del original.
 - **FICHAS.md** con todas las fichas, de ejercicios y alternativas, en el formato de la sección 11.
-- **Auditoría:** la sesión se retoma exacta si iOS cierra la app (series, ejercicio y descanso); el descanso se calcula por la hora real aunque se bloquee la pantalla; la pantalla no se apaga durante la sesión si el iPhone lo permite; almacenamiento persistente y recordatorio de descargar respaldo cada 2 semanas; botones de al menos 44 px; fotos ligeras sin brincos.
+- **Auditoría:** la sesión se retoma exacta si iOS cierra la app; el descanso se calcula por la hora real aunque se bloquee la pantalla; la pantalla no se apaga durante la sesión si el iPhone lo permite; almacenamiento persistente y recordatorio de descargar respaldo cada 2 semanas; botones de al menos 44 px; fotos ligeras sin brincos.
