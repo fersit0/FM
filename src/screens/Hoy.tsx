@@ -176,7 +176,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
           </>
         ) : (
           <>
-            <p className="t-nota tenue inicio-linea">{sesionEnCurso ? 'Sesión a medias' : lineaHoy}</p>
+            <p className="t-nota tenue inicio-linea">{sesionEnCurso ? `Sesión a medias · Semana: ${semana.hechas} de ${semana.meta}` : lineaHoy}</p>
             {versionAuto !== 'completa' && !sesionEnCurso && <Pez expresion="picaro" tamano={72} style={{ right: 0, top: -30 }} />}
             <h1 className="t-inicio">{tituloSesion}</h1>
             <div style={{ position: 'relative' }}>
