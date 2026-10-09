@@ -112,9 +112,12 @@ test('tras un error no se retoma sola', async ({ page }) => {
   await expect(page.getByText('Sesión a medias')).toBeVisible()
 })
 
-test('terminar con 0 series', async ({ page }) => {
+test('terminar aquí con 0 series: ofrece el cierre de 5 min y cuenta', async ({ page }) => {
   await page.getByRole('button', { name: /^Empezar/ }).click()
-  await menu(page, 'Terminar sesión')
+  await page.getByRole('button', { name: 'Terminar aquí' }).click()
+  await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
+  await expect(page.getByText(/5 min a elección/)).toBeVisible()
+  await page.getByRole('button', { name: 'Saltar' }).click()
   await expect(page.getByText('Listo.')).toBeVisible()
   await page.getByRole('button', { name: 'Cerrar' }).click()
   await page.getByRole('button', { name: 'Historial' }).click()
@@ -122,14 +125,22 @@ test('terminar con 0 series', async ({ page }) => {
 })
 
 test('lunes con Frida', async ({ page }) => {
-  // el lunes 12 de la semana siguiente: Hoy muestra FRIDA y "Sí, fui" la registra
+  // el lunes 12 de la semana siguiente: Hoy muestra "Hoy vas con Frida" y "Fui con Frida" la registra con nota
   await reloj(page, '2026-10-12T10:00:00')
   await page.goto('')
   await contestarNo(page)
-  await expect(page.getByText('FRIDA: pierna en Foro 4')).toBeVisible()
-  await page.getByRole('button', { name: 'Sí, fui' }).click()
-  await expect(page.getByText('FRIDA: pierna en Foro 4')).toHaveCount(0)
+  await expect(page.getByText('Hoy vas con Frida')).toBeVisible()
+  await page.getByLabel('Nota').fill('espalda y bíceps')
+  await page.getByRole('button', { name: 'Fui con Frida' }).click()
+  await expect(page.getByText('Hoy vas con Frida')).toHaveCount(0)
   await expect(page.getByText('lunes 12: Frida registrada.')).toBeVisible()
+  await page.getByRole('button', { name: 'Historial' }).click()
+  await page.locator('.lista .fila').first().click()
+  await page.locator('.hoja-fondo.abierta .fila', { hasText: 'lunes 12, Frida' }).click()
+  await expect(page.locator('.hoja-fondo.abierta').last()).toContainText('Nota: espalda y bíceps')
+  await page.keyboard.press('Escape')
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Hoy' }).click()
   await expect(page.getByText(/Hoy toca/)).toBeVisible()
   await expect(page.locator('.punto.hecho')).toHaveCount(1)
 })

@@ -12,7 +12,8 @@ const unidad = (page) => page.locator('button.kg')
 
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (d) => d.accept())
-  await limpiar(page)
+  // semana sin Frida: toca C, que empieza con el jalón
+  await limpiar(page, 'no')
 })
 
 test('el jalón arranca en 90 lb y sube de 5 en 5; kg/lb se queda guardado', async ({ page }) => {
