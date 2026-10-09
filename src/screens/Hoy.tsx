@@ -261,6 +261,9 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
 }
 
 /** "Pon al día tu semana" (RUTINA-FINAL.md, 2.4): la primera vez, los días de esta semana hasta hoy con los mismos botones por día */
+/** "lun 5": con A, B, C, Frida y No fui al lado ya no cabe el nombre completo */
+const diaCorto = (fecha: string) => { const d = desdeClave(fecha); return `${DIAS_NOMBRE[d.getDay()].slice(0, 3)} ${d.getDate()}` }
+
 function PonAlDia({ datos, ahora }: { datos: Datos; ahora: Date }) {
   const { sesiones, sets, settings } = datos
   const claveHoy = claveFecha(ahora)
@@ -302,7 +305,7 @@ function PonAlDia({ datos, ahora }: { datos: Datos; ahora: Date }) {
         <Grupo>
           {dias.map((d) => (
             <div key={d.fecha} className="fila dia-fila">
-              <span className="fila-texto"><span className="t-cuerpo">{textoDia(d.fecha)}{d.fecha === claveHoy ? ', hoy' : ''}</span></span>
+              <span className="fila-texto"><span className="t-cuerpo">{d.fecha === claveHoy ? 'hoy' : diaCorto(d.fecha)}</span></span>
               <BotonesDia marcado={sel[d.fecha] ?? null} sinNo={d.fecha === claveHoy} onElegir={(r) => setSel((s) => ({ ...s, [d.fecha]: s[d.fecha] === r ? null : r }))} />
             </div>
           ))}

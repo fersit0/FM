@@ -17,7 +17,11 @@ test('instalación nueva: "Pon al día tu semana" una sola vez, con el 7 oct com
   await expect(page.getByText('Pon al día tu semana')).toBeVisible()
   const filas = page.locator('.dia-fila')
   await expect(filas).toHaveCount(3)
-  await expect(filas.nth(2)).toContainText('miércoles 7, hoy')
+  await expect(filas.nth(0)).toContainText('lun 5')
+  await expect(filas.nth(1)).toContainText('mar 6')
+  await expect(filas.nth(2)).toContainText('hoy')
+  // el día se lee completo, sin "…"
+  expect(await filas.locator('.fila-texto .t-cuerpo').evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).length)).toBe(0)
   await expect(filas.nth(2).locator('.dia-boton.marcado')).toHaveText('A')
   await expect(filas.nth(0).locator('.dia-boton.marcado')).toHaveText('Frida')
   await expect(filas.nth(1).locator('.dia-boton.marcado')).toHaveText('No fui')
