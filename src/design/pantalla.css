@@ -15,6 +15,8 @@
 .inicio-semana { margin-left: 6px; }
 /* hasta dos renglones: "Semana: X de 3" va al final y no se puede perder */
 .inicio-linea { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+/* con el pez (72 px, arriba a la derecha) la línea le deja su lugar y el título empieza debajo de él */
+.inicio-linea.con-pez { padding-right: 84px; min-height: 44px; }
 .inicio-nota { font-size: 20px; font-weight: 400; line-height: 1.3; text-align: left; }
 /* Botones de un día: A, B, Frida, No fui */
 .dia-botones { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
@@ -66,7 +68,8 @@ button.sesion-linea { min-height: 44px; padding: 4px 0; }
 .sesion-zona { padding-top: 0; }
 .sesion-foto { margin-top: 10px; flex: 0 1 auto; min-height: 0; overflow: hidden; }
 .sesion-foto:empty { display: none; }
-.sesion-foto .foto { width: 100%; aspect-ratio: 4 / 3; max-height: min(26dvh, 100%); }
+/* sin el margen negativo de la ficha: en la sesión la foto va centrada y llena el ancho, con la etiqueta adentro */
+.sesion-foto .foto { width: 100%; margin: 0; aspect-ratio: 4 / 3; max-height: min(26dvh, 100%); }
 .sesion-medio { flex: 1 1 0; min-height: 96px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 0; }
 .sesion-abajo { display: flex; flex-direction: column; gap: 14px; flex: none; padding-top: 8px; }
 .circulo-sitio { position: relative; flex: none; }

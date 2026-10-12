@@ -109,7 +109,9 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await revisar(page, 'calentamiento corriendo')
     await page.getByRole('button', { name: 'Ya terminé' }).click()
     await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Jalón al pecho, agarre ancho')
-    await expect(page.locator('.sesion-aviso')).toBeVisible()
+    // el jalón es el primer ejercicio: aviso de peso y de aproximación, los dos
+    await expect(page.locator('.sesion-aviso')).toHaveCount(2)
+    await expect(page.locator('.sesion-aviso').first()).toBeVisible()
     await expect(page.locator('.sesion-linea')).toContainText('Cambiar a corta')
     await page.waitForTimeout(700)
     if (instalada && d.h >= 800) expect(await page.locator('.sesion-foto img').first().boundingBox().then((b) => b?.height ?? 0)).toBeGreaterThan(100)

@@ -419,8 +419,9 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
     else if (sugerencia.tipo === 'bajar' && pesoSugerido !== null) aviso = `Dos veces seguidas bajaron las reps. Baja a ${formatoPeso(pesoSugerido, unidad)}.`
     else if (sugerencia.tipo === 'quedarse' && pesoBase !== null) aviso = `La vez pasada no llegaste al mínimo. Quédate en ${formatoPeso(pesoBase, unidad)} o baja.`
     else if (primeraVez && conPeso) aviso = 'Primera vez: empieza con este y ajusta.'
-    else if (aproximacion) aviso = `Antes, una de aproximación con ${formatoPeso(redondearAPaso(peso / 2, incremento) || incremento, unidad)}, 10 reps. No se registra.`
   }
+  // la de aproximación va además del aviso de peso, nunca en su lugar
+  const avisoAprox = hechos.length === 0 && !error && aproximacion ? `Antes, una de aproximación con ${formatoPeso(redondearAPaso(peso / 2, incremento) || incremento, unidad)}, 10 reps. No se registra.` : null
   const zona = base.zona ? `${ZONA_NOMBRE[base.zona]} · ` : ''
 
   return (
@@ -435,6 +436,7 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
         <p className="t-nota tenue sesion-zona">{zona}{ej.indice + 1} de {lista.length}{onOcupado && hechos.length === 0 && <> · <button className="subrayado" onClick={onOcupado}>{pospuesto ? 'Sigue ocupado: alternativa' : 'Ocupado: después'}</button></>}</p>
         {esAlternativa && <p className="t-nota tenue sesion-alternativa">{'caso' in item && <span className="caso">{item.caso}. </span>}<button onClick={onVolverOriginal}>Volver al original</button></p>}
         {aviso && <p className="t-cuerpo tenue sesion-aviso">{aviso}</p>}
+        {avisoAprox && <p className="t-cuerpo tenue sesion-aviso">{avisoAprox}</p>}
         <div className="sesion-foto"><Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="toque" /></div>
       </div>
       <div className="sesion-medio" ref={medio}>
