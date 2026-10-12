@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { siguienteSesion, estadoSemana, avisoRescate, seriesPara, casaDeSemana, casaDisponible, estadoFrida, tocaPierna, diaFridaPlaneado, diasParaMoverFrida, cuenta, ultimaPropia } from './semana'
-import { listaDe, rutaDe, alternativasDisponibles, ejerciciosDe, buscarEjercicio, EJERCICIOS, NOMBRES_RETIRADOS } from '../data/ejercicios'
+import { estadoSemana, avisoRescate, seriesPara, casaDeSemana, casaDisponible, estadoFrida, diaFridaPlaneado, diasParaMoverFrida, cuenta, ultimaPropia, semanaSinFrida, sesionesBase, faltantes, elegirSesion, type PlanFrida } from './semana'
 import type { Sesion, SetLog } from '../data/tipos'
 import { inicioSemana, claveFecha } from './fechas'
 
@@ -10,31 +9,21 @@ export function sesion(fecha: string, tipo: Sesion['tipo'], terminada = true): S
 }
 const serie = (sessionId: string, n = 1): SetLog => ({ sessionId, exerciseId: 'jalon', ejercicioBaseId: 'jalon', numSerie: n, pesoKg: 40, reps: 10, fecha: '2026-09-21', hora: n })
 
-describe('la que sigue', () => {
-  it('empieza en A sin historial', () => {
-    expect(siguienteSesion([])).toBe('A')
-  })
-  it('es la contraria de la A o B más reciente por fecha, aunque se registre después', () => {
-    expect(siguienteSesion([sesion('2026-09-21', 'A')])).toBe('B')
-    expect(siguienteSesion([sesion('2026-09-21', 'A'), sesion('2026-09-23', 'B')])).toBe('A')
-    // una B registrada después pero con fecha anterior no manda
-    expect(siguienteSesion([sesion('2026-09-23', 'A'), { ...sesion('2026-09-21', 'B'), inicio: 9e15 }])).toBe('B')
-  })
-  it('Frida y CASA no la cambian', () => {
-    expect(siguienteSesion([sesion('2026-09-21', 'A'), sesion('2026-09-22', 'FRIDA'), sesion('2026-09-23', 'CASA')])).toBe('B')
-  })
+// Semana del lunes 5 al domingo 11 de octubre de 2026 (la del miércoles 7, cuando Fer hizo la A sin la app)
+const LUN = '2026-10-05', MAR = '2026-10-06', MIE = '2026-10-07', JUE = '2026-10-08', DOM = '2026-10-11'
+const dia = (f: string, h = '19:00:00') => new Date(`${f}T${h}`)
+const SIN_FRIDA: PlanFrida = { [LUN]: null }
+
+describe('la que cuenta', () => {
   it('una sesión abierta cuenta en cuanto tiene una serie; sin series no', () => {
-    const abierta = sesion('2026-09-23', 'B', false)
+    const abierta = sesion(MIE, 'B', false)
     expect(cuenta(abierta)).toBe(false)
     expect(cuenta(abierta, [serie(abierta.id)])).toBe(true)
-    expect(siguienteSesion([sesion('2026-09-21', 'A'), abierta])).toBe('B')
-    expect(siguienteSesion([sesion('2026-09-21', 'A'), abierta], [serie(abierta.id)])).toBe('A')
   })
-  it('si se borra la última, se recalcula sola', () => {
-    const s = [sesion('2026-09-21', 'A'), sesion('2026-09-23', 'B')]
-    expect(siguienteSesion(s)).toBe('A')
-    expect(siguienteSesion(s.filter((x) => x.tipo !== 'B'))).toBe('B')
-    expect(ultimaPropia(s)?.fecha).toBe('2026-09-23')
+  it('la última de club es la A, B o C más reciente por fecha, aunque se registre después', () => {
+    expect(ultimaPropia([sesion(MAR, 'A'), { ...sesion(LUN, 'C'), inicio: 9e15 }])?.tipo).toBe('A')
+    expect(ultimaPropia([sesion(MAR, 'C'), sesion(LUN, 'FRIDA'), sesion(MIE, 'CASA')])?.tipo).toBe('C')
+    expect(ultimaPropia([])).toBeNull()
   })
 })
 
@@ -43,20 +32,20 @@ describe('semana', () => {
     expect(claveFecha(inicioSemana(new Date('2026-09-27T10:00:00')))).toBe('2026-09-21') // domingo
     expect(claveFecha(inicioSemana(new Date('2026-09-21T10:00:00')))).toBe('2026-09-21') // lunes
   })
-  it('cuenta sesiones de la semana incluyendo Frida y marca bonus con 3', () => {
-    const s = [sesion('2026-09-21', 'FRIDA'), sesion('2026-09-22', 'A'), sesion('2026-09-24', 'B'), sesion('2026-09-14', 'A')]
-    const e = estadoSemana(s, new Date('2026-09-25T20:00:00'))
+  it('cuenta FRIDA, A, B y C para la meta; CASA no', () => {
+    const s = [sesion(LUN, 'FRIDA'), sesion(MAR, 'A'), sesion(JUE, 'B'), sesion('2026-09-28', 'A'), sesion(MIE, 'CASA')]
+    const e = estadoSemana(s, dia('2026-10-09'))
     expect(e.hechas).toBe(3)
     expect(e.bonus).toBe(true)
     expect(e.fridaHecha).toBe(true)
     expect(e.dias[0].tipos).toEqual(['FRIDA'])
     expect(e.dias[3].tipos).toEqual(['B'])
+    expect(estadoSemana([sesion(MAR, 'C')], dia(MIE)).hechas).toBe(1)
   })
-  it('CASA no cuenta para la meta, no mueve la alternancia y se topa en 2', () => {
-    const s = [sesion('2026-09-22', 'A'), sesion('2026-09-23', 'CASA'), sesion('2026-09-24', 'CASA')]
-    const d = new Date('2026-09-25T20:00:00')
+  it('CASA no cuenta para la meta y se topa en 2', () => {
+    const s = [sesion(MAR, 'A'), sesion(MIE, 'CASA'), sesion(JUE, 'CASA')]
+    const d = dia('2026-10-09')
     expect(estadoSemana(s, d).hechas).toBe(1)
-    expect(siguienteSesion(s)).toBe('B')
     expect(casaDeSemana(s, d)).toBe(2)
     expect(casaDisponible(s, d)).toBe(false)
     expect(casaDisponible([s[0]], d)).toBe(true)
@@ -68,134 +57,126 @@ describe('semana', () => {
   })
 })
 
-describe('domingo de rescate', () => {
-  const s = [sesion('2026-09-21', 'A'), sesion('2026-09-23', 'B')]
-  it('avisa jueves en la noche con 2', () => {
-    expect(avisoRescate(s, new Date('2026-09-24T21:00:00'))).toBe('Vas en 2. Domingo antes de las 3 pm.')
-  })
-  it('no avisa jueves en la tarde ni miércoles', () => {
-    expect(avisoRescate(s, new Date('2026-09-24T18:00:00'))).toBeNull()
-    expect(avisoRescate(s, new Date('2026-09-23T21:00:00'))).toBeNull()
-  })
-  it('avisa domingo en la mañana', () => {
-    expect(avisoRescate(s, new Date('2026-09-27T09:00:00'))).toMatch(/Vas en 2/)
-    expect(avisoRescate(s, new Date('2026-09-27T16:00:00'))).toBeNull()
-  })
-  it('no avisa con 0 ni con 3', () => {
-    expect(avisoRescate([], new Date('2026-09-24T21:00:00'))).toBeNull()
-    expect(avisoRescate([...s, sesion('2026-09-24', 'FRIDA')], new Date('2026-09-24T21:00:00'))).toBeNull()
-  })
-})
-
-describe('pierna con Frida', () => {
-  const lunes = '2026-09-21'
-  const mar = new Date('2026-09-22T19:00:00')
-  const mie = new Date('2026-09-23T19:00:00')
-  it('lunes por defecto; el día planeado Hoy muestra FRIDA', () => {
-    expect(diaFridaPlaneado(undefined, mar)).toBe(lunes)
-    const e = estadoFrida([], undefined, new Date('2026-09-21T10:00:00'))
+describe('Frida (RUTINA-FINAL.md, 2)', () => {
+  it('el lunes por defecto; el día planeado Hoy muestra Frida', () => {
+    expect(diaFridaPlaneado(undefined, dia(MAR))).toBe(LUN)
+    const e = estadoFrida([], undefined, dia(LUN, '10:00:00'))
     expect(e.hoyEsFrida).toBe(true)
     expect(e.pendiente).toBeNull()
   })
-  it('con Frida registrada el lunes, A y B no traen pierna', () => {
-    const s = [sesion(lunes, 'FRIDA')]
-    expect(estadoFrida(s, undefined, mar).hecha).toBe(lunes)
-    expect(tocaPierna(s, undefined, mar, 'completa')).toBe(false)
+  it('"Fui con Frida" registra la sesión y la semana tiene Frida', () => {
+    const s = [sesion(LUN, 'FRIDA')]
+    expect(estadoFrida(s, undefined, dia(MAR)).hecha).toBe(LUN)
+    expect(semanaSinFrida(s, undefined, dia(MAR))).toBe(false)
   })
-  it('movida al miércoles: el martes no hay pierna y el miércoles Hoy muestra FRIDA', () => {
-    const plan = { [lunes]: '2026-09-23' }
-    expect(tocaPierna([], plan, mar, 'completa')).toBe(false)
-    expect(estadoFrida([], plan, mar).hoyEsFrida).toBe(false)
-    expect(estadoFrida([], plan, mie).hoyEsFrida).toBe(true)
+  it('registrada otro día, ese pasa a ser el día de Frida de la semana', () => {
+    const s = [sesion(MIE, 'FRIDA')]
+    expect(estadoFrida(s, undefined, dia(JUE)).hecha).toBe(MIE)
+    expect(semanaSinFrida(s, SIN_FRIDA, dia(JUE))).toBe(false)
   })
-  it('"Esta semana no hay": la siguiente completa trae pierna y la que sigue ya no; no se arrastra a la otra semana', () => {
-    const plan = { [lunes]: null }
-    expect(tocaPierna([], plan, mar, 'completa')).toBe(true)
-    expect(tocaPierna([], plan, mar, 'bonus')).toBe(true)
-    const conPierna = [{ ...sesion('2026-09-22', 'A'), pierna: true }]
-    expect(tocaPierna(conPierna, plan, mie, 'completa')).toBe(false)
-    expect(tocaPierna([], plan, new Date('2026-09-29T19:00:00'), 'completa')).toBe(false)
+  it('movida al miércoles: el martes no es Frida y el miércoles sí', () => {
+    const plan = { [LUN]: MIE }
+    expect(estadoFrida([], plan, dia(MAR)).hoyEsFrida).toBe(false)
+    expect(estadoFrida([], plan, dia(MIE)).hoyEsFrida).toBe(true)
   })
-  it('el día planeado pasó sin respuesta: queda pendiente y no hay pierna; "No fui" la activa', () => {
-    const e = estadoFrida([], undefined, mar)
-    expect(e.pendiente).toBe(lunes)
-    expect(tocaPierna([], undefined, mar, 'completa')).toBe(false)
-    expect(tocaPierna([], { [lunes]: null }, mar, 'completa')).toBe(true)
+  it('el día planeado pasó sin respuesta: queda pendiente y la semana todavía no está sin Frida', () => {
+    const e = estadoFrida([], undefined, dia(MAR))
+    expect(e.pendiente).toBe(LUN)
+    expect(semanaSinFrida([], undefined, dia(MAR))).toBe(false)
   })
-  it('en corta nunca hay pierna', () => {
-    expect(tocaPierna([], { [lunes]: null }, mar, 'corta')).toBe(false)
-  })
-  it('si ya hubo pierna y luego se registra Frida, nada cambia', () => {
-    const s = [{ ...sesion('2026-09-22', 'A'), pierna: true }, sesion('2026-09-24', 'FRIDA')]
-    expect(tocaPierna(s, { [lunes]: null }, new Date('2026-09-25T19:00:00'), 'completa')).toBe(false)
-    expect(estadoSemana(s, mie).hechas).toBe(2)
+  it('"Esta semana no hay" o "No hubo" dejan la semana sin Frida y C entra a las sesiones base', () => {
+    expect(semanaSinFrida([], SIN_FRIDA, dia(MAR))).toBe(true)
+    expect(sesionesBase([], SIN_FRIDA, dia(MAR))).toEqual(['C', 'A', 'B'])
+    expect(sesionesBase([], undefined, dia(MAR))).toEqual(['FRIDA', 'A', 'B'])
+    // no se arrastra a la otra semana
+    expect(semanaSinFrida([], SIN_FRIDA, dia('2026-10-13'))).toBe(false)
   })
   it('se puede mover de hoy en adelante dentro de la semana', () => {
-    expect(diasParaMoverFrida(mie)).toEqual(['2026-09-23', '2026-09-24', '2026-09-25', '2026-09-26', '2026-09-27'])
-  })
-  it('goblet solo entra cuando toca, al empezar la terraza, en A y en B', () => {
-    expect(listaDe('A').some((e) => e.id === 'goblet')).toBe(false)
-    const a = listaDe('A', 'completa', true).map((e) => e.id)
-    expect(a.indexOf('goblet')).toBe(a.indexOf('laterales') - 1)
-    expect(a.indexOf('goblet')).toBe(a.indexOf('triceps-cabeza') + 1)
-    const b = listaDe('B', 'completa', true).map((e) => e.id)
-    expect(b.indexOf('goblet')).toBe(b.indexOf('laterales') - 1)
-    expect(listaDe('A', 'corta', true).some((e) => e.pierna)).toBe(false)
+    expect(diasParaMoverFrida(dia(MIE))).toEqual([MIE, JUE, '2026-10-09', '2026-10-10', DOM])
   })
 })
 
-describe('sesiones por zona (RUTINA-FINAL.md, 4 y 5)', () => {
-  it('A y B tienen 8 ejercicios en el orden y zona del archivo, sin pares', () => {
-    expect(listaDe('A').map((e) => e.id)).toEqual(['jalon', 'remo-polea', 'press-inclinado', 'press-militar', 'triceps-cabeza', 'laterales', 'curl-alternado', 'crunch'])
-    expect(listaDe('A').map((e) => e.zona)).toEqual(['poleas', 'poleas', 'bancos', 'bancos', 'bancos', 'terraza', 'terraza', 'terraza'])
-    expect(listaDe('B').map((e) => e.id)).toEqual(['press-plano', 'aperturas-mancuernas', 'remo-pecho-apoyado', 'jalon-cerrado', 'triceps-polea', 'laterales', 'curl-martillo', 'elevacion-piernas'])
-    expect(listaDe('B').map((e) => e.zona)).toEqual(['bancos', 'bancos', 'bancos', 'poleas', 'poleas', 'terraza', 'terraza', 'terraza'])
-    expect(buscarEjercicio('jalon-cerrado')!.series).toBe(3)
+describe('elección de la sesión de club (RUTINA-FINAL.md, 2)', () => {
+  const tipo = (s: Sesion[], f: string, plan?: PlanFrida) => elegirSesion(s, plan, dia(f)).tipo
+  it('las que faltan son A y B siempre, y C solo si la semana está sin Frida, en orden C → A → B', () => {
+    expect(faltantes([], undefined, dia(MAR))).toEqual(['A', 'B'])
+    expect(faltantes([], SIN_FRIDA, dia(MAR))).toEqual(['C', 'A', 'B'])
+    expect(faltantes([sesion(MAR, 'C'), sesion(MIE, 'B')], SIN_FRIDA, dia(JUE))).toEqual(['A'])
+    expect(faltantes([sesion(MAR, 'A'), sesion(MIE, 'B')], undefined, dia(JUE))).toEqual([])
   })
-  it('cada zona se visita una sola vez: Poleas → Bancos → Terraza en A, Bancos → Poleas → Terraza en B', () => {
-    expect(rutaDe(listaDe('A'))).toEqual(['poleas', 'bancos', 'terraza'])
-    expect(rutaDe(listaDe('B'))).toEqual(['bancos', 'poleas', 'terraza'])
-    expect(rutaDe(listaDe('A', 'completa', true))).toEqual(['poleas', 'bancos', 'terraza'])
+  it('semana normal: Frida lunes, A martes, B jueves', () => {
+    const frida = [sesion(LUN, 'FRIDA')]
+    expect(tipo(frida, MAR)).toBe('A')
+    expect(tipo([...frida, sesion(MAR, 'A')], JUE)).toBe('B')
   })
-  it('la corta: jalón, press principal y laterales a 3 series, con los laterales en bancos', () => {
-    const a = listaDe('A', 'corta')
-    expect(a.map((e) => e.id)).toEqual(['jalon', 'press-inclinado', 'laterales'])
-    expect(a.map((e) => e.zona)).toEqual(['poleas', 'bancos', 'bancos'])
-    expect(a.every((e) => e.series === 3)).toBe(true)
-    const b = listaDe('B', 'corta')
-    expect(b.map((e) => e.id)).toEqual(['press-plano', 'laterales', 'jalon-cerrado'])
-    expect(rutaDe(b)).toEqual(['bancos', 'poleas'])
+  it('con 4 días: Frida, A, B y el jueves A como extra', () => {
+    const s = [sesion(LUN, 'FRIDA'), sesion(MAR, 'A')]
+    expect(elegirSesion(s, undefined, dia(MIE))).toEqual({ tipo: 'B', extra: false })
+    expect(elegirSesion([...s, sesion(MIE, 'B')], undefined, dia(JUE))).toEqual({ tipo: 'A', extra: true })
   })
-  it('cada sesión tiene un jalón y un remo, nunca dos remos; laterales se comparte', () => {
-    const a = ejerciciosDe('A').map((e) => e.id), b = ejerciciosDe('B').map((e) => e.id)
-    expect(a.filter((id) => id.startsWith('jalon'))).toHaveLength(1)
-    expect(b.filter((id) => id.startsWith('jalon'))).toHaveLength(1)
-    expect(a.filter((id) => id.startsWith('remo'))).toHaveLength(1)
-    expect(b.filter((id) => id.startsWith('remo'))).toHaveLength(1)
-    expect(a).toContain('laterales'); expect(b).toContain('laterales')
+  it('Frida el martes: el lunes y el miércoles A, el jueves B', () => {
+    const plan = { [LUN]: MAR }
+    expect(tipo([], LUN, plan)).toBe('A')
+    expect(tipo([sesion(MAR, 'FRIDA')], MIE, plan)).toBe('A')
+    expect(tipo([sesion(MAR, 'FRIDA'), sesion(MIE, 'A')], JUE, plan)).toBe('B')
   })
-  it('solo equipo que Fer ubica: ninguna alternativa "en máquina"; sin prensa, pec deck, barra Z ni plancha', () => {
-    for (const e of EJERCICIOS) {
-      expect(Object.keys(NOMBRES_RETIRADOS), e.id).not.toContain(e.id)
-      for (const a of e.alternativas) {
-        expect(a.nombre, a.id).not.toMatch(/máquina/i)
-        expect(Object.keys(NOMBRES_RETIRADOS), a.id).not.toContain(a.id)
-      }
-    }
-    expect(buscarEjercicio('remo-polea')!.nombre).toBe('Remo sentado en máquina')
+  it('sin Frida: C martes, A miércoles, B jueves', () => {
+    expect(tipo([], MAR, SIN_FRIDA)).toBe('C')
+    expect(tipo([sesion(MAR, 'C')], MIE, SIN_FRIDA)).toBe('A')
+    expect(tipo([sesion(MAR, 'C'), sesion(MIE, 'A')], JUE, SIN_FRIDA)).toBe('B')
   })
-  it('una alternativa se oculta si su id ya está en la sesión; una elegida bloquea a las demás', () => {
-    const lista = listaDe('B')
-    // en B, remo-pecho-apoyado es de la rutina: no aparece como alternativa de nada (no la hay); en A sí es alternativa del remo
-    expect(alternativasDisponibles(buscarEjercicio('remo-polea')!, listaDe('A')).map((a) => a.id)).toContain('remo-pecho-apoyado')
-    const jalon = buscarEjercicio('jalon-cerrado')!
-    expect(alternativasDisponibles(jalon, lista).map((a) => a.id)).toContain('remo-mancuerna')
-    const cambios = [{ ejercicioId: 'remo-pecho-apoyado', alternativaId: 'remo-mancuerna' }]
-    expect(alternativasDisponibles(jalon, lista, cambios).map((a) => a.id)).not.toContain('remo-mancuerna')
-    // el propio ejercicio no se bloquea a sí mismo
-    expect(alternativasDisponibles(buscarEjercicio('remo-pecho-apoyado')!, lista, cambios).map((a) => a.id)).toContain('remo-mancuerna')
-    // crunch está en A: en A la alternativa del crunch es elevación de piernas, y en B la de elevación es crunch
-    expect(alternativasDisponibles(buscarEjercicio('crunch', 'A')!, listaDe('A')).map((a) => a.id)).toEqual(['elevacion-piernas'])
-    expect(alternativasDisponibles(buscarEjercicio('elevacion-piernas')!, lista).map((a) => a.id)).toEqual(['crunch'])
+  it('faltó a días: Frida, A y el domingo B (no es extra)', () => {
+    expect(elegirSesion([sesion(LUN, 'FRIDA'), sesion(MAR, 'A')], undefined, dia(DOM))).toEqual({ tipo: 'B', extra: false })
+  })
+  it('Frida el miércoles: el martes A (Frida es mañana), el jueves B', () => {
+    const plan = { [LUN]: MIE }
+    expect(tipo([], MAR, plan)).toBe('A')
+    expect(tipo([sesion(MAR, 'A'), sesion(MIE, 'FRIDA')], JUE, plan)).toBe('B')
+  })
+  it('después de Frida o de C nunca se ofrece B ni C mientras falte A', () => {
+    // ayer C y falta A: A, aunque C → A → B ya lo daría; con A hecha ayer, B sí
+    expect(tipo([sesion(MAR, 'C')], MIE, SIN_FRIDA)).toBe('A')
+    // ayer Frida, falta A y B: A. Con Frida registrada el martes (día movido) igual
+    expect(tipo([sesion(MAR, 'FRIDA')], MIE)).toBe('A')
+    // Frida mañana con A hecha: B
+    expect(tipo([sesion(MAR, 'A')], MIE, { [LUN]: JUE })).toBe('B')
+  })
+  it('con las tres base hechas, la extra alterna con la última A o B; C nunca es extra', () => {
+    const base = [sesion(LUN, 'FRIDA'), sesion(MAR, 'B'), sesion(MIE, 'A')]
+    expect(elegirSesion(base, undefined, dia(JUE))).toEqual({ tipo: 'B', extra: true })
+    const sinFrida = [sesion(MAR, 'C'), sesion(MIE, 'A'), sesion(JUE, 'B')]
+    expect(elegirSesion(sinFrida, SIN_FRIDA, dia(DOM))).toEqual({ tipo: 'A', extra: true })
+    expect(elegirSesion([sesion(MAR, 'A'), sesion(MIE, 'B'), sesion(JUE, 'C')], SIN_FRIDA, dia(DOM)).tipo).toBe('A')
+  })
+  it('"Hoy prefiero A" manda solo ese día', () => {
+    const s = [sesion(LUN, 'FRIDA')]
+    expect(elegirSesion(s, undefined, dia(MAR), [], { fecha: MAR, tipo: 'B' })).toEqual({ tipo: 'B', extra: false })
+    expect(elegirSesion(s, undefined, dia(MIE), [], { fecha: MAR, tipo: 'B' }).tipo).toBe('A')
+    // elegir algo que ya se hizo es extra
+    expect(elegirSesion([...s, sesion(MAR, 'A')], undefined, dia(MIE), [], { fecha: MIE, tipo: 'A' })).toEqual({ tipo: 'A', extra: true })
+  })
+  it('una sesión abierta con una serie ya cuenta para la elección', () => {
+    const abierta = sesion(MAR, 'A', false)
+    expect(elegirSesion([sesion(LUN, 'FRIDA'), abierta], undefined, dia(MIE)).tipo).toBe('A')
+    expect(elegirSesion([sesion(LUN, 'FRIDA'), abierta], undefined, dia(MIE), [serie(abierta.id)]).tipo).toBe('B')
+  })
+})
+
+describe('aviso del jueves y del domingo', () => {
+  const s = [sesion(LUN, 'FRIDA'), sesion(MAR, 'A')]
+  it('jueves en la noche con menos de 3 dice qué toca el domingo', () => {
+    expect(avisoRescate(s, undefined, dia(JUE, '21:00:00'))).toBe('Vas en 2 de 3; el domingo antes de las 3 pm te toca B.')
+    expect(avisoRescate([sesion(MAR, 'C')], SIN_FRIDA, dia(JUE, '21:00:00'))).toBe('Vas en 1 de 3; el domingo antes de las 3 pm te toca A.')
+  })
+  it('no avisa jueves en la tarde ni miércoles', () => {
+    expect(avisoRescate(s, undefined, dia(JUE, '18:00:00'))).toBeNull()
+    expect(avisoRescate(s, undefined, dia(MIE, '21:00:00'))).toBeNull()
+  })
+  it('domingo en la mañana avisa; en la tarde ya no', () => {
+    expect(avisoRescate(s, undefined, dia(DOM, '09:00:00'))).toBe('Vas en 2 de 3; hoy antes de las 3 pm te toca B.')
+    expect(avisoRescate(s, undefined, dia(DOM, '16:00:00'))).toBeNull()
+  })
+  it('con 3 no avisa', () => {
+    expect(avisoRescate([...s, sesion(JUE, 'B')], undefined, dia(JUE, '21:00:00'))).toBeNull()
   })
 })

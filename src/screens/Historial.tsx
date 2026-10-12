@@ -98,11 +98,11 @@ function DetalleSesion({ datos, sesion, onBorrada }: { datos: Datos; sesion: Ses
       <Grupo>
         <Fila texto="Qué hice" detalle={como}>
           <select value={sesion.tipo} onChange={(e) => datos.guardarSesion({ ...sesion, tipo: e.target.value as SesionTipo })} aria-label="Qué hice">
-            <option value="A">A</option><option value="B">B</option><option value="FRIDA">Frida</option><option value="CASA">Casa</option>
+            <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="FRIDA">Frida</option><option value="CASA">Casa</option>
           </select>
         </Fila>
       </Grupo>
-      {ordenados.length === 0 ? <p className="t-cuerpo tenue">Sin series registradas.</p> : (
+      {sesion.tipo === 'FRIDA' ? <p className="t-cuerpo tenue">Con Frida, a su ritmo y con su app.{sesion.nota ? ` Nota: ${sesion.nota}` : ''}</p> : ordenados.length === 0 ? <p className="t-cuerpo tenue">Sin series registradas.</p> : (
         <Grupo>{ordenados.map((s) => <SerieEditable key={s.id} set={s} datos={datos} />)}</Grupo>
       )}
       <BotonTexto onClick={async () => { if (!confirm('¿Borrar esta sesión y sus series?')) return; await datos.borrarSesion(sesion.id); onBorrada() }}>Borrar sesión</BotonTexto>

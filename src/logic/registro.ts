@@ -4,15 +4,15 @@
 import type { Sesion, SetLog, SesionTipo, Settings } from '../data/tipos'
 import { listaDe } from '../data/ejercicios'
 import { claveFecha, desdeClave, inicioSemana, sumarDias } from './fechas'
-import { cuenta, hechas, siguienteSesion, diaFridaPlaneado, sesionesDeSemana, META, type PlanFrida } from './semana'
+import { cuenta, hechas, elegirSesion, diaFridaPlaneado, sesionesDeSemana, META, type PlanFrida } from './semana'
 
-/** Fecha y hora de la A del 7 oct 2026 que Fer hizo sin la app (RUTINA-FINAL.md, 2.8) */
+/** Fecha y hora de la A del 7 oct 2026 que Fer hizo sin la app (RUTINA-FINAL.md, 2.7) */
 export const CARGA_INICIAL = { fecha: '2026-10-07', tipo: 'A' as const }
 
 /** Sesión registrada sin la app (Historial, pregunta de Hoy o carga inicial): a las 7:30 pm, una hora */
-export function sesionRegistrada(fecha: string, tipo: SesionTipo, id = `registro-${fecha}-${tipo}`): Sesion {
+export function sesionRegistrada(fecha: string, tipo: SesionTipo, id = `registro-${fecha}-${tipo}`, nota?: string): Sesion {
   const inicio = new Date(fecha + 'T19:30:00').getTime()
-  return { id, fecha, tipo, version: 'completa', inicio, fin: inicio + 60 * 60000, terminada: true, cambios: [], como: 'registrada', origen: 'registro' }
+  return { id, fecha, tipo, version: 'completa', inicio, fin: inicio + 60 * 60000, terminada: true, cambios: [], como: 'registrada', origen: 'registro', ...(nota ? { nota } : {}) }
 }
 
 /** La A del 7 oct 2026, una sola vez: si no hay ninguna sesión ese día */
@@ -24,7 +24,7 @@ export function cargaInicial(sesiones: Sesion[]): Sesion | null {
 /** Series planeadas de una sesión (para saber si quedó completa o parcial) */
 export function seriesPlaneadas(s: Sesion): number {
   if (s.tipo === 'FRIDA') return 0
-  const lista = listaDe(s.tipo, s.version, !!s.pierna).filter((e) => !s.recortados?.includes(e.id))
+  const lista = listaDe(s.tipo, s.version).filter((e) => !s.recortados?.includes(e.id))
   return lista.reduce((a, e) => a + (s.ligera ? Math.min(2, e.series) : e.series), 0)
 }
 /** Cómo quedó una sesión hecha con la app: completa si se hizo la mayoría de las series (corta si era corta), si no parcial */
@@ -53,19 +53,20 @@ export function cierresPendientes(sesiones: Sesion[], sets: SetLog[], hoy: strin
   return { guardar, borrar }
 }
 
-/** Lunes a jueves son días de gym; el domingo solo de rescate (si la semana va en menos de 3) */
-export function esDiaDeGym(fecha: string, sesiones: Sesion[], sets: SetLog[] = []): boolean {
+/** Martes a jueves son días de gym (el club cierra los lunes), más el día de Frida y el domingo de rescate (semana en menos de 3) */
+export function esDiaDeGym(fecha: string, sesiones: Sesion[], sets: SetLog[] = [], plan?: PlanFrida): boolean {
   const d = desdeClave(fecha)
   const dow = d.getDay()
-  if (dow >= 1 && dow <= 4) return true
+  if (dow >= 2 && dow <= 4) return true
+  if (diaFridaPlaneado(plan, d) === fecha) return true
   if (dow === 0) return sesionesDeSemana(sesiones, d, sets).filter((s) => s.fecha < fecha).length < META
   return false
 }
 
 export interface DiaPendiente {
   fecha: string
-  /** la que tocaba ese día: FRIDA si era el día planeado, si no la A o B que seguía */
-  sugerida: 'A' | 'B' | 'FRIDA'
+  /** la que tocaba ese día: FRIDA si era el día planeado, si no la de club que la app habría elegido */
+  sugerida: 'A' | 'B' | 'C' | 'FRIDA'
 }
 export const DIAS_ATRAS_MAX = 7
 /**
@@ -84,15 +85,16 @@ export function diasSinRegistro(sesiones: Sesion[], sets: SetLog[], settings: Pi
     if (fecha <= ultima || fecha < tope || fecha >= hoyClave) continue
     if (settings.noFui?.includes(fecha)) continue
     if (sesiones.some((s) => s.fecha === fecha && cuenta(s, sets))) continue
-    if (!esDiaDeGym(fecha, sesiones, sets)) continue
+    if (!esDiaDeGym(fecha, sesiones, sets, settings.fridaPlan)) continue
     out.push({ fecha, sugerida: sugeridaPara(fecha, sesiones, sets, settings.fridaPlan) })
   }
   return out
 }
-/** Qué tocaba un día: FRIDA si era el planeado de su semana, si no la que seguía según el historial anterior a ese día */
-export function sugeridaPara(fecha: string, sesiones: Sesion[], sets: SetLog[], plan?: PlanFrida): 'A' | 'B' | 'FRIDA' {
-  if (diaFridaPlaneado(plan, desdeClave(fecha)) === fecha) return 'FRIDA'
-  return siguienteSesion(sesiones, sets, fecha)
+/** Qué tocaba un día: FRIDA si era el planeado de su semana, si no la que la app habría elegido con lo hecho antes de ese día */
+export function sugeridaPara(fecha: string, sesiones: Sesion[], sets: SetLog[], plan?: PlanFrida): 'A' | 'B' | 'C' | 'FRIDA' {
+  const d = desdeClave(fecha)
+  if (diaFridaPlaneado(plan, d) === fecha) return 'FRIDA'
+  return elegirSesion(sesiones.filter((s) => s.fecha < fecha), plan, d, sets).tipo
 }
 
 /** Días de esta semana hasta hoy (para "Pon al día tu semana"), con lo que ya tienen registrado */
@@ -104,23 +106,25 @@ export function diasDeSemanaHastaHoy(sesiones: Sesion[], sets: SetLog[], hoy: Da
     const fecha = claveFecha(sumarDias(ini, i))
     if (fecha > hoyClave) break
     const s = hechas(sesiones, sets).filter((x) => x.fecha === fecha)
-    const propia = s.find((x) => x.tipo === 'A' || x.tipo === 'B') ?? s.find((x) => x.tipo === 'FRIDA') ?? s[0]
+    const propia = s.find((x) => x.tipo === 'A' || x.tipo === 'B' || x.tipo === 'C') ?? s.find((x) => x.tipo === 'FRIDA') ?? s[0]
     out.push({ fecha, registrado: propia?.tipo ?? null })
   }
   return out
 }
 
+const esClub = (t: SesionTipo) => t === 'A' || t === 'B' || t === 'C'
 /**
- * Registrar una sesión hecha sin la app. Nunca en el futuro. Máximo una A o B por día: si ese día ya tiene una,
- * se devuelve en `reemplaza` para ofrecer cambiarla en vez de duplicarla. FRIDA es una por día (mismo id).
+ * Registrar una sesión hecha sin la app. Nunca en el futuro. Máximo una sesión de club (A, B o C) por día: si ese
+ * día ya tiene una, se devuelve en `reemplaza` para ofrecer cambiarla en vez de duplicarla. FRIDA es una por día
+ * (mismo id) y puede llevar una nota.
  */
-export function armarRegistro(sesiones: Sesion[], fecha: string, tipo: SesionTipo, hoy: string): { sesion: Sesion; reemplaza: Sesion | null } | { error: string } {
+export function armarRegistro(sesiones: Sesion[], fecha: string, tipo: SesionTipo, hoy: string, nota?: string): { sesion: Sesion; reemplaza: Sesion | null } | { error: string } {
   if (fecha > hoy) return { error: 'Esa fecha todavía no llega.' }
-  if (tipo === 'A' || tipo === 'B') {
-    const otra = sesiones.find((s) => s.fecha === fecha && (s.tipo === 'A' || s.tipo === 'B'))
+  if (esClub(tipo)) {
+    const otra = sesiones.find((s) => s.fecha === fecha && esClub(s.tipo))
     if (otra) return { sesion: { ...otra, tipo, como: otra.origen === 'registro' || !otra.como ? 'registrada' : otra.como }, reemplaza: otra }
   }
-  if (tipo === 'FRIDA') return { sesion: sesionRegistrada(fecha, 'FRIDA', `frida-${fecha}`), reemplaza: sesiones.find((s) => s.id === `frida-${fecha}`) ?? null }
+  if (tipo === 'FRIDA') return { sesion: sesionRegistrada(fecha, 'FRIDA', `frida-${fecha}`, nota), reemplaza: sesiones.find((s) => s.id === `frida-${fecha}`) ?? null }
   const n = sesiones.filter((s) => s.fecha === fecha && s.tipo === tipo).length
   return { sesion: sesionRegistrada(fecha, tipo, `registro-${fecha}-${tipo}-${n + 1}`), reemplaza: null }
 }

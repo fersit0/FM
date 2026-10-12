@@ -53,20 +53,25 @@ test('editar y borrar series de hoy', async ({ page }) => {
   await expect(page.getByText('Todavía no hay series.')).toBeVisible()
 })
 
-test('terminar y descartar piden confirmación', async ({ page }) => {
+test('descartar pide confirmación; "Terminar aquí" no, pero se deshace', async ({ page }) => {
   page.removeAllListeners('dialog')
   page.on('dialog', (d) => d.dismiss())
   await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
-  await page.getByText('Terminar sesión', { exact: true }).click()
-  await expect(page.getByText(/Serie 1 de/)).toBeVisible()
   await page.getByText('Descartar sesión', { exact: true }).click()
+  await expect(page.getByText(/Serie 1 de/)).toBeVisible()
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Terminar aquí' }).click()
+  await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
+  await page.getByText('Terminaste aquí. Cuenta para la semana.').waitFor()
+  await page.getByRole('button', { name: 'Deshacer' }).click()
   await expect(page.getByText(/Serie 1 de/)).toBeVisible()
 })
 
 test('editar y borrar una sesión pasada desde Historial', async ({ page }) => {
   await page.getByRole('button', { name: 'Serie hecha' }).click()
-  await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
-  await page.getByText('Terminar sesión', { exact: true }).click()
+  await page.getByRole('button', { name: 'Terminar aquí', exact: true }).click()
+  await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
+  await page.getByRole('button', { name: 'Saltar' }).click()
   await page.getByRole('button', { name: 'Cerrar' }).click()
   await page.getByRole('button', { name: 'Historial' }).click()
   await page.locator('.lista .fila').first().click()

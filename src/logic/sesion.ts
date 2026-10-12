@@ -1,12 +1,12 @@
-// Orden de la sesión en marcha (RUTINA-FINAL.md, 3): "Ocupado: después" y el recorte en el camino. Puro, sin React.
+// Orden de la sesión en marcha (RUTINA-FINAL.md, 3): "Ocupado: después", el recorte en el camino y "Terminar aquí". Puro, sin React.
 import type { Ejercicio, Sesion, SetLog } from '../data/tipos'
 import { listaDe, RECORTE_ORDEN } from '../data/ejercicios'
 import { segundosDeEjercicio, SEG_ENTRE_EJERCICIOS, SEG_CAMBIO_ZONA } from './duracion'
 
 /** Lista de ejercicios de una sesión en su orden actual: el guardado (si "Ocupado: después" lo cambió) sin los recortados */
-export function listaDeSesion(s: Pick<Sesion, 'tipo' | 'version' | 'pierna' | 'orden' | 'recortados'>): Ejercicio[] {
+export function listaDeSesion(s: Pick<Sesion, 'tipo' | 'version' | 'orden' | 'recortados'>): Ejercicio[] {
   if (s.tipo === 'FRIDA') return []
-  const base = listaDe(s.tipo, s.version, !!s.pierna)
+  const base = listaDe(s.tipo, s.version)
   const orden = s.orden ?? base.map((e) => e.id)
   const lista = orden.map((id) => base.find((e) => e.id === id)).filter((e): e is Ejercicio => !!e)
   for (const e of base) if (!lista.includes(e)) lista.push(e)
@@ -40,7 +40,7 @@ export function segundosRestantes(lista: Ejercicio[], indice: number, seriesHech
 
 /**
  * Recorte en el camino: si lo que falta no cabe antes del tope, quita de los pendientes (después del actual) en este
- * orden: abdomen, brazos, press militar o aperturas. Nunca el press principal, el jalón, el remo ni los laterales.
+ * orden: abdomen, brazos, aperturas o puente. Nunca el press principal, el jalón, el remo, los laterales ni la goblet.
  * Devuelve los ids a quitar (además de los ya quitados) hasta que quepa, o todo lo quitable si ni así.
  */
 export function recortar(lista: Ejercicio[], indice: number, seriesHechasActual: number, segundosDisponibles: number, ligera = false): string[] {
@@ -58,6 +58,12 @@ export function recortar(lista: Ejercicio[], indice: number, seriesHechasActual:
     }
   }
   return quitar
+}
+
+/** "Terminar aquí": lo que falta después del ejercicio actual queda fuera; la sesión se cierra con lo hecho y el cierre es de 5 min */
+export function terminarAqui(s: Sesion, lista: Ejercicio[], indice: number): Sesion {
+  const fuera = lista.slice(indice + 1).map((e) => e.id).filter((id) => !s.recortados?.includes(id))
+  return { ...s, terminoAqui: true, recortados: [...(s.recortados ?? []), ...fuera] }
 }
 
 /** Series hechas en esta sesión del ejercicio base (cuentan aunque se hayan hecho en una alternativa) */

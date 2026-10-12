@@ -2,7 +2,7 @@
 // en cuatro iPhones, en Safari (viewport recortado por sus barras) y como app instalada (pantalla completa con
 // áreas seguras arriba y abajo), con el nombre más largo, una alternativa elegida y la foto grande.
 import { test, expect } from '@playwright/test'
-import { reloj, registrar } from './comun.mjs'
+import { reloj } from './comun.mjs'
 
 const DISPOSITIVOS = [
   { nombre: 'iPhone SE', w: 375, h: 667, top: 20, bottom: 0, safari: 553 },
@@ -39,6 +39,8 @@ async function revisar(page, nombre) {
     // Botón principal: completo, dentro de la pantalla y nadie encima
     for (const el of document.querySelectorAll('.boton, .dia-boton')) {
       if (el.closest('.hoja-fondo:not(.abierta)')) continue
+      // con una hoja abierta, lo de atrás queda tapado a propósito: solo cuentan los botones de la hoja
+      if (document.querySelector('.hoja-fondo.abierta') && !el.closest('.hoja-fondo.abierta')) continue
       const b = el.getBoundingClientRect()
       if (b.width === 0) continue
       const texto = el.textContent.trim()
@@ -88,9 +90,14 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await page.waitForTimeout(500)
     await revisar(page, 'pregunta por un día')
     await page.getByRole('button', { name: 'No fui' }).click()
-    // una B hoy para que toque A y salga el jalón con aviso
-    await registrar(page, null, 'B')
-    await expect(page.locator('h1')).toContainText('A:')
+    // "Hoy prefiero C" para que salga el jalón con aviso y la alternativa de nombre más largo
+    await page.getByRole('button', { name: 'Hoy prefiero…' }).click()
+    await page.waitForTimeout(500)
+    await revisar(page, 'hoy prefiero')
+    await page.locator('.hoja-fondo.abierta').getByRole('button', { name: /^C:/ }).click()
+    await expect(page.locator('h1')).toContainText('C:')
+    // el aviso de 5 s con Deshacer flota sobre el pie; se revisa la pantalla ya sin él
+    await expect(page.locator('.deshacer')).toHaveCount(0, { timeout: 8000 })
     await page.waitForTimeout(500)
     await revisar(page, 'inicio')
     await page.getByRole('button', { name: /^Empezar/ }).click()
@@ -102,7 +109,9 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await revisar(page, 'calentamiento corriendo')
     await page.getByRole('button', { name: 'Ya terminé' }).click()
     await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Jalón al pecho, agarre ancho')
-    await expect(page.locator('.sesion-aviso')).toBeVisible()
+    // el jalón es el primer ejercicio: aviso de peso y de aproximación, los dos
+    await expect(page.locator('.sesion-aviso')).toHaveCount(2)
+    await expect(page.locator('.sesion-aviso').first()).toBeVisible()
     await expect(page.locator('.sesion-linea')).toContainText('Cambiar a corta')
     await page.waitForTimeout(700)
     if (instalada && d.h >= 800) expect(await page.locator('.sesion-foto img').first().boundingBox().then((b) => b?.height ?? 0)).toBeGreaterThan(100)
@@ -137,8 +146,11 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await page.waitForTimeout(700)
     await revisar(page, 'ejercicio completo con Siguiente ejercicio')
     await page.getByRole('button', { name: 'Siguiente ejercicio' }).click()
-    await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
-    await page.getByText('Terminar sesión', { exact: true }).click()
+    await page.getByRole('button', { name: 'Terminar aquí', exact: true }).click()
+    await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
+    await page.waitForTimeout(700)
+    await revisar(page, 'cierre')
+    await page.getByRole('button', { name: 'Saltar' }).click()
     await expect(page.getByText('Listo.')).toBeVisible()
     await page.waitForTimeout(700)
     await revisar(page, 'resumen')

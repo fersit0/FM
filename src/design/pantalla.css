@@ -13,7 +13,10 @@
 .inicio-pie { display: flex; flex-direction: column; gap: 14px; align-items: center; margin: 0 calc(-1 * var(--margen)); z-index: 1; flex: none; }
 .inicio-linea-roja { color: var(--rojo); font-size: 17px; min-height: 44px; }
 .inicio-semana { margin-left: 6px; }
-.inicio-linea { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* hasta dos renglones: "Semana: X de 3" va al final y no se puede perder */
+.inicio-linea { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+/* con el pez (72 px, arriba a la derecha) la línea le deja su lugar y el título empieza debajo de él */
+.inicio-linea.con-pez { padding-right: 84px; min-height: 44px; }
 .inicio-nota { font-size: 20px; font-weight: 400; line-height: 1.3; text-align: left; }
 /* Botones de un día: A, B, Frida, No fui */
 .dia-botones { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
@@ -24,8 +27,10 @@
 .dia-fila { flex-wrap: wrap; }
 .inicio-aldia .inicio-texto { margin-top: 0; }
 .inicio-aldia .inicio-pie { margin-top: auto; }
-.dia-fila .dia-botones { justify-content: flex-start; }
-.dia-fila .dia-boton { padding: 0 12px; font-size: 15px; min-height: 40px; }
+/* el día ("mar 6") nunca se encoge; si no cabe todo, los botones bajan al renglón de abajo */
+.dia-fila .fila-texto { flex: none; }
+.dia-fila .dia-botones { justify-content: flex-start; gap: 6px; }
+.dia-fila .dia-boton { padding: 0 10px; font-size: 15px; min-height: 40px; min-width: 40px; }
 @media (max-height: 700px) { .inicio { gap: 10px; } .t-inicio { font-size: 44px; } .inicio-pie { gap: 8px; } }
 
 /* Ficha */
@@ -63,7 +68,8 @@ button.sesion-linea { min-height: 44px; padding: 4px 0; }
 .sesion-zona { padding-top: 0; }
 .sesion-foto { margin-top: 10px; flex: 0 1 auto; min-height: 0; overflow: hidden; }
 .sesion-foto:empty { display: none; }
-.sesion-foto .foto { width: 100%; aspect-ratio: 4 / 3; max-height: min(26dvh, 100%); }
+/* sin el margen negativo de la ficha: en la sesión la foto va centrada y llena el ancho, con la etiqueta adentro */
+.sesion-foto .foto { width: 100%; margin: 0; aspect-ratio: 4 / 3; max-height: min(26dvh, 100%); }
 .sesion-medio { flex: 1 1 0; min-height: 96px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 0; }
 .sesion-abajo { display: flex; flex-direction: column; gap: 14px; flex: none; padding-top: 8px; }
 .circulo-sitio { position: relative; flex: none; }
@@ -74,6 +80,8 @@ button.sesion-linea { min-height: 44px; padding: 4px 0; }
 .deshacer { position: fixed; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 96px); z-index: 25; background: var(--tinta); color: var(--piedra); padding: 10px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--piedra); }
 .deshacer button { color: var(--rojo); font-weight: 700; font-size: 17px; min-height: 44px; padding: 0 8px; }
 body[data-pantalla='descanso'] .deshacer { background: var(--piedra); color: var(--cobalto); box-shadow: none; }
+/* calentamiento y cierre: el botón grande va abajo y "Terminar aquí" llega aquí con su Deshacer; el aviso sube para no taparlo */
+body[data-pantalla='calentamiento'] .deshacer { top: calc(var(--safe-top) + 8px); bottom: auto; }
 /* Pantallas cortas (iPhone SE instalado, 667): foto 16:9 compacta, menos aire */
 @media (max-height: 700px) {
   .sesion-foto .foto { aspect-ratio: 16 / 9; max-height: min(12dvh, 100%); }
