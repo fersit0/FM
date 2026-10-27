@@ -318,6 +318,15 @@ function PasoTiempo({ titulo, detalle, nota, minutos, linea, activa, setActiva, 
 
 // ---------- 6.2 Serie ----------
 /** Formato de una serie hecha: "30 × 10", "12" o "45 s" */
+/** "30 lb × 10, 10, 9"; con pesos distintos, "30 × 10, 35 × 8 lb"; sin peso, "15, 15 reps" */
+function textoVez(sets: SetLog[], modo: Modo, unidad: Unidad, paso: number): string {
+  const reps = sets.map((h) => h.reps).join(', ')
+  if (modo === 'tiempo') return `${reps} s`
+  if (modo === 'corporal') return `${reps} reps`
+  const pesos = sets.map((h) => pesoDeSet(h, unidad, paso))
+  if (pesos.every((x) => x !== null && x === pesos[0])) return `${formatoPeso(pesos[0]!, unidad)} × ${reps}`
+  return `${sets.map((h) => textoSerie(h, modo, unidad, paso)).join(', ')} ${unidad}`
+}
 function textoSerie(h: SetLog, modo: Modo, unidad: Unidad, paso: number): string {
   if (modo === 'tiempo') return `${h.reps} s`
   if (modo === 'corporal') return `${h.reps}`
@@ -415,9 +424,15 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
   else if (hechos.length > 0) {
     aviso = <>{conPeso ? `Hechas en ${unidad}: ` : 'Hechas: '}{hechos.map((h) => textoSerie(h, item.modo, unidad, incremento) + (h.exerciseId !== item.id ? ` (${nombreDe(h.exerciseId).toLowerCase()})` : '')).join(', ')}. <button onClick={onSeries}>Editar</button></>
   } else {
-    if (sugerencia.tipo === 'subir' && ultimaVez && pesoSugerido !== null) aviso = invertida ? `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Menos ayuda: ${formatoPeso(pesoSugerido, unidad)}.` : `La vez pasada hiciste ${ultimaVez[0].reps} en todas. Sube a ${formatoPeso(pesoSugerido, unidad)}.`
-    else if (sugerencia.tipo === 'bajar' && pesoSugerido !== null) aviso = `Dos veces seguidas bajaron las reps. Baja a ${formatoPeso(pesoSugerido, unidad)}.`
-    else if (sugerencia.tipo === 'quedarse' && pesoBase !== null) aviso = `La vez pasada no llegaste al mínimo. Quédate en ${formatoPeso(pesoBase, unidad)} o baja.`
+    // siempre a la vista: lo de la vez pasada (peso y reps) y el peso que toca hoy (PULIDO-FM.md, 3)
+    const vez = ultimaVez ? `La vez pasada: ${textoVez(ultimaVez, item.modo, unidad, incremento)}.` : ''
+    const p = pesoSugerido !== null ? formatoPeso(pesoSugerido, unidad) : ''
+    if (sugerencia.tipo === 'subir' && vez && p) aviso = `${vez} ${invertida ? `Menos ayuda: ${p}` : `Sube a ${p}`}.`
+    else if (sugerencia.tipo === 'bajar' && vez && p) aviso = `${vez} Dos veces seguidas bajaron las reps: baja a ${p}.`
+    else if (sugerencia.tipo === 'quedarse' && vez && pesoBase !== null) {
+      const menos = pesoBase - signo * incremento
+      aviso = `${vez} No llegaste a ${item.repsMin}: quédate en ${formatoPeso(pesoBase, unidad)}${menos > 0 ? ` o baja a ${formatoPeso(menos, unidad)}` : ''}.`
+    } else if (vez) aviso = conPeso && p ? `${vez} Repite ${p}.` : vez
     else if (primeraVez && conPeso) aviso = 'Primera vez: empieza con este y ajusta.'
   }
   // la de aproximación va además del aviso de peso, nunca en su lugar
