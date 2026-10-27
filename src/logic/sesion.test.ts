@@ -37,8 +37,8 @@ describe('recorte en el camino (RUTINA-FINAL.md, 3)', () => {
     expect(recortar(A, 0, 0, segundosRestantes(A, 0, 0))).toEqual([])
   })
   it('quita primero abdomen, luego brazos, luego aperturas o puente; nunca press principal, jalón, remo, laterales ni goblet', () => {
-    // desde el press sin series faltan 2410 s; con 2300 disponibles sale el crunch
-    expect(recortar(A, 0, 0, 2300)).toEqual(['crunch'])
+    // desde el press sin series faltan 2655 s; con 2450 disponibles sale el crunch
+    expect(recortar(A, 0, 0, 2450)).toEqual(['crunch'])
     // con mucho menos salen crunch, tríceps, puente y aperturas, en ese orden, y nada más
     expect(recortar(A, 0, 0, 600)).toEqual(['crunch', 'triceps-cabeza', 'puente-gluteo', 'aperturas-inclinadas'])
     expect(recortar(B, 0, 0, 600)).toEqual(['elevacion-piernas', 'curl-alternado', 'triceps-polea'])

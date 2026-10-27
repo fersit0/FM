@@ -77,9 +77,9 @@ Cada ejercicio lleva su zona. La sesión se recorre por zonas en orden y cada zo
 - **Series seguidas:** cada ejercicio se termina completo antes de pasar al siguiente. El descanso corre al tocar la serie.
 - **Serie de aproximación:** en el primer ejercicio de la sesión y en el primer press si no es el primero, 10 repeticiones con la mitad del peso. No se registra.
 - **Esfuerzo:** 1 o 2 repeticiones en reserva.
-- **Duración** (se muestra en Hoy; Code la verifica con su cálculo de 40 s por serie de 8-10, 45 s de 10-12, 50 s de 12-15 y 55 s de 12-20, descansos completos, 1 min entre ejercicios y 2 min al cambiar de zona): A ≈ 53 min, B ≈ 58 min y C ≈ 55 min con calentamiento y cierre. Con los tiempos muertos reales quedan alrededor de una hora; el máximo es 70.
+- **Duración** (se muestra en Hoy; Code la verifica con su cálculo de 40 s por serie de 8-10, 45 s de 10-12, 50 s de 12-15 y 55 s de 12-20, descansos completos, 1 min entre ejercicios y 2 min al cambiar de zona): A ≈ 62 min, B ≈ 64 min y C ≈ 58 min con calentamiento y cierre (cálculo de la app, 27 oct). Con los tiempos muertos reales quedan alrededor de una hora; el máximo es 70.
 - **Corta (unos 30 min):** calentamiento 5 min; tres ejercicios a 3 series (A: press inclinado, laterales y goblet; B: press plano, laterales y jalón cerrado; C: jalón ancho, press militar y laterales); cierre de 5 min. Cuenta como sesión.
-- **Versión automática** (en `src/logic`, con pruebas): al tocar "Empezar", la app toma la hora real y calcula si las pesas de la completa terminan antes de las 21:10 (última pesa; a las 22:00 cierran el agua). Si sí, completa. Si no, y la corta alcanza, corta. Si ninguna alcanza, ofrece `CASA`. Con las duraciones de arriba queda: completa si empieza a las 20:15 o antes, corta hasta las 20:40, después `CASA`. Arriba de la sesión, en una línea: "Empezaste 8:22 · va la corta · terminas pesas 8:50", con un botón para cambiar de versión. En domingo o cualquier día antes de las 7 pm, siempre completa.
+- **Versión automática** (en `src/logic`, con pruebas): al tocar "Empezar", la app toma la hora real y calcula si las pesas de la completa terminan antes de las 21:10 (última pesa; a las 22:00 cierran el agua). Si sí, completa. Si no, y la corta alcanza, corta. Si ninguna alcanza, ofrece `CASA`. Con las duraciones de arriba queda: completa si empieza a las 20:17 o antes en A, 20:16 en B y 20:22 en C; corta hasta las 20:42 en A y 20:43 en B y C; después `CASA`. Arriba de la sesión, en una línea: "Empezaste 8:22 · va la corta · terminas pesas 8:50", con un botón para cambiar de versión. En domingo o cualquier día antes de las 7 pm, siempre completa.
 - **Recorte en el camino:** si a media sesión la hora proyectada de la última pesa pasa de 21:10, la app quita lo que falta en este orden: abdomen, brazos, aperturas o puente de glúteo. Avisa en una línea qué quitó. Nunca quita el press principal, el jalón, el remo, los laterales ni la goblet.
 - **"Terminar aquí":** siempre visible durante la sesión. Cierra la sesión con lo hecho, cuenta para la meta y ofrece el cierre de cardio de 5 min.
 - **"Ocupado: después":** manda ese ejercicio al final de su zona; si la zona ya se terminó, al final de la sesión. Cuando le vuelve a tocar y sigue ocupado, ofrece su alternativa (sección 7).
@@ -88,15 +88,15 @@ Cada ejercicio lleva su zona. La sesión se recorre por zonas en orden y cada zo
 
 | # | Zona | id | Nombre | Series × reps | Descanso | Modo | Foto |
 |---|---|---|---|---|---|---|---|
-| 1 | Bancos | `press-inclinado` | Press inclinado con mancuernas | 3 × 8-10 | 90 s | peso, lb | Incline_Dumbbell_Press |
+| 1 | Bancos | `press-inclinado` | Press inclinado con mancuernas | 4 × 8-10 | 90 s | peso, lb | Incline_Dumbbell_Press |
 | 2 | Bancos | `aperturas-inclinadas` | Aperturas inclinadas con mancuernas | 2 × 12-15 | 60 s | peso, lb | Incline_Dumbbell_Flyes |
-| 3 | Bancos | `laterales` | Elevaciones laterales | 3 × 12-20 | 60 s | peso, lb | Side_Lateral_Raise |
+| 3 | Bancos | `laterales` | Elevaciones laterales | 4 × 12-20 | 60 s | peso, lb | Side_Lateral_Raise |
 | 4 | Bancos | `triceps-cabeza` | Tríceps con mancuerna sobre la cabeza, sentado | 2 × 10-12 | 60 s | peso, lb | Seated_Triceps_Press |
 | 5 | Terraza | `goblet` | Sentadilla goblet | 3 × 10-12 | 90 s | peso, lb | Goblet_Squat |
 | 6 | Terraza | `puente-gluteo` | Puente de glúteo con mancuerna, en colchoneta | 2 × 12-15 | 60 s | peso, lb | Butt_Lift_Bridge (referencia: sin mancuerna) |
 | 7 | Terraza | `crunch` | Crunch en colchoneta | 2 × 15-20 | 45 s | corporal | Crunches |
 
-Notas: del 1 al 4 es el mismo banco reclinable: a 30° para el 1 y el 2, casi derecho para el 4. El cierre en saco queda ahí mismo en la terraza.
+Notas: del 1 al 4 es el mismo banco reclinable: a 30° para el 1 y el 2, casi derecho para el 4. El cierre en saco queda ahí mismo en la terraza. El press inclinado y los laterales van a 4 series desde el 27 oct (PULIDO-FM.md, 4), con sus alternativas también a 4; en B, C y la corta siguen a 3. Así pecho y hombro lateral llegan a unas 10 series por semana contando a Frida.
 
 ## 5. Sesión B: torso completo · Bancos → Poleas → Terraza
 

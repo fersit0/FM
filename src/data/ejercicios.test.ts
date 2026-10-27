@@ -8,7 +8,7 @@ describe('sesiones por zona, sin pares (RUTINA-FINAL.md, 4, 5 y 5c)', () => {
     const a = listaDe('A')
     expect(ids(a)).toEqual(['press-inclinado', 'aperturas-inclinadas', 'laterales', 'triceps-cabeza', 'goblet', 'puente-gluteo', 'crunch'])
     expect(a.map((e) => e.zona)).toEqual(['bancos', 'bancos', 'bancos', 'bancos', 'terraza', 'terraza', 'terraza'])
-    expect(a.map((e) => e.series)).toEqual([3, 2, 3, 2, 3, 2, 2])
+    expect(a.map((e) => e.series)).toEqual([4, 2, 4, 2, 3, 2, 2])
     expect(a.map((e) => `${e.repsMin}-${e.repsMax}`)).toEqual(['8-10', '12-15', '12-20', '10-12', '10-12', '12-15', '15-20'])
     expect(a.map((e) => e.descansoSeg)).toEqual([90, 60, 60, 60, 90, 60, 45])
     expect(rutaDe(a)).toEqual(['bancos', 'terraza'])

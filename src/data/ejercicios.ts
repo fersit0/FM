@@ -40,7 +40,7 @@ export const REGLA_ALTERNATIVA = 'Primero "Ocupado: después". Si sigue ocupado,
 
 // ---- alternativas compartidas (mismo id = mismo historial) ----
 const remoMancuerna = (caso: string): Alternativa => alt({ id: 'remo-mancuerna', nombre: 'Remo a una mano con mancuerna, jalando hacia la cadera', caso, series: 3, repsMin: 10, repsMax: 12, descansoSeg: 75, porLado: true, colocacion: 'Una rodilla y la mano del mismo lado en un banco plano, espalda plana, la mancuerna colgando bajo el hombro.', tecnica: ['Jala el codo hacia la cadera, pegado al cuerpo.', 'Baja en 2 a 3 segundos hasta estirar.'], ilustracion: 'remo-mancuerna' })
-const pressPiso = (caso: string, nombre = 'Press en el piso con mancuernas'): Alternativa => alt({ id: 'press-piso', nombre, caso, series: 3, repsMin: 8, repsMax: 10, descansoSeg: 90, tecnica: ['Acostado en la colchoneta, mismas reps.', 'La amplitud es menor y es más seguro para el hombro.'], ilustracion: 'press-piso' })
+const pressPiso = (caso: string, nombre = 'Press en el piso con mancuernas', series = 3): Alternativa => alt({ id: 'press-piso', nombre, caso, series, repsMin: 8, repsMax: 10, descansoSeg: 90, tecnica: ['Acostado en la colchoneta, mismas reps.', 'La amplitud es menor y es más seguro para el hombro.'], ilustracion: 'press-piso' })
 const lagartijas = (caso: string, series = 3): Alternativa => alt({ id: 'lagartijas', nombre: 'Lagartijas', caso, series, repsMin: 0, repsMax: 0, descansoSeg: 90, modo: 'corporal', tecnica: ['Al tope dejando 2 en reserva.'], ilustracion: 'lagartijas' })
 const tricepsPatada = (caso: string, nombre: string, series = 2): Alternativa => alt({ id: 'triceps-patada', nombre, caso, series, repsMin: 10, repsMax: 12, descansoSeg: 60, porLado: true, colocacion: 'Una mano y una rodilla en el banco, espalda plana; el codo pegado al cuerpo y doblado a 90°.', tecnica: ['Estira el brazo hacia atrás hasta que quede recto.', 'Regresa a 90° en 2 a 3 segundos.'], ilustracion: 'triceps-patada' })
 const tricepsCabezaAlt = (caso: string): Alternativa => alt({ id: 'triceps-cabeza', nombre: 'Tríceps con mancuerna sobre la cabeza', caso, series: 3, repsMin: 10, repsMax: 12, descansoSeg: 60, colocacion: 'Sentado en banco con respaldo, una mancuerna a dos manos.', tecnica: ['Bajar detrás de la cabeza doblando codos.', 'Estirar arriba sin abrir codos.'], ilustracion: 'triceps-cabeza' })
@@ -50,14 +50,14 @@ const crunchAlt = (caso: string, series = 3): Alternativa => alt({ id: 'crunch',
 const elevacionPiernasAlt = (caso: string, series = 2): Alternativa => alt({ id: 'elevacion-piernas', nombre: 'Elevación de piernas en colchoneta', caso, series, repsMin: 12, repsMax: 12, descansoSeg: 45, modo: 'corporal', tecnica: ['Espalda baja pegada, piernas casi estiradas hasta la vertical.', 'Baja controlado.'], ilustracion: 'elevacion-piernas' })
 const lateralesLiga: Alternativa = alt({ id: 'laterales-liga', nombre: 'Laterales con liga', caso: 'Sin mancuernas', series: 3, repsMin: 15, repsMax: 20, descansoSeg: 60, modo: 'corporal', tecnica: ['Pisa la liga con los dos pies y sube a los lados hasta la altura de los hombros.'], ilustracion: 'laterales-liga' })
 
-/** Laterales: en A, B y C, en la zona de bancos (mancuernas ligeras) */
-const LATERALES = (sesion: Letra, orden: number): Ejercicio => ({
-  id: 'laterales', nombre: 'Elevaciones laterales', sesion, orden, zona: 'bancos', series: 3, repsMin: 12, repsMax: 20, descansoSeg: 60, modo: 'peso', incrementoKg: 1,
+/** Laterales: en A, B y C, en la zona de bancos (mancuernas ligeras); en A van 4 series (PULIDO-FM.md, 4) */
+const LATERALES = (sesion: Letra, orden: number, series = 3): Ejercicio => ({
+  id: 'laterales', nombre: 'Elevaciones laterales', sesion, orden, zona: 'bancos', series, repsMin: 12, repsMax: 20, descansoSeg: 60, modo: 'peso', incrementoKg: 1,
   ubicar: 'Mancuernas ligeras (empezar con las que parezcan poca cosa).',
   tecnica: ['De pie, mancuernas a los costados, codos apenas doblados.', 'Subir a los lados hasta la altura de los hombros.', 'Bajar en 2 segundos.'],
   errores: ['Impulso.', 'Pasar de los hombros.', 'Encoger hombros.'],
   ilustracion: 'laterales',
-  alternativas: [alt({ id: 'laterales-sentado', nombre: 'Laterales sentado en la orilla de un banco', caso: 'Si te balanceas', series: 3, repsMin: 12, repsMax: 20, descansoSeg: 60, tecnica: ['Sentado en la orilla del banco, mismo movimiento.'], ilustracion: 'laterales-sentado' })],
+  alternativas: [alt({ id: 'laterales-sentado', nombre: 'Laterales sentado en la orilla de un banco', caso: 'Si te balanceas', series, repsMin: 12, repsMax: 20, descansoSeg: 60, tecnica: ['Sentado en la orilla del banco, mismo movimiento.'], ilustracion: 'laterales-sentado' })],
 })
 /** Remo sentado en máquina: en B y en C */
 const REMO_POLEA = (sesion: Letra, orden: number): Ejercicio => ({
@@ -78,13 +78,13 @@ const CRUNCH = (sesion: Letra, orden: number): Ejercicio => ({
 export const EJERCICIOS: Ejercicio[] = [
   // ---------------- A: pecho y pierna · Bancos → Terraza ----------------
   {
-    id: 'press-inclinado', nombre: 'Press inclinado con mancuernas', sesion: 'A', orden: 1, zona: 'bancos', series: 3, repsMin: 8, repsMax: 10, descansoSeg: 90, modo: 'peso',
+    id: 'press-inclinado', nombre: 'Press inclinado con mancuernas', sesion: 'A', orden: 1, zona: 'bancos', series: 4, repsMin: 8, repsMax: 10, descansoSeg: 90, modo: 'peso',
     ubicar: 'Banco reclinable a 30° (uno o dos clics arriba de plano). Más de 45° ya es hombro. Del 1 al 4 es el mismo banco.',
     colocacion: 'Mancuernas sobre los muslos, impulsar una a la vez al acostarse, espalda alta pegada, omóplatos juntos y abajo.',
     tecnica: ['Bajar hasta la parte alta del pecho.', 'Empujar arriba y un poco atrás.'], errores: ['Banco muy inclinado.', 'Codos abiertos.', 'Rebotar.'], ilustracion: 'press-inclinado',
     alternativas: [
-      alt({ id: 'press-plano', nombre: 'Press plano con mancuernas', caso: 'No hay banco reclinable libre', series: 3, repsMin: 8, repsMax: 10, descansoSeg: 90, tecnica: ['Mismo movimiento en banco plano.'], ilustracion: 'press-plano' }),
-      pressPiso('Bancos ocupados o molestia de hombro', 'Press en el piso con mancuernas, en colchoneta'),
+      alt({ id: 'press-plano', nombre: 'Press plano con mancuernas', caso: 'No hay banco reclinable libre', series: 4, repsMin: 8, repsMax: 10, descansoSeg: 90, tecnica: ['Mismo movimiento en banco plano.'], ilustracion: 'press-plano' }),
+      pressPiso('Bancos ocupados o molestia de hombro', 'Press en el piso con mancuernas, en colchoneta', 4),
     ],
   },
   {
@@ -97,7 +97,7 @@ export const EJERCICIOS: Ejercicio[] = [
       lagartijas('Bancos ocupados o molestia de hombro al abrir', 2),
     ],
   },
-  LATERALES('A', 3),
+  LATERALES('A', 3, 4),
   {
     id: 'triceps-cabeza', nombre: 'Tríceps con mancuerna sobre la cabeza, sentado', sesion: 'A', orden: 4, zona: 'bancos', series: 2, repsMin: 10, repsMax: 12, descansoSeg: 60, modo: 'peso',
     ubicar: 'El mismo banco reclinable, casi derecho.',

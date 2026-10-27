@@ -21,13 +21,14 @@ describe('duración estimada (RUTINA-FINAL.md, 3)', () => {
   })
   it('descansos completos, 1 min entre ejercicios y 2 al cambiar de zona', () => {
     const a = listaDe('A')
-    // press inclinado 3 × (40 + 90) = 390; aperturas 2 × (50 + 60) = 220; misma zona: 60
-    expect(segundosPesas(a.slice(0, 2))).toBe(390 + 60 + 220)
+    // press inclinado 4 × (40 + 90) = 520; aperturas 2 × (50 + 60) = 220; misma zona: 60
+    expect(segundosPesas(a.slice(0, 2))).toBe(520 + 60 + 220)
     // tríceps (bancos) → goblet (terraza): 120
     expect(segundosPesas(a.slice(3, 5))).toBe(210 + 120 + 405)
   })
-  it('A unos 58, B unos 64, C unos 58 con calentamiento y cierre; la corta unos 31; CASA 12', () => {
-    expect(duracionEstimada(listaDe('A'), 'completa')).toBe(58)
+  it('A unos 62, B unos 64, C unos 58 con calentamiento y cierre; la corta unos 31; CASA 12', () => {
+    // A con press inclinado y laterales a 4 series (PULIDO-FM.md, 4)
+    expect(duracionEstimada(listaDe('A'), 'completa')).toBe(62)
     expect(duracionEstimada(listaDe('B'), 'completa')).toBe(64)
     expect(duracionEstimada(listaDe('C'), 'completa')).toBe(58)
     expect(duracionEstimada(listaDe('A', 'corta'), 'corta')).toBe(32)
@@ -36,7 +37,7 @@ describe('duración estimada (RUTINA-FINAL.md, 3)', () => {
     expect(duracionEstimada(listaDe('CASA'), 'completa', { casa: true })).toBe(12)
   })
   it('hasta la última pesa: calentamiento más pesas, sin cierre', () => {
-    expect(minutosHastaUltimaPesa(listaDe('A'), 'completa')).toBeCloseTo(8 + 2410 / 60, 2)
+    expect(minutosHastaUltimaPesa(listaDe('A'), 'completa')).toBeCloseTo(8 + 2655 / 60, 2)
     expect(DUR_B.completa).toBeCloseTo(8 + 2730 / 60, 2)
     expect(DUR_B.corta).toBeCloseTo(5 + 1275 / 60, 2)
   })
@@ -57,6 +58,8 @@ describe('versión automática (RUTINA-FINAL.md, 3 y 14)', () => {
     expect(l.corta).toBe(minutosDe('20:43'))
     expect(versionAutomatica(l.completa, DUR_B, tope)).toBe('completa')
     expect(versionAutomatica(l.completa + 1, DUR_B, tope)).toBe('corta')
+    // A, con press inclinado y laterales a 4 series, alcanza la completa hasta las 20:17
+    expect(limites(DUR_A, tope).completa).toBe(minutosDe('20:17'))
     expect(versionAutomatica(l.corta, DUR_B, tope)).toBe('corta')
     expect(versionAutomatica(l.corta + 1, DUR_B, tope)).toBe('casa')
   })
