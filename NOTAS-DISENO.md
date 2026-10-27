@@ -309,3 +309,13 @@ Ya estaba todo del 1 de octubre (layout con áreas seguras y prueba del botón, 
 ## Pruebas de punta a punta
 - `e2e/comun.mjs`: `reloj()` instala el reloj falso en el miércoles 7 oct 2026 a las 7 pm (avanza en tiempo real); `?seed=` deja la app sin carga inicial, sin "Pon al día" y con la semana anterior contestada (`?fresco=1` la deja como instalación nueva; `?registro=fecha:tipo` registra una sesión).
 - `e2e/registro.spec.mjs` cubre la sección 14 del registro; `alternativas.spec.mjs` recorre A y B con goblet, "Ocupado: después" y el recorte; `frida.spec.mjs` usa la semana del 14 de septiembre con una B el domingo 13.
+
+# Pulido (PULIDO-FM.md, 27 oct)
+
+- Auditoría con `scripts/auditoria.mjs`: WebKit a 375, 393 y 430, con `?seed=1` y vacía; revisa errores de consola, scroll horizontal, toques de menos de 44 px, campos de menos de 16 px y textos cortados o fuera de la pantalla. `NAVEGADOR=webkit npx playwright test` corre las de punta a punta en WebKit.
+- A: press inclinado y laterales a 4 series; sus alternativas (press plano, press en el piso, laterales sentado) también a 4 dentro de A, para que el volumen no dependa de qué banco esté libre. A ≈ 62 min, completa hasta las 20:17.
+- El Deshacer va arriba en toda la sesión (abajo están reps, Serie hecha, +15 s y las cifras del resumen) y por encima de las hojas.
+- Borrar sesión, serie, peso, cintura o foto: sin diálogo, con Deshacer. En peso y cintura se borra con "Borrar", ya no tocando la fila. Descartar una sesión entera y reemplazar todo al importar siguen preguntando.
+- La tarjeta siempre muestra "La vez pasada: 30 lb × 10, 10, 9." con el peso de hoy (sube, repite, quédate o baja).
+- Toques de 44: select sin apariencia nativa con flecha propia, interruptor, barra (relleno con margen negativo para no mover los textos), botones dentro de renglones con relleno de 13 px y margen negativo.
+- `color-scheme: dark` en tinta y en las hojas, `light` en piedra y rojo, para que los selectores nativos de iOS combinen aunque el teléfono esté en modo claro.
