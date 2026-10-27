@@ -19,6 +19,10 @@
   --boton-fondo: var(--rojo);
   --boton-texto: var(--tinta);
 }
+/* los controles nativos (selector de fecha y hora, listas) en oscuro sobre tinta y cobalto, en claro sobre piedra y rojo; igual con el iPhone en modo claro u oscuro */
+:root, .hoja { color-scheme: dark; }
+body[data-pantalla='calentamiento'], body[data-pantalla='serie'] { color-scheme: light; }
+
 /* derivados: se resuelven en body, donde vive --texto de cada pantalla */
 body, .hoja {
   --texto-2: color-mix(in srgb, var(--texto) var(--texto-2-pct, 60%), transparent);
