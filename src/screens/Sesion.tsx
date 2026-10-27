@@ -189,7 +189,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
           onSaltar={() => { const antes = { ...activa }; setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined }); setAccion({ texto: 'Descanso saltado.', deshacer: () => setActiva(antes) }) }}
           onSiguienteEjercicio={() => { const antes = { ...activa }; ir(indice + 1); setAccion({ texto: 'Descanso saltado.', deshacer: () => setActiva(antes) }) }} />
       )}
-      {paso.tipo === 'cierre' && <PasoTiempo key="cierre" titulo="Cierre" detalle={`${minCierre} min a elección: saco en la terraza o elíptica.${sesion.terminoAqui ? ' Terminaste aquí: cierre corto.' : ''}`} nota={CIERRE.saco} minutos={minCierre} linea={null} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
+      {paso.tipo === 'cierre' && <PasoTiempo key="cierre" titulo="Cierre" detalle={`${minCierre} min a elección: saco en la terraza o elíptica.`} nota={CIERRE.saco(minCierre)} minutos={minCierre} linea={null} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
       {paso.tipo === 'resumen' && <Resumen datos={datos} sesion={sesion} sets={sets} lista={lista} onTerminar={onTerminar} />}
 
       {accion && <Deshacer texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
@@ -199,7 +199,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
           {ej && <Fila texto="Ver técnica" onClick={() => { setMenu(false); setTecnica(true) }} />}
           {ej && !casa && <Fila texto="Ocupado: después" detalle={pospuesto ? 'Ya se pospuso una vez: ahora la alternativa' : 'Lo manda al final de su zona'} onClick={ocupado} />}
           {ej && <Fila texto="Cambiar por alternativa" detalle="Si sigue ocupado o no te late" onClick={() => { setMenu(false); setAlternativas(true) }} />}
-          <Fila texto="Series de hoy" detalle={`${setsHoy.length} registradas, editar o borrar`} onClick={() => { setMenu(false); setSeriesHoy(true) }} />
+          <Fila texto="Series de hoy" detalle={`${setsHoy.length} ${setsHoy.length === 1 ? 'registrada' : 'registradas'}, editar o borrar`} onClick={() => { setMenu(false); setSeriesHoy(true) }} />
           {indice > 0 && <Fila texto={ej && ej.indice > 0 ? 'Ejercicio anterior' : 'Paso anterior'} onClick={() => { setMenu(false); ir(indice - 1) }} />}
           {paso.tipo !== 'resumen' && <Fila texto={ej ? 'Saltar ejercicio' : 'Saltar'} onClick={saltar} />}
           <Fila texto="Seguir después" detalle="Se queda guardada donde vas" onClick={() => { setMenu(false); onSalir() }} />
@@ -223,7 +223,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
       {ej && <FichaHoja abierta={tecnica} onCerrar={() => setTecnica(false)} base={ej.base} item={ej.item} datos={datos} series={ej.series} alternativas={disponibles} onElegirAlternativa={elegirAlternativa} />}
       {ej && (
         <Hoja abierta={alternativas} titulo="Cambiar por" onCerrar={() => setAlternativas(false)}>
-          {!casa && !pospuesto && <p className="t-nota tenue">Si está ocupado, primero "Ocupado: después" en el menú: lo manda al final de su zona.</p>}
+          {!casa && !pospuesto && <p className="t-nota tenue">Si está ocupado, primero "Ocupado: después": lo manda al final de su zona.</p>}
           {pospuesto && <p className="t-nota tenue">Ya se pospuso una vez. Si sigue ocupado, cambia por la alternativa.</p>}
           <Grupo>
             {[ej.base, ...disponibles].filter((a) => a.id !== ej.item.id).map((a) => {
@@ -580,7 +580,7 @@ function Resumen({ datos, sesion, sets, lista, onTerminar }: { datos: Datos; ses
         <div className="resumen-cifras">
           <div className="resumen-cifra"><span className="t-cifra">{minutos}</span><span className="t-unidad tenue">min</span></div>
           <div className="resumen-cifra"><span className="t-cifra">{hechosEj}</span><span className="t-unidad tenue">{hechosEj === 1 ? 'ejercicio' : 'ejercicios'}</span></div>
-          <div className="resumen-cifra"><span className="t-cifra">{propios.length}</span><span className="t-unidad tenue">series</span></div>
+          <div className="resumen-cifra"><span className="t-cifra">{propios.length}</span><span className="t-unidad tenue">{propios.length === 1 ? 'serie' : 'series'}</span></div>
         </div>
         <BotonPrincipal onClick={terminar}>Cerrar</BotonPrincipal>
       </div>

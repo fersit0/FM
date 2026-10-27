@@ -20,7 +20,8 @@ export const CALENTAMIENTO = {
 export const CIERRE = {
   nombre: 'Cierre', minCompleta: 10, minCorta: 5, minTerminarAqui: 5,
   texto: 'Diez minutos a elección: saco en la terraza (1 min fuerte y 1 min suave, cinco veces) o elíptica. Corta o "Terminar aquí": 5 min.',
-  saco: 'Saco: 1 min fuerte y 1 min suave, cinco veces. O elíptica.',
+  /** con 10 min son cinco vueltas; con 5 (corta o "Terminar aquí"), hasta que se acabe */
+  saco: (min: number) => `Saco: 1 min fuerte y 1 min suave, ${min >= 10 ? 'cinco veces' : `hasta los ${min}`}.`,
 }
 export const REGLAS_GLOBALES: { titulo: string; texto: string }[] = [
   { titulo: 'Esfuerzo', texto: 'Terminar cada serie con 1 o 2 repeticiones en reserva. Si la última salió fácil, el peso era chico. Si no llegaste al mínimo del rango, era grande.' },

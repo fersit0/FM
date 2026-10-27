@@ -63,7 +63,8 @@ describe('sesiones por zona, sin pares (RUTINA-FINAL.md, 4, 5 y 5c)', () => {
     expect(CALENTAMIENTO.minCorta).toBe(5)
     expect(CIERRE.minCompleta).toBe(10)
     expect(CIERRE.minCorta).toBe(5)
-    expect(CIERRE.saco).toMatch(/1 min fuerte y 1 min suave, cinco veces/)
+    expect(CIERRE.saco(10)).toMatch(/1 min fuerte y 1 min suave, cinco veces/)
+    expect(CIERRE.saco(5)).toBe('Saco: 1 min fuerte y 1 min suave, hasta los 5.')
   })
   it('el jalón cerrado y el ancho son la misma máquina; los dos remos de B y C son el mismo id', () => {
     expect(buscarEjercicio('jalon-cerrado')!.ubicar).toMatch(/misma máquina/)
