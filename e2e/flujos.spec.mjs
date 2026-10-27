@@ -152,7 +152,7 @@ test('registrar un día pasado', async ({ page }) => {
 
 test('exportar e importar respaldo', async ({ page }) => {
   // sin hoja de compartir (WebKit de escritorio la ofrece y nunca se cierra): así baja como archivo
-  await page.addInitScript(() => { Object.defineProperty(navigator, 'canShare', { value: undefined }) })
+  await page.evaluate(() => { Object.defineProperty(navigator, 'canShare', { value: undefined }) })
   await registrar(page, null, 'A')
   await expect(page.locator('.punto.hecho')).toHaveCount(2)
   // peso y cintura también viajan en el respaldo

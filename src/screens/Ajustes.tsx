@@ -44,7 +44,10 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
     const a = document.createElement('a')
     a.href = url
     a.download = nombre
+    // Safari solo descarga si el enlace está en la página
+    document.body.appendChild(a)
     a.click()
+    a.remove()
     setTimeout(() => URL.revokeObjectURL(url), 5000)
   }
 
