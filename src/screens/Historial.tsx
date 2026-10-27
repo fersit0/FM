@@ -45,7 +45,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
               const ini = desdeClave(w.inicio)
               const dias = Array.from({ length: 7 }, (_, i) => claveFecha(sumarDias(ini, i)))
               return (
-                <Fila key={w.inicio} texto={`${ini.getDate()} al ${fechaCorta(claveFecha(sumarDias(ini, 6)))}`} onClick={() => setSemana(w)}>
+                <Fila key={w.inicio} texto={`${ini.getMonth() === sumarDias(ini, 6).getMonth() ? ini.getDate() : fechaCorta(w.inicio)} al ${fechaCorta(claveFecha(sumarDias(ini, 6)))}`} onClick={() => setSemana(w)}>
                   <span className="puntos" aria-label={`${w.sesiones.length} de 3`}>{dias.map((d) => <i key={d} className={`punto ${w.sesiones.some((s) => s.fecha === d) ? 'hecho' : ''}`} />)}</span>
                 </Fila>
               )
