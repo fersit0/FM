@@ -217,7 +217,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
       </Hoja>
       <Hoja abierta={seriesHoy} titulo="Series de hoy" altura="completa" onCerrar={() => setSeriesHoy(false)}>
         {setsHoy.length === 0 ? <p className="t-cuerpo tenue">Todavía no hay series.</p> : (
-          <Grupo>{setsHoy.map((s) => <SerieEditable key={s.id} set={s} datos={datos} />)}</Grupo>
+          <Grupo>{setsHoy.map((s) => <SerieEditable key={s.id} set={s} datos={datos} onBorrada={(b) => setAccion({ texto: 'Serie borrada.', deshacer: () => { datos.guardarSet(b) } })} />)}</Grupo>
         )}
       </Hoja>
       {ej && <FichaHoja abierta={tecnica} onCerrar={() => setTecnica(false)} base={ej.base} item={ej.item} datos={datos} series={ej.series} alternativas={disponibles} onElegirAlternativa={elegirAlternativa} />}
@@ -248,7 +248,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
 }
 
 /** Fila editable de una serie: peso en la unidad del ejercicio y reps, con Borrar */
-export function SerieEditable({ set, datos }: { set: SetLog; datos: Datos }) {
+export function SerieEditable({ set, datos, onBorrada }: { set: SetLog; datos: Datos; onBorrada: (s: SetLog) => void }) {
   const info = buscarCualquiera(set.exerciseId)
   const unidad: Unidad = info ? unidadDe(info.item, datos.settings.unidades) : 'kg'
   const paso = info ? incrementoDe(info.item, unidad) : undefined
@@ -261,14 +261,14 @@ export function SerieEditable({ set, datos }: { set: SetLog; datos: Datos }) {
     await datos.guardarSet({ ...set, pesoKg: p === null ? null : aKg(p, unidad), peso: p ?? undefined, unidad: p === null ? undefined : unidad, reps: r })
   }
   return (
-    <div className="fila" style={{ flexWrap: 'wrap', gap: 8 }}>
+    <div className="fila serie-editable">
       <span className="fila-texto"><span className="t-cuerpo">{nombreDe(set.exerciseId)}</span><span className="t-nota tenue">Serie {set.numSerie}</span></span>
-      <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <span className="serie-editable-campos">
         {set.pesoKg !== null && <input inputMode="decimal" value={peso} onChange={(e) => setPeso(e.target.value)} onBlur={guardar} aria-label="Peso" style={{ width: 64, textAlign: 'right', borderBottom: '1px solid var(--separador)' }} />}
         {set.pesoKg !== null && <span className="t-nota tenue">{unidad}</span>}
         <input inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} onBlur={guardar} aria-label="Reps" style={{ width: 44, textAlign: 'right', borderBottom: '1px solid var(--separador)' }} />
         <span className="t-nota tenue">{set.exerciseId.startsWith('plancha') ? 's' : 'reps'}</span>
-        <BotonTexto onClick={() => confirm('¿Borrar esta serie?') && set.id !== undefined && datos.borrarSet(set.id)}>Borrar</BotonTexto>
+        <BotonTexto onClick={() => { if (set.id === undefined) return; datos.borrarSet(set.id); onBorrada(set) }}>Borrar</BotonTexto>
       </span>
     </div>
   )

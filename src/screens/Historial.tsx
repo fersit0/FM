@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import type { Sesion, SesionTipo } from '../data/tipos'
+import type { Sesion, SesionTipo, SetLog } from '../data/tipos'
 import { usePantalla } from '../design/pantallaActiva'
 import { semanasHistorial, tocaPesarse, tocaFoto, promedioSemanal, type SemanaHistorial } from '../logic/progreso'
 import { claveFecha, fechaCorta, DIAS_NOMBRE, desdeClave, sumarDias, inicioSemana } from '../logic/fechas'
@@ -23,7 +23,8 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
   const [fotos, setFotos] = useState(false)
   const [cinturaAbierta, setCinturaAbierta] = useState(false)
   const [agregar, setAgregar] = useState(false)
-  const [accion, setAccion] = useState<{ texto: string; deshacer: () => void | Promise<void> } | null>(null)
+  const [accion, setAccion] = useState<Accion | null>(null)
+  const cerrarAccion = useCallback(() => setAccion(null), [])
   const hayAlgo = datos.sesiones.some((s) => s.terminada)
   return (
     <div className="pantalla con-barra">
@@ -71,16 +72,19 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
         ))}
       </Hoja>
       <Hoja abierta={sesion !== null} altura="completa" titulo={sesion ? `${sesion.tipo === 'FRIDA' ? 'Frida' : sesion.tipo}, ${fechaCorta(sesion.fecha)}` : ''} onCerrar={() => setSesion(null)}>
-        {sesion && <DetalleSesion datos={datos} sesion={datos.sesiones.find((s) => s.id === sesion.id) ?? sesion} onBorrada={() => { setSesion(null); setSemana(null) }} />}
+        {sesion && <DetalleSesion datos={datos} sesion={datos.sesiones.find((s) => s.id === sesion.id) ?? sesion} onBorrada={() => { setSesion(null); setSemana(null) }} onAccion={setAccion} />}
       </Hoja>
       <RegistrarHoja datos={datos} ahora={ahora} abierta={agregar} onCerrar={() => setAgregar(false)} onGuardado={(s, reemplazada) => setAccion({ texto: `${textoDia(s.fecha)}: ${etiquetaDe(s)} registrada.`, deshacer: async () => { if (reemplazada) await datos.guardarSesion(reemplazada); else await datos.borrarSesion(s.id) } })} />
-      {accion && <Deshacer texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={() => setAccion(null)} />}
-      <PesoHoja datos={datos} ahora={ahora} abierta={peso} onCerrar={() => setPeso(false)} />
-      <FotosHoja datos={datos} ahora={ahora} abierta={fotos} onCerrar={() => setFotos(false)} />
-      <CinturaHoja datos={datos} ahora={ahora} abierta={cinturaAbierta} onCerrar={() => setCinturaAbierta(false)} />
+      {accion && <Deshacer texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
+      <PesoHoja datos={datos} ahora={ahora} abierta={peso} onCerrar={() => setPeso(false)} onAccion={setAccion} />
+      <FotosHoja datos={datos} ahora={ahora} abierta={fotos} onCerrar={() => setFotos(false)} onAccion={setAccion} />
+      <CinturaHoja datos={datos} ahora={ahora} abierta={cinturaAbierta} onCerrar={() => setCinturaAbierta(false)} onAccion={setAccion} />
     </div>
   )
 }
+
+/** Sin diálogos de confirmación: lo que se borra muestra Deshacer unos segundos (RUTINA-FINAL.md, 2.6) */
+type Accion = { texto: string; deshacer: () => void | Promise<void> }
 
 /** "A completa", "B corta", "A parcial", "A registrada", "Frida", "casa" */
 function etiquetaDe(s: Sesion): string {
@@ -89,7 +93,7 @@ function etiquetaDe(s: Sesion): string {
   return `${s.tipo} ${s.ligera ? 'ligera' : s.como ?? (s.origen === 'registro' ? 'registrada' : s.version)}`
 }
 
-function DetalleSesion({ datos, sesion, onBorrada }: { datos: Datos; sesion: Sesion; onBorrada: () => void }) {
+function DetalleSesion({ datos, sesion, onBorrada, onAccion }: { datos: Datos; sesion: Sesion; onBorrada: () => void; onAccion: (a: Accion) => void }) {
   const propios = datos.sets.filter((s) => s.sessionId === sesion.id)
   const ordenados = [...propios].sort((a, b) => a.hora - b.hora)
   const como = sesion.como === 'registrada' || sesion.origen === 'registro' ? 'Registrada sin la app' : sesion.como === 'parcial' ? 'Parcial: se cerró con pocas series' : sesion.como === 'corta' ? 'Corta' : sesion.como === 'completa' ? 'Completa' : sesion.terminada ? 'Hecha con la app' : 'Abierta'
@@ -103,14 +107,20 @@ function DetalleSesion({ datos, sesion, onBorrada }: { datos: Datos; sesion: Ses
         </Fila>
       </Grupo>
       {sesion.tipo === 'FRIDA' ? <p className="t-cuerpo tenue">Con Frida, a su ritmo y con su app.{sesion.nota ? ` Nota: ${sesion.nota}` : ''}</p> : ordenados.length === 0 ? <p className="t-cuerpo tenue">Sin series registradas.</p> : (
-        <Grupo>{ordenados.map((s) => <SerieEditable key={s.id} set={s} datos={datos} />)}</Grupo>
+        <Grupo>{ordenados.map((s) => <SerieEditable key={s.id} set={s} datos={datos} onBorrada={(b: SetLog) => onAccion({ texto: 'Serie borrada.', deshacer: () => { datos.guardarSet(b) } })} />)}</Grupo>
       )}
-      <BotonTexto onClick={async () => { if (!confirm('¿Borrar esta sesión y sus series?')) return; await datos.borrarSesion(sesion.id); onBorrada() }}>Borrar sesión</BotonTexto>
+      <BotonTexto onClick={async () => {
+        const copia = { ...sesion }
+        const series = propios.map((s) => ({ ...s }))
+        await datos.borrarSesion(sesion.id)
+        onBorrada()
+        onAccion({ texto: `${textoDia(copia.fecha)}: ${etiquetaDe(copia)} borrada.`, deshacer: async () => { await datos.guardarSesion(copia); for (const s of series) await datos.guardarSet(s) } })
+      }}>Borrar sesión</BotonTexto>
     </>
   )
 }
 
-function PesoHoja({ datos, ahora, abierta, onCerrar }: { datos: Datos; ahora: Date; abierta: boolean; onCerrar: () => void }) {
+function PesoHoja({ datos, ahora, abierta, onCerrar, onAccion }: { datos: Datos; ahora: Date; abierta: boolean; onCerrar: () => void; onAccion: (a: Accion) => void }) {
   const [kg, setKg] = useState('')
   const toca = tocaPesarse(datos.peso, ahora, datos.settings.diaPesaje)
   const ultimo = datos.peso[datos.peso.length - 1]
@@ -136,12 +146,12 @@ function PesoHoja({ datos, ahora, abierta, onCerrar }: { datos: Datos; ahora: Da
         <BotonTexto onClick={guardar}>Guardar</BotonTexto>
       </div>
       {datos.peso.length > 0 && <Linea puntos={datos.peso.slice(-12).map((p) => ({ etiqueta: fechaCorta(p.fecha), valor: p.kg }))} />}
-      {datos.peso.length > 0 && <Grupo>{[...datos.peso].reverse().slice(0, 8).map((p) => <Fila key={p.fecha} texto={fechaCorta(p.fecha)} dato={`${p.kg} kg`} onClick={() => confirm(`¿Borrar el peso del ${fechaCorta(p.fecha)}?`) && datos.borrarPeso(p.fecha)} />)}</Grupo>}
+      {datos.peso.length > 0 && <Grupo>{[...datos.peso].reverse().slice(0, 8).map((p) => <Fila key={p.fecha} texto={fechaCorta(p.fecha)} dato={`${p.kg} kg`}><BotonTexto onClick={() => { datos.borrarPeso(p.fecha); onAccion({ texto: `Peso del ${fechaCorta(p.fecha)} borrado.`, deshacer: () => { datos.guardarPeso(p) } }) }}>Borrar</BotonTexto></Fila>)}</Grupo>}
     </Hoja>
   )
 }
 
-function FotosHoja({ datos, ahora, abierta, onCerrar }: { datos: Datos; ahora: Date; abierta: boolean; onCerrar: () => void }) {
+function FotosHoja({ datos, ahora, abierta, onCerrar, onAccion }: { datos: Datos; ahora: Date; abierta: boolean; onCerrar: () => void; onAccion: (a: Accion) => void }) {
   const { toca, dias } = tocaFoto(datos.fotos, ahora)
   const [urls, setUrls] = useState<Record<string, string>>({})
   useEffect(() => {
@@ -166,7 +176,7 @@ function FotosHoja({ datos, ahora, abierta, onCerrar }: { datos: Datos; ahora: D
           {[...datos.fotos].reverse().map((f) => (
             <figure key={f.fecha}>
               {urls[f.fecha] && <img src={urls[f.fecha]} alt={`Foto del ${f.fecha}`} />}
-              <figcaption><span className="t-nota tenue">{fechaCorta(f.fecha)}</span><BotonTexto onClick={() => confirm('¿Borrar esta foto?') && datos.borrarFoto(f.fecha)}>Borrar</BotonTexto></figcaption>
+              <figcaption><span className="t-nota tenue">{fechaCorta(f.fecha)}</span><BotonTexto onClick={() => { datos.borrarFoto(f.fecha); onAccion({ texto: `Foto del ${fechaCorta(f.fecha)} borrada.`, deshacer: () => { datos.guardarFoto(f) } }) }}>Borrar</BotonTexto></figcaption>
             </figure>
           ))}
         </div>
@@ -175,7 +185,7 @@ function FotosHoja({ datos, ahora, abierta, onCerrar }: { datos: Datos; ahora: D
   )
 }
 
-function CinturaHoja({ datos, ahora, abierta, onCerrar }: { datos: Datos; ahora: Date; abierta: boolean; onCerrar: () => void }) {
+function CinturaHoja({ datos, ahora, abierta, onCerrar, onAccion }: { datos: Datos; ahora: Date; abierta: boolean; onCerrar: () => void; onAccion: (a: Accion) => void }) {
   const [cm, setCm] = useState('')
   const lunes = ahora.getDay() === 1
   const ultimo = datos.cintura[datos.cintura.length - 1]
@@ -194,7 +204,7 @@ function CinturaHoja({ datos, ahora, abierta, onCerrar }: { datos: Datos; ahora:
         <BotonTexto onClick={guardar}>Guardar</BotonTexto>
       </div>
       {datos.cintura.length > 0 && <Linea puntos={datos.cintura.slice(-12).map((c) => ({ etiqueta: fechaCorta(c.fecha), valor: c.cm }))} unidad="cm" />}
-      {ultimo && <Grupo>{[...datos.cintura].reverse().slice(0, 8).map((c) => <Fila key={c.fecha} texto={fechaCorta(c.fecha)} dato={`${c.cm} cm`} onClick={() => confirm(`¿Borrar la cintura del ${fechaCorta(c.fecha)}?`) && datos.borrarCintura(c.fecha)} />)}</Grupo>}
+      {ultimo && <Grupo>{[...datos.cintura].reverse().slice(0, 8).map((c) => <Fila key={c.fecha} texto={fechaCorta(c.fecha)} dato={`${c.cm} cm`}><BotonTexto onClick={() => { datos.borrarCintura(c.fecha); onAccion({ texto: `Cintura del ${fechaCorta(c.fecha)} borrada.`, deshacer: () => { datos.guardarCintura(c) } }) }}>Borrar</BotonTexto></Fila>)}</Grupo>}
     </Hoja>
   )
 }
