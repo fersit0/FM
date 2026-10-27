@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Settings } from '../data/tipos'
 import { armarRespaldo, leerRespaldo, blobABase64, base64ABlob } from '../logic/respaldo'
-import { borrarTodo, guardarSesion, guardarSet, guardarPeso, guardarFoto, guardarFotoEjercicio } from '../data/db'
+import { borrarTodo, guardarSesion, guardarSet, guardarPeso, guardarCintura, guardarFoto, guardarFotoEjercicio } from '../data/db'
 import { DIAS_NOMBRE, claveFecha } from '../logic/fechas'
 import { hapticosActivos, setHapticosActivos, haptico } from '../lib/haptics'
 import { sonidoActivo, setSonidoActivo, prepararAudio, sonarFinDescanso } from '../lib/sonido'
@@ -25,7 +25,7 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
   async function exportar() {
     const fotos = await Promise.all(datos.fotos.map(async (f) => ({ fecha: f.fecha, tipo: f.blob.type, base64: await blobABase64(f.blob) })))
     const fotosEjercicio = await Promise.all(datos.fotosEjercicio.map(async (f) => ({ ejercicioId: f.ejercicioId, fecha: f.fecha, tipo: f.blob.type, base64: await blobABase64(f.blob), base64b: f.blob2 ? await blobABase64(f.blob2) : undefined })))
-    const r = armarRespaldo({ settings, sesiones: datos.sesiones, sets: datos.sets, peso: datos.peso, fotos, fotosEjercicio })
+    const r = armarRespaldo({ settings, sesiones: datos.sesiones, sets: datos.sets, peso: datos.peso, cintura: datos.cintura, fotos, fotosEjercicio })
     const nombre = `gym-respaldo-${claveFecha(new Date())}.json`
     const file = new File([JSON.stringify(r)], nombre, { type: 'application/json' })
     const marcar = () => datos.setSettings({ ...datos.settings, ultimoRespaldo: claveFecha(new Date()) })
@@ -54,13 +54,14 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
     if (!f) return
     try {
       const r = leerRespaldo(await f.text())
-      const resumen = `${r.sesiones.length} sesiones, ${r.sets.length} series, ${r.peso.length} pesajes, ${r.fotos.length} fotos`
+      const resumen = `${r.sesiones.length} sesiones, ${r.sets.length} series, ${r.peso.length} pesajes, ${r.cintura?.length ?? 0} de cintura, ${r.fotos.length} fotos`
       if (!confirm(`Importar reemplaza todo lo que hay en el teléfono.\n\nEl archivo trae: ${resumen}.\n\n¿Seguimos?`)) return
       await borrarTodo()
       const desconocidos = new Set<string>()
       for (const s of r.sesiones) await guardarSesion(migrarSesion(s, desconocidos))
       for (const s of r.sets) await guardarSet(migrarSet(s, desconocidos))
       for (const p of r.peso) await guardarPeso(p)
+      for (const c of r.cintura ?? []) await guardarCintura(c)
       for (const foto of r.fotos) await guardarFoto({ fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo) })
       for (const foto of r.fotosEjercicio ?? []) await guardarFotoEjercicio({ ejercicioId: migrarFoto({ ejercicioId: foto.ejercicioId, blob: new Blob(), fecha: foto.fecha }, desconocidos).ejercicioId, fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo), blob2: foto.base64b ? base64ABlob(foto.base64b, foto.tipo) : undefined })
       datos.setSettings({ ...migrarSettings(r.settings, desconocidos), idsDesconocidos: [...desconocidos], ultimoRespaldo: claveFecha(new Date()) })
