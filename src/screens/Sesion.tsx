@@ -232,9 +232,9 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
                 <div key={a.id} className="fila" style={{ alignItems: 'flex-start' }}>
                   <Foto clave={a.ilustracion} ejercicioId={a.id} propias={datos.fotosEjercicio} nombre={a.nombre} modo="chica" />
                   <span className="fila-texto" style={{ gap: 6 }}>
-                    <button className="t-cuerpo" style={{ textAlign: 'left', whiteSpace: 'normal' }} onClick={() => elegirAlternativa(a.id === ej.base.id ? null : (a as Alternativa))}>{a.nombre}</button>
+                    <button className="t-cuerpo alt-boton" onClick={() => elegirAlternativa(a.id === ej.base.id ? null : (a as Alternativa))}>{a.nombre}</button>
                     <span className="t-nota tenue">{'caso' in a ? `${a.caso}. ` : 'Original. '}{ultimoPesoDe(a)}</span>
-                    <button className="t-nota" style={{ textAlign: 'left', color: siempre ? 'var(--rojo)' : 'var(--texto-2)' }} onClick={() => usarSiempre(ej.base, a.id === ej.base.id ? null : a.id)}>{siempre ? 'Es la de siempre' : 'Usar siempre esta'}</button>
+                    <button className="t-nota alt-boton" style={{ color: siempre ? 'var(--rojo)' : 'var(--texto-2)' }} onClick={() => usarSiempre(ej.base, a.id === ej.base.id ? null : a.id)}>{siempre ? 'Es la de siempre' : 'Usar siempre esta'}</button>
                   </span>
                 </div>
               )

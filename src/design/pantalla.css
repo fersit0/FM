@@ -29,8 +29,8 @@
 .inicio-aldia .inicio-pie { margin-top: auto; }
 /* el día ("mar 6") nunca se encoge; si no cabe todo, los botones bajan al renglón de abajo */
 .dia-fila .fila-texto { flex: none; }
-.dia-fila .dia-botones { justify-content: flex-start; gap: 6px; }
-.dia-fila .dia-boton { padding: 0 10px; font-size: 15px; min-height: 40px; min-width: 40px; }
+.dia-fila .dia-botones { justify-content: flex-start; gap: 4px; }
+.dia-fila .dia-boton { padding: 0 9px; font-size: 15px; min-height: 44px; min-width: 44px; }
 @media (max-height: 700px) { .inicio { gap: 10px; } .t-inicio { font-size: 44px; } .inicio-pie { gap: 8px; } }
 
 /* Ficha */
@@ -67,7 +67,8 @@
 .sesion-titulo-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .sesion-titulo-fila h1 { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .sesion-aviso { padding-top: 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
-.sesion-aviso button, .sesion-alternativa button { color: inherit; text-decoration: underline; text-underline-offset: 3px; font: inherit; padding: 10px 4px; margin: -10px -4px; }
+/* botones dentro de un renglón de texto: 44 de alto sin mover el renglón */
+.sesion-aviso button, .sesion-alternativa button, .sesion-zona button { color: inherit; text-decoration: underline; text-underline-offset: 3px; font: inherit; padding: 13px 4px; margin: -13px -4px; }
 .sesion-ruta { text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .sesion-ruta .actual { color: var(--texto); font-weight: 600; }
 .sesion-linea { display: block; width: 100%; text-align: left; white-space: normal; font: inherit; font-size: 15px; line-height: 1.3; }
