@@ -3,7 +3,7 @@ import type { Datos } from '../hooks/useDatos'
 import type { Settings } from '../data/tipos'
 import { armarRespaldo, leerRespaldo, blobABase64, base64ABlob } from '../logic/respaldo'
 import { borrarTodo, guardarSesion, guardarSet, guardarPeso, guardarCintura, guardarFoto, guardarFotoEjercicio } from '../data/db'
-import { DIAS_NOMBRE, claveFecha } from '../logic/fechas'
+import { DIAS_NOMBRE, claveFecha, fechaCorta } from '../logic/fechas'
 import { hapticosActivos, setHapticosActivos, haptico } from '../lib/haptics'
 import { sonidoActivo, setSonidoActivo, prepararAudio, sonarFinDescanso } from '../lib/sonido'
 import { PASOS_ATAJO, NOMBRE_ATAJO } from '../lib/atajos'
@@ -66,7 +66,7 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
       for (const foto of r.fotosEjercicio ?? []) await guardarFotoEjercicio({ ejercicioId: migrarFoto({ ejercicioId: foto.ejercicioId, blob: new Blob(), fecha: foto.fecha }, desconocidos).ejercicioId, fecha: foto.fecha, blob: base64ABlob(foto.base64, foto.tipo), blob2: foto.base64b ? base64ABlob(foto.base64b, foto.tipo) : undefined })
       datos.setSettings({ ...migrarSettings(r.settings, desconocidos), idsDesconocidos: [...desconocidos], ultimoRespaldo: claveFecha(new Date()) })
       await datos.recargar()
-      onAviso(desconocidos.size ? `Respaldo importado; ids sin mapa: ${[...desconocidos].join(', ')}` : 'Respaldo importado')
+      onAviso(desconocidos.size ? `Respaldo importado. No reconocí: ${[...desconocidos].join(', ')}` : 'Respaldo importado')
       onCerrar()
     } catch (err) {
       alert(err instanceof Error ? err.message : 'No se pudo importar.')
@@ -105,7 +105,7 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
       </Grupo>
 
       <Grupo titulo="Respaldo">
-        <Fila texto="Exportar respaldo" detalle={settings.ultimoRespaldo ? `Último: ${settings.ultimoRespaldo}. Un JSON con todo; se comparte o descarga` : 'Un JSON con todo; se comparte o descarga'} onClick={exportar} />
+        <Fila texto="Exportar respaldo" detalle={`${settings.ultimoRespaldo ? `Último: ${fechaCorta(settings.ultimoRespaldo)}. ` : ''}Un archivo con todo; se comparte o se guarda`} onClick={exportar} />
         <Fila texto="Importar respaldo" detalle="Reemplaza lo que hay en este teléfono" onClick={() => archivo.current?.click()} />
         <input ref={archivo} type="file" accept="application/json,.json" onChange={importar} className="oculto-visual" />
       </Grupo>

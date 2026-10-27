@@ -331,7 +331,7 @@ function textoSerie(h: SetLog, modo: Modo, unidad: Unidad, paso: number): string
   if (modo === 'tiempo') return `${h.reps} s`
   if (modo === 'corporal') return `${h.reps}`
   const p = pesoDeSet(h, unidad, paso)
-  return `${p ?? '—'} × ${h.reps}`
+  return `${p ?? 0} × ${h.reps}`
 }
 
 function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, linea, otraVersion, onCambiarVersion, onTecnica, onSiguiente, onGuardado, onSeries, onVolverOriginal, onOcupado, pospuesto }: { datos: Datos; sesion: SesionTipo; ej: PasoEjercicio; lista: Ejercicio[]; hechos: SetLog[]; sets: SetLog[]; activa: SesionActiva; setActiva: (a: SesionActiva) => void; linea: string | null; otraVersion: Version; onCambiarVersion?: () => void; onTecnica: () => void; onSiguiente: () => void; onGuardado: (id: number) => void; onSeries: () => void; onVolverOriginal: () => void; onOcupado?: () => void; pospuesto?: boolean }) {

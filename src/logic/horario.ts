@@ -48,7 +48,7 @@ export function estadoTiempoEnMinutos(min: number, settings: Pick<Settings, 'hor
     }
   }
   if (version === 'corta') return { version, minutosParaTope, titulo: 'Alcanza la corta', detalle: `Tienes ${minutosParaTope} min hasta la última pesa. Corta hasta las ${formatoHora(lim.corta)}.` }
-  return { version, minutosParaTope, titulo: 'Hoy ya no alcanza ni la corta.', detalle: minutosParaTope > 0 ? 'Queda casa, 12 minutos, o la corta de todas formas.' : 'Mañana es otro día.' }
+  return { version, minutosParaTope, titulo: 'Hoy ya no alcanza ni la corta.', detalle: minutosParaTope > 0 ? 'Queda casa, 12 minutos, o la corta de todas formas.' : 'Ya pasó la hora de la última pesa.' }
 }
 export function estadoTiempo(ahora: Date, settings: Pick<Settings, 'horaTope'>, duraciones: Duraciones): ResultadoTiempo {
   return estadoTiempoEnMinutos(minutosAhora(ahora), settings, duraciones, ahora.getDay() === 0)
