@@ -429,14 +429,15 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
     aviso = <>{conPeso ? `Hechas en ${unidad}: ` : 'Hechas: '}{hechos.map((h) => textoSerie(h, item.modo, unidad, incremento) + (h.exerciseId !== item.id ? ` (${nombreDe(h.exerciseId).toLowerCase()})` : '')).join(', ')}. <button onClick={onSeries}>Editar</button></>
   } else {
     // siempre a la vista: lo de la vez pasada (peso y reps) y el peso que toca hoy (PULIDO-FM.md, 3)
+    // la indicación va primero: en el iPhone SE dentro de Safari el aviso es de un solo renglón
     const vez = ultimaVez ? `La vez pasada: ${textoVez(ultimaVez, item.modo, unidad, incremento)}.` : ''
     const p = pesoSugerido !== null ? formatoPeso(pesoSugerido, unidad) : ''
-    if (sugerencia.tipo === 'subir' && vez && p) aviso = `${vez} ${invertida ? `Menos ayuda: ${p}` : `Sube a ${p}`}.`
-    else if (sugerencia.tipo === 'bajar' && vez && p) aviso = `${vez} Dos veces seguidas bajaron las reps: baja a ${p}.`
+    if (sugerencia.tipo === 'subir' && vez && p) aviso = `${invertida ? `Menos ayuda: ${p}` : `Sube a ${p}`}. ${vez}`
+    else if (sugerencia.tipo === 'bajar' && vez && p) aviso = `Baja a ${p}: dos veces seguidas bajaron las reps. ${vez}`
     else if (sugerencia.tipo === 'quedarse' && vez && pesoBase !== null) {
       const menos = pesoBase - signo * incremento
-      aviso = `${vez} No llegaste a ${item.repsMin}: quédate en ${formatoPeso(pesoBase, unidad)}${menos > 0 ? ` o baja a ${formatoPeso(menos, unidad)}` : ''}.`
-    } else if (vez) aviso = conPeso && p ? `${vez} Repite ${p}.` : vez
+      aviso = `Quédate en ${formatoPeso(pesoBase, unidad)}${menos > 0 ? ` o baja a ${formatoPeso(menos, unidad)}` : ''}: no llegaste a ${item.repsMin}. ${vez}`
+    } else if (vez) aviso = conPeso && p ? `Repite ${p}. ${vez}` : vez
     else if (primeraVez && conPeso) aviso = 'Primera vez: empieza con este y ajusta.'
   }
   // la de aproximación va además del aviso de peso, nunca en su lugar
