@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cargaInicial, cierresPendientes, comoQuedo, seriesPlaneadas, diasSinRegistro, sugeridaPara, diasDeSemanaHastaHoy, armarRegistro, esDiaDeGym, textoUltima, sesionRegistrada } from './registro'
+import { cargaInicial, cierresPendientes, comoQuedo, seriesPlaneadas, diasSinRegistro, sugeridaPara, diasDeSemanaHastaHoy, armarRegistro, esDiaDeGym, textoUltima, sesionRegistrada, momentoDe, momentoPorDefecto, preguntarNoche, textoFrida } from './registro'
 import { elegirSesion, estadoSemana, ultimaPropia } from './semana'
 import { DIAS_NOMBRE } from './fechas'
 import type { Sesion, SetLog } from '../data/tipos'
@@ -71,16 +71,16 @@ describe('días sin registro (2.3)', () => {
   it('una sola vez: contestado "No fui" ya no se pregunta', () => {
     expect(diasSinRegistro([lunes], [], { noFui: ['2026-10-06'] }, new Date('2026-10-07T19:00:00'))).toEqual([])
   })
-  it('incluye el día de Frida y sugiere FRIDA; lunes sin Frida, viernes y sábado no se preguntan; el domingo de rescate sí', () => {
+  it('incluye el día de Frida y sugiere FRIDA; el viernes y el domingo solo si la semana iba en menos de 3; sábado y lunes sin Frida no', () => {
     const r = diasSinRegistro([sesion('2026-10-01', 'B')], [], {}, new Date('2026-10-07T19:00:00'))
-    expect(r).toEqual([{ fecha: '2026-10-04', sugerida: 'A' }, { fecha: '2026-10-05', sugerida: 'FRIDA' }, { fecha: '2026-10-06', sugerida: 'A' }])
+    expect(r).toEqual([{ fecha: '2026-10-02', sugerida: 'A' }, { fecha: '2026-10-04', sugerida: 'A' }, { fecha: '2026-10-05', sugerida: 'FRIDA' }, { fecha: '2026-10-06', sugerida: 'A' }])
     // Frida movida al martes: el lunes no se pregunta y el martes sugiere Frida
     const plan = { '2026-10-05': '2026-10-06' }
-    expect(diasSinRegistro([sesion('2026-10-01', 'B')], [], { fridaPlan: plan }, new Date('2026-10-07T19:00:00'))).toEqual([{ fecha: '2026-10-04', sugerida: 'A' }, { fecha: '2026-10-06', sugerida: 'FRIDA' }])
+    expect(diasSinRegistro([sesion('2026-10-01', 'B')], [], { fridaPlan: plan }, new Date('2026-10-07T19:00:00'))).toEqual([{ fecha: '2026-10-02', sugerida: 'A' }, { fecha: '2026-10-04', sugerida: 'A' }, { fecha: '2026-10-06', sugerida: 'FRIDA' }])
   })
   it('en una semana sin Frida el martes sugiere C', () => {
     expect(sugeridaPara('2026-10-06', [], [], { '2026-10-05': null })).toBe('C')
-    expect(diasSinRegistro([sesion('2026-10-01', 'B')], [], { fridaPlan: { '2026-10-05': null } }, new Date('2026-10-07T19:00:00'))).toEqual([{ fecha: '2026-10-04', sugerida: 'A' }, { fecha: '2026-10-06', sugerida: 'C' }])
+    expect(diasSinRegistro([sesion('2026-10-01', 'B')], [], { fridaPlan: { '2026-10-05': null } }, new Date('2026-10-07T19:00:00'))).toEqual([{ fecha: '2026-10-02', sugerida: 'A' }, { fecha: '2026-10-04', sugerida: 'A' }, { fecha: '2026-10-06', sugerida: 'C' }])
   })
   it('el domingo solo cuando era de rescate (menos de 3 en la semana); el lunes solo si es el día de Frida', () => {
     expect(esDiaDeGym('2026-10-04', [sesion('2026-09-29', 'A')])).toBe(true)
@@ -90,9 +90,9 @@ describe('días sin registro (2.3)', () => {
     expect(esDiaDeGym('2026-10-05', [], [], { '2026-10-05': null })).toBe(false)
     expect(esDiaDeGym('2026-10-05', [], [], { '2026-10-05': '2026-10-07' })).toBe(false)
   })
-  it('no pregunta más de una semana atrás ni por hoy, y sin sesiones no pregunta nada', () => {
+  it('no pregunta más de una semana atrás ni por hoy, ni por el miércoles; sin sesiones no pregunta nada', () => {
     const r = diasSinRegistro([sesion('2026-09-01', 'A')], [], {}, new Date('2026-10-07T19:00:00'))
-    expect(r.map((d) => d.fecha)).toEqual(['2026-09-30', '2026-10-01', '2026-10-04', '2026-10-05', '2026-10-06'])
+    expect(r.map((d) => d.fecha)).toEqual(['2026-10-01', '2026-10-02', '2026-10-04', '2026-10-05', '2026-10-06'])
     expect(diasSinRegistro([], [], {}, new Date('2026-10-07T19:00:00'))).toEqual([])
   })
   it('la sugerencia respeta lo hecho antes de ese día en su semana', () => {
@@ -135,5 +135,57 @@ describe('registrar una sesión hecha sin la app (2.5)', () => {
     expect(textoUltima(ultimaPropia([cargaInicial([])!]), DIAS_NOMBRE)).toBe('la última fue A el miércoles 7')
     expect(textoUltima(ultimaPropia([sesion('2026-10-06', 'C')]), DIAS_NOMBRE)).toBe('la última fue C el martes 6')
     expect(textoUltima(null, DIAS_NOMBRE)).toBe('sin sesiones todavía')
+  })
+})
+
+describe('v7: registro con mañana o noche, Frida con tipo y "¿Vas en la noche?" (RUTINA-FINAL.md v7, 2)', () => {
+  const LUN = '2026-10-05', MAR = '2026-10-06', MIE = '2026-10-07', JUE = '2026-10-08', VIE = '2026-10-09', SAB = '2026-10-10'
+  const fp = (f: string): Sesion => sesion(f, 'FRIDA', true, { fridaTipo: 'pierna' })
+  it('antes de las 12 es mañana; al registrar después, noche el día de Frida y mañana los demás', () => {
+    expect(momentoDe(new Date(`${MAR}T06:45:00`).getTime())).toBe('manana')
+    expect(momentoDe(new Date(`${MAR}T12:00:00`).getTime())).toBe('noche')
+    expect(momentoPorDefecto(MAR)).toBe('manana')
+    expect(momentoPorDefecto(LUN)).toBe('noche')
+    expect(momentoPorDefecto(LUN, { [LUN]: MIE })).toBe('manana')
+    expect(momentoPorDefecto(MIE, { [LUN]: MIE })).toBe('noche')
+  })
+  it('registrar Frida guarda su tipo y su momento; cambiarla conserva el tipo si no se da otro', () => {
+    const r = armarRegistro([], LUN, 'FRIDA', MIE, undefined, { fridaTipo: 'pierna', momento: 'noche' })
+    expect('sesion' in r && r.sesion).toMatchObject({ tipo: 'FRIDA', fridaTipo: 'pierna', momento: 'noche' })
+    const otra = armarRegistro(['sesion' in r ? r.sesion : fp(LUN)], LUN, 'FRIDA', MIE, 'con nota')
+    expect('sesion' in otra && otra.sesion.fridaTipo).toBe('pierna')
+  })
+  it('una A registrada después de una Frida pierna de esa semana queda sin pierna; antes, no', () => {
+    const r = armarRegistro([fp(LUN)], MAR, 'A', MIE, undefined, { momento: 'manana' })
+    expect('sesion' in r && r.sesion).toMatchObject({ tipo: 'A', sinPierna: true, momento: 'manana' })
+    const antes = armarRegistro([fp(MIE)], MAR, 'A', MIE)
+    expect('sesion' in antes && antes.sesion.sinPierna).toBe(false)
+  })
+  it('días de gym: martes, jueves, el de Frida, el viernes si la semana iba en menos de 3; miércoles y sábado no', () => {
+    expect(esDiaDeGym(MAR, [])).toBe(true)
+    expect(esDiaDeGym(MIE, [])).toBe(false)
+    expect(esDiaDeGym(JUE, [])).toBe(true)
+    expect(esDiaDeGym(SAB, [])).toBe(false)
+    expect(esDiaDeGym(VIE, [sesion(LUN, 'FRIDA'), sesion(MAR, 'A')])).toBe(true)
+    expect(esDiaDeGym(VIE, [sesion(LUN, 'FRIDA'), sesion(MAR, 'A'), sesion(JUE, 'B')])).toBe(false)
+    expect(esDiaDeGym(MIE, [], [], { [LUN]: MIE })).toBe(true)
+  })
+  it('"¿Vas en la noche?": un martes a las 8:30 sin sesión sí; antes de las 8:15, después de las 21:00, con sesión, con "Voy en la noche" o "Hoy no", no', () => {
+    const en = (f: string, h: string) => new Date(`${f}T${h}:00`)
+    expect(preguntarNoche(en(MAR, '08:30'), [], [], {})).toBe(true)
+    expect(preguntarNoche(en(MAR, '08:10'), [], [], {})).toBe(false)
+    expect(preguntarNoche(en(MAR, '21:05'), [], [], {})).toBe(false)
+    expect(preguntarNoche(en(MAR, '08:30'), [sesion(MAR, 'A')], [], {})).toBe(false)
+    expect(preguntarNoche(en(MAR, '08:30'), [], [], { vaEnLaNoche: MAR })).toBe(false)
+    expect(preguntarNoche(en(MAR, '08:30'), [], [], { noFui: [MAR] })).toBe(false)
+    // miércoles y sábado no son días de pesas; el viernes solo si la semana va en menos de 3
+    expect(preguntarNoche(en(MIE, '09:00'), [], [], {})).toBe(false)
+    expect(preguntarNoche(en(SAB, '09:00'), [], [], {})).toBe(false)
+    expect(preguntarNoche(en(VIE, '09:00'), [sesion(LUN, 'FRIDA'), sesion(MAR, 'A')], [], {})).toBe(true)
+    expect(preguntarNoche(en(VIE, '09:00'), [sesion(LUN, 'FRIDA'), sesion(MAR, 'A'), sesion(JUE, 'B')], [], {})).toBe(false)
+  })
+  it('línea de Hoy con Frida: "Frida fue pierna el lunes"; las viejas sin tipo, torso', () => {
+    expect(textoFrida(fp(LUN), DIAS_NOMBRE)).toBe('Frida fue pierna el lunes')
+    expect(textoFrida(sesion(LUN, 'FRIDA'), DIAS_NOMBRE)).toBe('Frida fue torso el lunes')
   })
 })
