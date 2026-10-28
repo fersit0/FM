@@ -50,6 +50,9 @@ describe('sesiones por zona, sin pares (RUTINA-FINAL.md, 4, 5 y 5c)', () => {
     expect(ids(listaDe('B', 'corta'))).toEqual(['press-plano', 'laterales', 'jalon-cerrado'])
     expect(ids(listaDe('C', 'corta'))).toEqual(['jalon', 'press-militar', 'laterales'])
     for (const s of ['A', 'B', 'C'] as const) expect(listaDe(s, 'corta').every((e) => e.series === 3), s).toBe(true)
+    // también al cambiar por una alternativa: las de press inclinado y laterales van a 4 solo en la completa de A
+    for (const s of ['A', 'B', 'C'] as const) expect(listaDe(s, 'corta').flatMap((e) => e.alternativas).every((a) => a.series <= 3), s).toBe(true)
+    expect(listaDe('A').find((e) => e.id === 'laterales')!.alternativas[0].series).toBe(4)
     expect(rutaDe(listaDe('A', 'corta'))).toEqual(['bancos', 'terraza'])
     expect(rutaDe(listaDe('B', 'corta'))).toEqual(['bancos', 'poleas'])
     expect(rutaDe(listaDe('C', 'corta'))).toEqual(['poleas', 'bancos'])

@@ -257,7 +257,8 @@ export function listaDe(sesion: Letra, version: 'completa' | 'corta' = 'completa
   const todos = ejerciciosDe(sesion)
   if (sesion === 'CASA') return todos
   if (version === 'corta') {
-    const lista = todos.filter((e) => CORTA[sesion].includes(e.id)).map((e) => ({ ...e, series: 3 }))
+    // tres series también si se cambia por una alternativa (las de A van a 4 en la completa)
+    const lista = todos.filter((e) => CORTA[sesion].includes(e.id)).map((e) => ({ ...e, series: 3, alternativas: e.alternativas.map((a) => ({ ...a, series: Math.min(a.series, 3) })) }))
     const ruta = RUTA[sesion]
     return lista.sort((a, b) => ruta.indexOf(a.zona!) - ruta.indexOf(b.zona!) || a.orden - b.orden)
   }
