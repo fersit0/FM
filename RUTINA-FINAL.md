@@ -1,67 +1,90 @@
-# RUTINA-FINAL.md · versión 6 (8 oct 2026)
+# RUTINA-FINAL.md · versión 7 (28 oct 2026)
 
-Para Claude Code. Este archivo es la única fuente de verdad de la rutina de FM y lo autoriza Fer. Sustituye completas a todas las versiones anteriores (29 sep y versiones 2 a 5). Sale de lo que Fer vivió en el gym el 7 oct, de cómo es su gym y de que Frida cambió su rutina de los lunes. Donde choque con BRIEF.md, NOTAS o cualquier otra cosa en el repo, manda este archivo. En CLAUDE.md debe seguir la línea: "La rutina, los ejercicios, las alternativas y las fotos salen de RUTINA-FINAL.md".
+Para Claude Code. Este archivo es la única fuente de verdad de la rutina de FM y lo autoriza Fer. Sustituye a la versión 6 y a todas las anteriores. Sale de dos cambios en la vida de Fer: ahora entrena en la mañana, y con Frida a veces hace pierna y a veces torso, sin aviso. Las sesiones A, B y C no cambian, salvo la nueva "A sin pierna". Donde choque con BRIEF.md, NOTAS o cualquier otra cosa en el repo, manda este archivo. En CLAUDE.md debe seguir la línea: "La rutina, los ejercicios, las alternativas y las fotos salen de RUTINA-FINAL.md".
 
 ## 0. Prompt para pegarle a Code
 
 ```
-Lee RUTINA-FINAL.md (versión 6) en la raíz del proyecto; reemplaza a cualquier versión anterior. Cambió la semana: Frida ya no hace pierna, el día con ella solo se registra, y en el club hay tres sesiones (A, B y C) que la app elige según lo que ya hice en la semana. Si ya implementaste la v3, v4 o v5, ajústala a esta en vez de empezar de cero; lo que no cambia (lb, fotos, registro de sesiones, sección 15) se queda. Orden: 1) semana, registro y elección de sesión de la sección 2, en src/logic con pruebas, con la A del 7 oct ya cargada; 2) sesiones A, B y C por zona, sin pares, con sus alternativas; 3) versión automática, recorte y "Terminar aquí", en src/logic con pruebas; 4) botón "Ocupado: después"; 5) fotos y fichas nuevas; 6) lo que falte de la sección 15. Commits chicos en una rama y sin push hasta que te diga. Al final dime qué cambió, cuánto dura cada sesión según tu cálculo, y enséñame capturas a 390 px de Hoy en un día de club, Hoy en un día de Frida, "Pon al día tu semana", sesión A, sesión B, sesión C y la versión corta.
+Lee RUTINA-FINAL.md (versión 7) en la raíz del proyecto; reemplaza a la v6. Cambió el horario (gym en la mañana) y Frida ahora es pierna o torso según la semana; A, B y C se quedan igual, salvo la nueva "A sin pierna". Parte de la rama pulido (todavía no está en main) y crea la rama mananas. Lo que no cambia se queda: no rehagas nada del pulido ni de la sección 15. Orden: 1) horario de mañana y noche de la sección 3, en src/logic con pruebas; 2) Frida con tipo, sesiones base, A sin pierna y elección de sesión de la sección 2, en src/logic con pruebas (la tabla de ejemplos va completa como pruebas); 3) registro con mañana o noche y "¿Vas en la noche?"; 4) Tu semana en Hoy y los avisos. Commits chicos en la rama y no hagas push sin preguntarme. Al final dime qué cambió, hasta qué hora alcanza la completa y la corta en la mañana y en la noche para A, A sin pierna, B y C según tu cálculo, y enséñame capturas a 390 px de: Hoy martes 6:45 am, Hoy martes 8:30 am sin nada registrado, Hoy lunes en la noche al tocar "Fui con Frida", Tu semana con Frida pierna, Hoy jueves 9:30 pm con el aviso del viernes, y la sesión A sin pierna.
 ```
 
 ## 1. Qué cambia contra lo que hay en la app
 
-- **Frida ya no es pierna.** Frida cambió su rutina: ahora es espalda, hombro y bíceps, a su ritmo y con su app. En FM ese día solo se registra ("Fui con Frida"); no lleva ejercicios.
-- **Semana por sesiones, no por días.** Cada semana tiene tres sesiones base: Frida (o C si no hay Frida), A y B. La app elige cuál toca según lo que ya se hizo esa semana (sección 2).
-- **Tres sesiones de club:** A (pecho y pierna), B (torso completo) y C (espalda y hombro, solo en semanas sin Frida).
-- **La pierna va siempre en A** y ya no depende de Frida. Se quita toda la lógica de "pierna según Frida".
-- **Sin pares.** Todas las series de un ejercicio seguidas y luego el siguiente.
-- **Por zona del gym** (sección 3): bancos, poleas y terraza; cada zona se visita una vez por sesión.
-- **Cardio:** elíptica al empezar (8 min) y cierre de 10 min en saco o elíptica, a elección de Fer.
-- **Duración:** alrededor de una hora, máximo 70 min. Versión corta automática según la hora, recorte si se atrasa y botón "Terminar aquí".
-- **Solo ejercicios fáciles con equipo que Fer ubica.** Salen el pec deck, la prensa, la barra Z, la plancha y todo lo "en máquina" que no sea jalón, remo sentado o tríceps con cuerda.
+- **Gym en la mañana.** Martes y jueves en la mañana en el club. El viernes solo si la semana va corta. El domingo, rescate. La noche (martes a sábado) es el respaldo si no fue en la mañana. El lunes en la mañana hace cardio y en la noche va con Frida a Smart Fit. El miércoles descansa.
+- **Horario del club** (clubbritania.org): lunes 7:00 a 11:00; martes a sábado 6:00 a 21:30; domingo 6:00 a 19:00.
+- **Versión según la hora, mañana y noche** (sección 3). En la mañana: calentamiento de 5 min, sin cierre de cardio, última pesa ideal 7:40 y tope 8:15, porque a las 8:40 sale del club a la chamba y necesita 25 min de baño.
+- **Frida con tipo.** "Fui con Frida" pregunta qué hicieron: Pierna o Torso (espalda, hombro y bíceps, la rutina de la app de ella). Cambia de semana a semana; puede ser cualquier día, en la mañana o en la noche.
+- **A sin pierna** (sección 4b) en semanas en que Frida ya fue pierna. **C también es la extra** en esas semanas.
+- **Registro con mañana o noche** y tarjeta "¿Vas en la noche?" cuando la mañana se pasó sin sesión.
+- **Tu semana en Hoy:** una tira de lunes a domingo con lo hecho y lo que falta, que se recalcula sola. Aviso el jueves en la noche para el viernes. "Pesas extra" es como Fer llama a sus alarmas del viernes; úsalo tal cual.
+- **Se quita:** la última pesa única de las 21:10, "a las 22:00 cierran el agua", "en domingo o antes de las 7 pm, siempre completa" y el miércoles como día de gym.
 
 ## 2. Semana, registro y elección de sesión
 
-**Contexto de Fer:** el club (Club Britania) cierra los lunes. Frida va normalmente el lunes en Smart Fit, pero a veces se mueve a otro día. Fer va al club de martes a jueves, no siempre los tres. El domingo es comodín. Viernes y sábado casi nunca. Meta: mínimo 3 sesiones por semana; puede haber días extra.
+**La semana de Fer:**
 
-**Sesiones base de cada semana** (lunes a domingo): `FRIDA` (o `C` si esa semana no hay Frida), `A` y `B`. Cuentan para la meta `FRIDA`, A, B y C. `CASA` no cuenta.
+| Día | Qué hace | Qué muestra FM |
+|---|---|---|
+| Lunes | Cardio 25 min en el club en la mañana; Frida en la noche | Mañana: "Hoy: cardio tranqui 25 min y sauna · en la noche, Frida". Noche: Frida |
+| Martes | Pesas en la mañana | La sesión que toca |
+| Miércoles | Descanso | "Descanso". Si Fer toca Empezar igual, va la que toca y cuenta |
+| Jueves | Pesas en la mañana | La sesión que toca |
+| Viernes | Sauna; pesas solo si falta una | La que toca si la semana va en menos de 3; si no, "Semana completa · hoy sauna" con opción de extra |
+| Sábado | Libre | Nada; si registra algo, cuenta |
+| Domingo | Rescate si falta | Como la v6 |
+
+Meta: 3 sesiones por semana; cuentan `FRIDA`, A, B y C. `CASA` no cuenta. Máximo una sesión de club por día, más Frida si cae el mismo día.
 
 **Frida** (en `src/logic`, con pruebas):
-1. Cada semana tiene un día de Frida planeado: el lunes, salvo que Fer lo mueva. En Hoy, "Mover Frida" deja elegir otro día de esa semana o "Esta semana no hay".
-2. El día planeado, Hoy muestra "Hoy vas con Frida" con "Fui con Frida", "Se movió a…" y "No hubo". "Fui con Frida" registra la sesión `FRIDA` de ese día, sin ejercicios. Se puede agregar una nota opcional.
-3. Fer también puede registrar "Fui con Frida" cualquier otro día desde Hoy o Historial; cuenta igual y ese pasa a ser el día de Frida de esa semana.
-4. Si el día planeado pasa sin respuesta, la siguiente vez que abra la app, Hoy pregunta "¿Fuiste con Frida el [día]?" con las mismas opciones, antes de armar la sesión.
-5. Una semana queda "sin Frida" si Fer marca "Esta semana no hay" o contesta "No hubo". Entonces `C` entra a las sesiones base de esa semana.
+1. Día planeado: el lunes, salvo que Fer lo mueva con "Mover Frida", como en la v6.
+2. "Fui con Frida" abre dos botones grandes, **Pierna** y **Torso**, sin uno marcado de antemano. Se guarda en la sesión `FRIDA` como `fridaTipo: 'pierna' | 'torso'`, con su nota opcional como hoy. En Historial se puede cambiar y la semana se recalcula.
+3. Las `FRIDA` viejas sin tipo cuentan como torso.
+4. "No hubo" o "Esta semana no hay": semana sin Frida, como en la v6.
+5. Si el día planeado se acaba sin respuesta, Hoy pregunta "¿Fuiste con Frida el lunes?" con Pierna, Torso, "Se movió a…" y "No hubo".
 
-**Elección de la sesión de club** (en `src/logic`, con pruebas). Cuando Fer abre Hoy un día de club:
-1. Las que faltan son las sesiones base de la semana que todavía no se hacen: A y B siempre, y C solo si la semana está sin Frida.
-2. Si falta más de una, el orden es C → A → B (la de espalda primero, luego pecho y pierna, luego torso completo).
-3. Para no repetir espalda dos días seguidos: si ayer fue `FRIDA` o C, hoy no se ofrece B ni C mientras falte A. Si Frida está planeada para mañana, hoy no se ofrece B ni C mientras falte A.
-4. Si ya se hicieron las tres base, la sesión extra es A o B, alternando con la última que se hizo. C nunca es extra.
-5. Domingo: si la semana va en menos de 3, la que falte con las mismas reglas. Si ya van 3, ofrece la extra y deja claro que es opcional.
-6. El jueves en la noche, si la semana va en menos de 3, Hoy avisa: "Vas en 2 de 3; el domingo antes de las 3 pm te toca B".
-7. Fer siempre puede cambiar la sesión del día con un toque ("Hoy prefiero A"); la elección se recalcula después.
+**Sesiones base de cada semana:**
+- Frida pierna: `FRIDA`, A y B. La A sale como A sin pierna (sección 4b) si la `FRIDA` pierna ya está registrada antes de esa A. Si Frida se registra como pierna después de una A con pierna, no se cambia nada.
+- Frida torso, o Frida planeada para más adelante y todavía sin tipo: `FRIDA`, A y B.
+- Sin Frida: C, A y B.
 
-Ejemplos que deben salir así (también van como pruebas):
+**Elección de la sesión de club** (en `src/logic`, con pruebas):
+1. Faltan las base que no se han hecho. Si faltan varias, el orden es C → A → B.
+2. Sin espalda dos días seguidos: si ayer hubo `FRIDA` torso o C, hoy no se ofrece B ni C mientras falte A. `FRIDA` pierna no bloquea nada. Si Frida está planeada para mañana y no tiene tipo, cuenta como torso.
+3. Extra, cuando ya van las tres base: si la semana tuvo `FRIDA` pierna, la extra es C; si no, A o B, la contraria de la última. Nunca dos C en la misma semana.
+4. Domingo, "Hoy prefiero A" y el resto: como en la v6.
 
-| Semana | Lun | Mar | Mié | Jue | Dom |
-|---|---|---|---|---|---|
-| Normal | Frida | A | | B | |
-| Con 4 días | Frida | A | B | A (extra) | |
-| Frida el martes | | Frida | A | B | |
-| Sin Frida | | C | A | B | |
-| Faltó a días | Frida | A | | | B |
-| Frida el miércoles | | A | Frida | B | |
+Ejemplos que deben salir así (van todos como pruebas):
 
-**Registro de sesiones** (de la v5, sin cambios; en `src/logic`, con pruebas). Tiene que funcionar aunque Fer se olvide de abrir la app, de terminar la sesión o de registrar.
-1. Una sola lista de sesiones con fecha, tipo (A, B, C, `FRIDA`, `CASA`), cómo quedó (completa, corta, parcial o registrada sin detalle) y si vino de la app o se registró después. Todo lo demás se calcula de esa lista; no hay contadores guardados aparte.
-2. La sesión se cierra sola: una sesión con al menos una serie registrada cuenta como hecha. Se cierra al final del día, al empezar otra o con "Terminar aquí".
-3. Días sin registro: al abrir la app, si desde la última sesión pasó un día de gym (martes a jueves, el día de Frida o un domingo de rescate) sin nada, Hoy pregunta una sola vez por cada día: "¿Entrenaste el martes 6?" con "A", "B", "C", "Frida" y "No fui", con la que tocaba ya marcada.
-4. Pon al día tu semana: la primera vez que abra esta versión, una pantalla con los días de esta semana hasta hoy y los mismos botones por día. El miércoles 7 oct ya aparece como A.
-5. Registrar una sesión hecha sin la app, en Hoy y en Historial: fecha (hoy por defecto, nunca en el futuro) y tipo. Máximo una sesión de club por día: si ese día ya tiene una, ofrece cambiarla en vez de duplicarla.
-6. Sin diálogos de confirmación: cada registro muestra "Deshacer" unos segundos. Todo se puede editar o borrar en Historial, y la sesión que sigue se recalcula sola.
-7. Carga inicial: si no hay ninguna sesión el 7 oct 2026, se agrega una A registrada después.
-8. En Hoy, arriba y en una línea: "Hoy toca B · la última fue A el miércoles 7 · Semana: 1 de 3".
+| Semana | Lun | Mar | Mié | Jue | Vie | Dom |
+|---|---|---|---|---|---|---|
+| Frida pierna | Frida pierna | A sin pierna | | B | | |
+| Frida torso | Frida torso | A | | B | | |
+| Sin Frida | | C | | A | B | |
+| Frida pierna con extra | Frida pierna | A sin pierna | | B | C | |
+| Frida pierna, faltó el martes | Frida pierna | | | A sin pierna | B | |
+| Frida torso, faltó el jueves | Frida torso | A | | | B | |
+| Martes en la noche | Frida torso | A (noche) | | B | | |
+| Frida el miércoles, torso | | A | Frida torso | B | | |
+| Sin Frida, sin viernes | | C | | A | | B |
+
+**Registro de sesiones** (lo de la v6 sigue: la sesión se cierra sola, Deshacer sin diálogos, editar o borrar en Historial, nunca en el futuro). Cambia esto:
+1. Cada sesión guarda `momento: 'manana' | 'noche'`. En vivo sale de la hora de Empezar: antes de las 12:00 es mañana. Al registrar después, dos botones; por defecto mañana en martes, jueves y viernes, y noche el día de Frida. Las sesiones viejas sin momento se quedan sin él.
+2. Días de gym para preguntar "¿Entrenaste el martes 6?": martes, jueves, el día de Frida, el viernes solo si la semana iba en menos de 3, y el domingo si seguía en menos de 3. El lunes en la mañana, el miércoles y el sábado no son días de gym.
+3. Nunca se pregunta por un día que no se ha acabado: hasta las 21:30 de ese día todavía puede ir en la noche.
+4. **¿Vas en la noche?** De martes a sábado, de las 8:15 a las 21:00, si es día de gym y no hay sesión ese día, Hoy pone arriba "No fuiste en la mañana" con la sesión que toca, la versión que alcanza según la hora a la que salga (usa `estadoSiSalgo`) y tres botones: "Voy en la noche" (se queda como plan del día), "Ya fui" (abre registrar) y "Hoy no" (se guarda en `noFui` y la semana se recalcula).
+5. Registrar sesión, en Hoy y en Historial: fecha, mañana o noche, y qué fue: A, B, C, Frida pierna o Frida torso. Una de club por día, como en la v6.
+6. Línea de arriba de Hoy: "Hoy toca A sin pierna · Frida fue pierna el lunes · Semana: 1 de 3".
+
+**Tu semana en Hoy** (nuevo):
+- Debajo de la línea de arriba, una tira de siete días (L M M J V S D) que cabe completa a 375 px.
+- Cada día muestra: lo hecho (la letra, o F con P o T para Frida, y un punto chico si fue en la noche), lo planeado (la letra en contorno), nada en los días sin plan, y hoy marcado.
+- El plan sale de acomodar las base que faltan en los días que quedan después de hoy, en este orden de preferencia: martes, jueves, viernes y domingo; Frida en su día planeado; respetando la regla de espalda.
+- Tocar un día que ya pasó abre registrar o editar ese día. Los días futuros no hacen nada.
+- Se recalcula con cada registro, con cada cambio de tipo de Frida y con "Hoy no".
+
+**Avisos** (una línea en Hoy, sin notificaciones):
+- Jueves, cuando ya se hizo la sesión del día o después de las 21:00: si la semana va en menos de 3, "Vas en 2 de 3. Mañana viernes toca B: prende tus alarmas de Pesas extra." Si ya van 3: "Semana completa. Mañana viernes, sauna."
+- Viernes y domingo: el aviso de rescate de la v6, con el domingo hasta las 19:00.
 
 ## 3. Zonas, horario y versiones
 
@@ -72,17 +95,16 @@ Ejemplos que deben salir así (también van como pruebas):
 
 Cada ejercicio lleva su zona. La sesión se recorre por zonas en orden y cada zona se visita una sola vez. Arriba se ve el recorrido, por ejemplo "Bancos → Poleas → Terraza", y al terminar una zona la app dice a cuál sigue.
 
-- **Calentamiento:** 8 min de elíptica (bici fija si está ocupada). En la corta, 5.
-- **Cierre:** 10 min a elección: saco en la terraza (1 min fuerte y 1 min suave, cinco veces) o elíptica. En la corta, 5.
-- **Series seguidas:** cada ejercicio se termina completo antes de pasar al siguiente. El descanso corre al tocar la serie.
-- **Serie de aproximación:** en el primer ejercicio de la sesión y en el primer press si no es el primero, 10 repeticiones con la mitad del peso. No se registra.
-- **Esfuerzo:** 1 o 2 repeticiones en reserva.
-- **Duración** (se muestra en Hoy; Code la verifica con su cálculo de 40 s por serie de 8-10, 45 s de 10-12, 50 s de 12-15 y 55 s de 12-20, descansos completos, 1 min entre ejercicios y 2 min al cambiar de zona): A ≈ 62 min, B ≈ 64 min y C ≈ 58 min con calentamiento y cierre (cálculo de la app, 27 oct). Con los tiempos muertos reales quedan alrededor de una hora; el máximo es 70.
-- **Corta (unos 30 min):** calentamiento 5 min; tres ejercicios a 3 series (A: press inclinado, laterales y goblet; B: press plano, laterales y jalón cerrado; C: jalón ancho, press militar y laterales); cierre de 5 min. Cuenta como sesión.
-- **Versión automática** (en `src/logic`, con pruebas): al tocar "Empezar", la app toma la hora real y calcula si las pesas de la completa terminan antes de las 21:10 (última pesa; a las 22:00 cierran el agua). Si sí, completa. Si no, y la corta alcanza, corta. Si ninguna alcanza, ofrece `CASA`. Con las duraciones de arriba queda: completa si empieza a las 20:17 o antes en A, 20:16 en B y 20:22 en C; corta hasta las 20:42 en A y 20:43 en B y C; después `CASA`. Arriba de la sesión, en una línea: "Empezaste 8:22 · va la corta · terminas pesas 8:50", con un botón para cambiar de versión. En domingo o cualquier día antes de las 7 pm, siempre completa.
-- **Recorte en el camino:** si a media sesión la hora proyectada de la última pesa pasa de 21:10, la app quita lo que falta en este orden: abdomen, brazos, aperturas o puente de glúteo. Avisa en una línea qué quitó. Nunca quita el press principal, el jalón, el remo, los laterales ni la goblet.
-- **"Terminar aquí":** siempre visible durante la sesión. Cierra la sesión con lo hecho, cuenta para la meta y ofrece el cierre de cardio de 5 min.
-- **"Ocupado: después":** manda ese ejercicio al final de su zona; si la zona ya se terminó, al final de la sesión. Cuando le vuelve a tocar y sigue ocupado, ofrece su alternativa (sección 7).
+- **Calentamiento:** 5 min de elíptica o caminadora; 4 en la corta.
+- **Cierre:** en la mañana no hay. En la noche y en fin de semana, al terminar se ofrece "Cierre de 10 min (saco o elíptica)" con un botón para saltarlo; no entra en el cálculo de la versión.
+- **Series seguidas, serie de aproximación y esfuerzo:** como en la v6.
+- **Duración:** con el cálculo que ya tiene la app y sin cierre, unos 47 min de pesas en A, 49 en B y 43 en C, más el calentamiento. Code calcula la de A sin pierna y la reporta.
+- **Entre semana en la mañana** (lunes a viernes, empezando antes de las 12:00): la última pesa ideal es a las 7:40 y el tope a las 8:15. Al tocar Empezar: completa si inicio + calentamiento + pesas termina a las 8:15 o antes; si no, corta si cabe; si tampoco, Hoy dice "Ya no alcanza en la mañana" y abre "¿Vas en la noche?". En la mañana no se ofrece `CASA`. Con las duraciones de arriba, la completa alcanza hasta las 7:20 más o menos y la corta hasta las 7:50; Code lo verifica y lo reporta.
+- **Línea de la mañana:** "Empezaste 6:47 · completa · terminas pesas 7:36 · sauna hasta 8:40". Si la última pesa pasa de las 7:40: "terminas pesas 7:52 · te quedan 48 min de sauna y baño".
+- **Recorte en la mañana:** solo si la última pesa proyectada pasa de las 8:15, en el orden de la v6. Pasar de las 7:40 no recorta nada: lo que se acorta es el sauna.
+- **En la noche y en fin de semana:** la última pesa es 15 min antes de que cierre el club: 21:15 de martes a sábado y 18:45 el domingo. El lunes en la tarde el club no abre: no se ofrece sesión de club. Completa, corta o `CASA` y el recorte, como en la v6 pero con estos topes.
+- **Ajustes:** "Salida del club en la mañana" (8:40), "Minutos de baño" (25) y "Última pesa en la noche" (21:15). Se quita la de 21:10. El domingo sale solo de la hora de cierre.
+- **"Terminar aquí" y "Ocupado: después":** como en la v6.
 
 ## 4. Sesión A: pecho y pierna · Bancos → Terraza
 
@@ -98,6 +120,19 @@ Cada ejercicio lleva su zona. La sesión se recorre por zonas en orden y cada zo
 
 Notas: del 1 al 4 es el mismo banco reclinable: a 30° para el 1 y el 2, casi derecho para el 4. El cierre en saco queda ahí mismo en la terraza. El press inclinado y los laterales van a 4 series desde el 27 oct (PULIDO-FM.md, 4), con sus alternativas también a 4; en B, C y la corta siguen a 3. Así pecho y hombro lateral llegan a unas 10 series por semana contando a Frida.
 
+## 4b. A sin pierna: pecho y espalda · Bancos → Terraza (semanas con Frida pierna)
+
+| # | Zona | id | Nombre | Series × reps | Descanso | Modo | Foto |
+|---|---|---|---|---|---|---|---|
+| 1 | Bancos | `press-inclinado` | Press inclinado con mancuernas | 4 × 8-10 | 90 s | peso, lb | Incline_Dumbbell_Press |
+| 2 | Bancos | `aperturas-inclinadas` | Aperturas inclinadas con mancuernas | 3 × 12-15 | 60 s | peso, lb | Incline_Dumbbell_Flyes |
+| 3 | Bancos | `remo-pecho-apoyado` | Remo con pecho apoyado en banco reclinable | 3 × 10-12 | 75 s | peso, lb | Dumbbell_Incline_Row |
+| 4 | Bancos | `laterales` | Elevaciones laterales | 4 × 12-20 | 60 s | peso, lb | Side_Lateral_Raise |
+| 5 | Bancos | `triceps-cabeza` | Tríceps con mancuerna sobre la cabeza, sentado | 2 × 10-12 | 60 s | peso, lb | Seated_Triceps_Press |
+| 6 | Terraza | `crunch` | Crunch en colchoneta | 2 × 15-20 | 45 s | corporal | Crunches |
+
+Notas: es la A con la goblet y el puente cambiados por el remo y una serie más de aperturas, para no repetir pierna y que la espalda no quede corta esa semana. Del 1 al 3 es el mismo banco reclinable a 30°; en el 3, Fer va boca abajo con el pecho apoyado. En la app se llama "A · pecho y espalda", con la línea "Sin pierna: esta semana la hiciste con Frida". Comparte historial por id con todo lo demás. La alternativa del remo es `remo-mancuerna` (sección 7). Corta: press inclinado, remo con pecho apoyado y laterales. Recorte: abdomen, brazos y aperturas; nunca el press, el remo ni los laterales. Peso inicial de `remo-pecho-apoyado` sin historial: 30 lb por mano (manda sobre la sección 10).
+
 ## 5. Sesión B: torso completo · Bancos → Poleas → Terraza
 
 | # | Zona | id | Nombre | Series × reps | Descanso | Modo | Foto |
@@ -112,7 +147,7 @@ Notas: del 1 al 4 es el mismo banco reclinable: a 30° para el 1 y el 2, casi de
 
 Notas: el jalón cerrado usa la misma máquina y la misma barra del jalón ancho; solo cambian las manos.
 
-## 5c. Sesión C: espalda y hombro · Poleas → Bancos → Terraza (solo semanas sin Frida)
+## 5c. Sesión C: espalda y hombro · Poleas → Bancos → Terraza (semanas sin Frida, o la extra en semanas con Frida pierna)
 
 | # | Zona | id | Nombre | Series × reps | Descanso | Modo | Foto |
 |---|---|---|---|---|---|---|---|
@@ -130,6 +165,8 @@ Notas: el jalón cerrado usa la misma máquina y la misma barra del jalón ancho
 - **Bajar de peso:** la pierna es el músculo más grande y el que más gasta; el cardio de inicio y cierre suma unos 18 min por sesión. Lo que más baja es la comida y los pasos del plan; la rutina hace que lo que se baje sea grasa y no músculo.
 - **Si falla un día, no se pierde nada:** cada sesión trabaja varias zonas.
 - No agregues series ni ejercicios para "completar": cada sesión tiene que caber en una hora.
+- **Con Frida variable (v7):** con cualquier semana, pierna va una vez (Frida o la A), pecho dos (A y B), espalda dos o tres (Frida torso o C, B y el remo de la A sin pierna) y hombro lateral dos o tres.
+- **En la mañana:** A, B y C ya caben en unos 50 min de pesas. No agregues series para "aprovechar" el tiempo; si un día no alcanza, manda el recorte.
 
 ## 6. Sesión CASA: 12 minutos, opcional
 
@@ -298,6 +335,12 @@ Sin cambios: promedio de 7 días del peso, cintura cada lunes, foto cada 2 seman
 - Cada ejercicio y cada alternativa tiene sus dos fotos.
 - Capturas a 390 px de lo que pide la sección 0.
 - Commits chicos en una rama. Push solo cuando Fer lo apruebe. Al final, resumen corto de qué cambió.
+- **v7, elección de sesión:** las nueve semanas de la tabla de la sección 2 salen exactamente así. `FRIDA` pierna no bloquea B ni C al día siguiente; `FRIDA` torso sí, mientras falte A. La A sale sin pierna solo si la `FRIDA` pierna se registró antes. La extra es C en semanas con Frida pierna y nunca hay dos C.
+- **v7, Frida:** "Fui con Frida" no guarda nada hasta elegir Pierna o Torso; las `FRIDA` viejas cuentan como torso; cambiar el tipo en Historial recalcula la semana y Tu semana.
+- **v7, horario:** un martes, empezar B a las 6:45 da completa y pesas hasta 7:39 más o menos; a las 7:20, completa; a las 7:30, corta; a las 7:55, "Ya no alcanza en la mañana". El recorte de la mañana no se activa antes de las 8:15. Martes en la noche: 20:15 completa, 20:45 corta, 21:00 `CASA`. Domingo a las 11:00, completa (tope 18:45). Lunes en la tarde no ofrece sesión de club.
+- **v7, registro:** cada sesión guarda mañana o noche; no se pregunta por un día antes de que se acabe; el miércoles y el sábado no se preguntan; "Hoy no" recalcula la semana; un martes a las 8:30 sin sesión muestra "¿Vas en la noche?".
+- **v7, Tu semana:** cabe a 375 px; muestra hecho, planeado y hoy; el plan coincide con la tabla de la sección 2.
+- **v7, avisos:** jueves después de su sesión con 2 de 3 dice "Mañana viernes toca …: prende tus alarmas de Pesas extra"; con 3 de 3, "Semana completa".
 
 ## 15. Calidad de la app (pedido del 1 oct; si ya está, verifícalo y no lo rehagas)
 
