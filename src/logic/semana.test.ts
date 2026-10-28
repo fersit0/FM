@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { estadoSemana, avisoRescate, seriesPara, casaDeSemana, casaDisponible, estadoFrida, diaFridaPlaneado, diasParaMoverFrida, cuenta, ultimaPropia, semanaSinFrida, sesionesBase, faltantes, elegirSesion, type PlanFrida } from './semana'
+import { estadoSemana, avisoRescate, seriesPara, fridaTipoDe, fridaPiernaEnSemana, casaDeSemana, casaDisponible, estadoFrida, diaFridaPlaneado, diasParaMoverFrida, cuenta, ultimaPropia, semanaSinFrida, sesionesBase, faltantes, elegirSesion, type PlanFrida } from './semana'
 import type { Sesion, SetLog } from '../data/tipos'
 import { inicioSemana, claveFecha } from './fechas'
 
@@ -111,8 +111,8 @@ describe('elección de la sesión de club (RUTINA-FINAL.md, 2)', () => {
   })
   it('con 4 días: Frida, A, B y el jueves A como extra', () => {
     const s = [sesion(LUN, 'FRIDA'), sesion(MAR, 'A')]
-    expect(elegirSesion(s, undefined, dia(MIE))).toEqual({ tipo: 'B', extra: false })
-    expect(elegirSesion([...s, sesion(MIE, 'B')], undefined, dia(JUE))).toEqual({ tipo: 'A', extra: true })
+    expect(elegirSesion(s, undefined, dia(MIE))).toMatchObject({ tipo: 'B', extra: false })
+    expect(elegirSesion([...s, sesion(MIE, 'B')], undefined, dia(JUE))).toMatchObject({ tipo: 'A', extra: true })
   })
   it('Frida el martes: el lunes y el miércoles A, el jueves B', () => {
     const plan = { [LUN]: MAR }
@@ -126,7 +126,7 @@ describe('elección de la sesión de club (RUTINA-FINAL.md, 2)', () => {
     expect(tipo([sesion(MAR, 'C'), sesion(MIE, 'A')], JUE, SIN_FRIDA)).toBe('B')
   })
   it('faltó a días: Frida, A y el domingo B (no es extra)', () => {
-    expect(elegirSesion([sesion(LUN, 'FRIDA'), sesion(MAR, 'A')], undefined, dia(DOM))).toEqual({ tipo: 'B', extra: false })
+    expect(elegirSesion([sesion(LUN, 'FRIDA'), sesion(MAR, 'A')], undefined, dia(DOM))).toMatchObject({ tipo: 'B', extra: false })
   })
   it('Frida el miércoles: el martes A (Frida es mañana), el jueves B', () => {
     const plan = { [LUN]: MIE }
@@ -143,22 +143,82 @@ describe('elección de la sesión de club (RUTINA-FINAL.md, 2)', () => {
   })
   it('con las tres base hechas, la extra alterna con la última A o B; C nunca es extra', () => {
     const base = [sesion(LUN, 'FRIDA'), sesion(MAR, 'B'), sesion(MIE, 'A')]
-    expect(elegirSesion(base, undefined, dia(JUE))).toEqual({ tipo: 'B', extra: true })
+    expect(elegirSesion(base, undefined, dia(JUE))).toMatchObject({ tipo: 'B', extra: true })
     const sinFrida = [sesion(MAR, 'C'), sesion(MIE, 'A'), sesion(JUE, 'B')]
-    expect(elegirSesion(sinFrida, SIN_FRIDA, dia(DOM))).toEqual({ tipo: 'A', extra: true })
+    expect(elegirSesion(sinFrida, SIN_FRIDA, dia(DOM))).toMatchObject({ tipo: 'A', extra: true })
     expect(elegirSesion([sesion(MAR, 'A'), sesion(MIE, 'B'), sesion(JUE, 'C')], SIN_FRIDA, dia(DOM)).tipo).toBe('A')
   })
   it('"Hoy prefiero A" manda solo ese día', () => {
     const s = [sesion(LUN, 'FRIDA')]
-    expect(elegirSesion(s, undefined, dia(MAR), [], { fecha: MAR, tipo: 'B' })).toEqual({ tipo: 'B', extra: false })
+    expect(elegirSesion(s, undefined, dia(MAR), [], { fecha: MAR, tipo: 'B' })).toMatchObject({ tipo: 'B', extra: false })
     expect(elegirSesion(s, undefined, dia(MIE), [], { fecha: MAR, tipo: 'B' }).tipo).toBe('A')
     // elegir algo que ya se hizo es extra
-    expect(elegirSesion([...s, sesion(MAR, 'A')], undefined, dia(MIE), [], { fecha: MIE, tipo: 'A' })).toEqual({ tipo: 'A', extra: true })
+    expect(elegirSesion([...s, sesion(MAR, 'A')], undefined, dia(MIE), [], { fecha: MIE, tipo: 'A' })).toMatchObject({ tipo: 'A', extra: true })
   })
   it('una sesión abierta con una serie ya cuenta para la elección', () => {
     const abierta = sesion(MAR, 'A', false)
     expect(elegirSesion([sesion(LUN, 'FRIDA'), abierta], undefined, dia(MIE)).tipo).toBe('A')
     expect(elegirSesion([sesion(LUN, 'FRIDA'), abierta], undefined, dia(MIE), [serie(abierta.id)]).tipo).toBe('B')
+  })
+})
+
+describe('v7: Frida con tipo, A sin pierna y elección (RUTINA-FINAL.md v7, 2)', () => {
+  const VIE = '2026-10-09'
+  const fp = (f: string): Sesion => ({ ...sesion(f, 'FRIDA'), fridaTipo: 'pierna' })
+  const ft = (f: string): Sesion => ({ ...sesion(f, 'FRIDA'), fridaTipo: 'torso' })
+  const a = (f: string, sinPierna = false): Sesion => ({ ...sesion(f, 'A'), sinPierna })
+  /**
+   * Recorre una semana de la tabla: cada sesión de club tiene que salir así (tipo, sin pierna y extra) con lo hecho antes
+   * de ese día; las FRIDA y las de club se van agregando como hechas.
+   */
+  function semana(dias: [string, Sesion, { sinPierna?: boolean; extra?: boolean; hora?: string }?][], plan?: PlanFrida) {
+    const hechas: Sesion[] = []
+    for (const [f, s, o = {}] of dias) {
+      if (s.tipo !== 'FRIDA') expect(elegirSesion(hechas, plan, dia(f, o.hora ?? '07:00:00')), `${f} ${s.tipo}`).toEqual({ tipo: s.tipo, sinPierna: !!o.sinPierna, extra: !!o.extra })
+      hechas.push(s)
+    }
+  }
+  it('Frida pierna: lunes Frida pierna, martes A sin pierna, jueves B', () => semana([[LUN, fp(LUN)], [MAR, a(MAR, true), { sinPierna: true }], [JUE, sesion(JUE, 'B')]]))
+  it('Frida torso: lunes Frida torso, martes A, jueves B', () => semana([[LUN, ft(LUN)], [MAR, a(MAR)], [JUE, sesion(JUE, 'B')]]))
+  it('sin Frida: martes C, jueves A, viernes B', () => semana([[MAR, sesion(MAR, 'C')], [JUE, a(JUE)], [VIE, sesion(VIE, 'B')]], SIN_FRIDA))
+  it('Frida pierna con extra: lunes Frida pierna, martes A sin pierna, jueves B, viernes C', () =>
+    semana([[LUN, fp(LUN)], [MAR, a(MAR, true), { sinPierna: true }], [JUE, sesion(JUE, 'B')], [VIE, sesion(VIE, 'C'), { extra: true }]]))
+  it('Frida pierna, faltó el martes: jueves A sin pierna, viernes B', () => semana([[LUN, fp(LUN)], [JUE, a(JUE, true), { sinPierna: true }], [VIE, sesion(VIE, 'B')]]))
+  it('Frida torso, faltó el jueves: martes A, viernes B', () => semana([[LUN, ft(LUN)], [MAR, a(MAR)], [VIE, sesion(VIE, 'B')]]))
+  it('martes en la noche: lunes Frida torso, martes A en la noche, jueves B', () =>
+    semana([[LUN, ft(LUN)], [MAR, { ...a(MAR), momento: 'noche' }, { hora: '19:30:00' }], [JUE, sesion(JUE, 'B')]]))
+  it('Frida el miércoles, torso: martes A, miércoles Frida torso, jueves B', () => semana([[MAR, a(MAR)], [MIE, ft(MIE)], [JUE, sesion(JUE, 'B')]], { [LUN]: MIE }))
+  it('sin Frida, sin viernes: martes C, jueves A, domingo B', () => semana([[MAR, sesion(MAR, 'C')], [JUE, a(JUE)], [DOM, sesion(DOM, 'B')]], SIN_FRIDA))
+
+  it('las FRIDA viejas sin tipo cuentan como torso', () => {
+    expect(fridaTipoDe(sesion(LUN, 'FRIDA'))).toBe('torso')
+    expect(elegirSesion([sesion(LUN, 'FRIDA')], undefined, dia(MAR))).toEqual({ tipo: 'A', sinPierna: false, extra: false })
+  })
+  it('FRIDA pierna no bloquea espalda al día siguiente; FRIDA torso o C sí, mientras falte A', () => {
+    // Frida movida al martes; el miércoles con A hecha el lunes, B en los dos casos
+    const plan = { [LUN]: MAR }
+    expect(elegirSesion([a(LUN), fp(MAR)], plan, dia(MIE)).tipo).toBe('B')
+    expect(elegirSesion([a(LUN), ft(MAR)], plan, dia(MIE)).tipo).toBe('B')
+    // falta A: después de Frida torso, A
+    expect(elegirSesion([ft(MAR)], plan, dia(MIE)).tipo).toBe('A')
+    // Frida planeada para mañana y sin tipo cuenta como torso: A
+    expect(elegirSesion([], { [LUN]: JUE }, dia(MIE)).tipo).toBe('A')
+  })
+  it('la A sale sin pierna solo si la FRIDA pierna se registró antes; registrarla después no cambia la A ya hecha', () => {
+    expect(fridaPiernaEnSemana([fp(LUN)], dia(MAR), [], MAR)).toBe(true)
+    expect(fridaPiernaEnSemana([fp(MIE)], dia(MAR), [], MAR)).toBe(false)
+    // A el lunes en la mañana y Frida pierna en la noche: ya no falta A, el martes toca B
+    expect(elegirSesion([a(LUN), fp(LUN)], undefined, dia(MAR))).toEqual({ tipo: 'B', sinPierna: false, extra: false })
+  })
+  it('la extra es C en semanas con Frida pierna, nunca dos C; sin Frida pierna, A o B contraria a la última', () => {
+    const base = [fp(LUN), a(MAR, true), sesion(JUE, 'B')]
+    expect(elegirSesion(base, undefined, dia(VIE))).toEqual({ tipo: 'C', sinPierna: false, extra: true })
+    // ya hubo una C en la semana: la extra vuelve a A o B, contraria a la última (B → A, sin pierna)
+    expect(elegirSesion([...base, sesion(VIE, 'C')], undefined, dia(DOM))).toEqual({ tipo: 'A', sinPierna: true, extra: true })
+    expect(elegirSesion([ft(LUN), a(MAR), sesion(JUE, 'B')], undefined, dia(VIE))).toEqual({ tipo: 'A', sinPierna: false, extra: true })
+  })
+  it('"Hoy prefiero A" en semana con Frida pierna da la A sin pierna', () => {
+    expect(elegirSesion([fp(LUN)], undefined, dia(MAR), [], { fecha: MAR, tipo: 'A' })).toEqual({ tipo: 'A', sinPierna: true, extra: false })
   })
 })
 
