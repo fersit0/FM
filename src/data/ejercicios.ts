@@ -13,13 +13,14 @@ export const ZONA_DETALLE: Record<Zona, string> = {
 }
 
 export const CALENTAMIENTO = {
-  nombre: 'Calentamiento', minCompleta: 8, minCorta: 5,
-  texto: 'Elíptica 8 min, ritmo en el que puedes platicar. Corta: 5 min.',
-  siOcupada: 'Si la elíptica está ocupada: bici fija.',
+  nombre: 'Calentamiento', minCompleta: 5, minCorta: 4,
+  texto: 'Elíptica o caminadora 5 min, ritmo en el que puedes platicar. Corta: 4 min.',
+  siOcupada: 'Si las dos están ocupadas: bici fija.',
 }
+/** En la mañana no hay cierre; en la noche y en fin de semana se ofrece al terminar y se puede saltar (RUTINA-FINAL.md v7, 3) */
 export const CIERRE = {
   nombre: 'Cierre', minCompleta: 10, minCorta: 5, minTerminarAqui: 5,
-  texto: 'Diez minutos a elección: saco en la terraza (1 min fuerte y 1 min suave, cinco veces) o elíptica. Corta o "Terminar aquí": 5 min.',
+  texto: 'En la noche y en fin de semana, diez minutos a elección: saco en la terraza (1 min fuerte y 1 min suave, cinco veces) o elíptica. Corta o "Terminar aquí": 5 min. En la mañana no hay cierre.',
   /** con 10 min son cinco vueltas; con 5 (corta o "Terminar aquí"), hasta que se acabe */
   saco: (min: number) => `Saco: 1 min fuerte y 1 min suave, ${min >= 10 ? 'cinco veces' : `hasta los ${min}`}.`,
 }
@@ -246,19 +247,45 @@ export function buscarCualquiera(id: string): { item: Ejercicio | Alternativa; b
 /** Sin regla de 4 semanas (RUTINA-FINAL.md, 10) */
 export const CON_SERIE_EXTRA: string[] = []
 export const NOMBRE_SESION: Record<Letra, string> = { A: 'Pecho y pierna', B: 'Torso completo', C: 'Espalda y hombro', CASA: 'Casa, 12 minutos' }
+/** La A en semanas con Frida pierna (RUTINA-FINAL.md v7, 4b) */
+export const NOMBRE_A_SIN_PIERNA = 'Pecho y espalda'
+export const nombreSesion = (tipo: Letra, sinPierna = false) => (tipo === 'A' && sinPierna ? NOMBRE_A_SIN_PIERNA : NOMBRE_SESION[tipo])
 
 /** Orden de las zonas en cada sesión (RUTINA-FINAL.md, 4, 5 y 5c) */
 export const RUTA: Record<Letra, Zona[]> = { A: ['bancos', 'terraza'], B: ['bancos', 'poleas', 'terraza'], C: ['poleas', 'bancos', 'terraza'], CASA: [] }
 /** La corta: tres ejercicios a 3 series (RUTINA-FINAL.md, 3) */
 const CORTA: Record<'A' | 'B' | 'C', string[]> = { A: ['press-inclinado', 'laterales', 'goblet'], B: ['press-plano', 'laterales', 'jalon-cerrado'], C: ['jalon', 'press-militar', 'laterales'] }
+const CORTA_A_SIN_PIERNA = ['press-inclinado', 'remo-pecho-apoyado', 'laterales']
 
-/** Lista de ejercicios de una sesión según versión, ya en el orden del recorrido por zonas. */
-export function listaDe(sesion: Letra, version: 'completa' | 'corta' = 'completa'): Ejercicio[] {
-  const todos = ejerciciosDe(sesion)
+/**
+ * A sin pierna (RUTINA-FINAL.md v7, 4b): la A con la goblet y el puente cambiados por el remo con pecho apoyado y una
+ * serie más de aperturas. Bancos → Terraza; comparte historial por id con todo lo demás.
+ */
+const deA = (id: string): Ejercicio => EJERCICIOS.find((e) => e.sesion === 'A' && e.id === id)!
+export const A_SIN_PIERNA: Ejercicio[] = [
+  { ...deA('press-inclinado'), orden: 1 },
+  { ...deA('aperturas-inclinadas'), orden: 2, series: 3 },
+  {
+    id: 'remo-pecho-apoyado', nombre: 'Remo con pecho apoyado en banco reclinable', sesion: 'A', orden: 3, zona: 'bancos', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 75, modo: 'peso',
+    ubicar: 'El mismo banco reclinable del press, a 30°. Vas boca abajo con el pecho apoyado.',
+    colocacion: 'Boca abajo en el banco, pecho apoyado y pies firmes en el piso; una mancuerna en cada mano, brazos colgando.',
+    tecnica: ['Jala los codos hacia atrás, pegados al cuerpo, hasta pasar la línea de la espalda.', 'Aprieta los omóplatos un segundo y baja en 2 a 3 segundos.'],
+    errores: ['Despegar el pecho del banco para jalar.', 'Encoger hombros.'], ilustracion: 'remo-pecho-apoyado',
+    alternativas: [remoMancuerna('Banco reclinable ocupado')],
+  },
+  { ...deA('laterales'), orden: 4 },
+  { ...deA('triceps-cabeza'), orden: 5 },
+  { ...deA('crunch'), orden: 6 },
+]
+
+/** Lista de ejercicios de una sesión según versión, ya en el orden del recorrido por zonas. `sinPierna`: la A sin pierna. */
+export function listaDe(sesion: Letra, version: 'completa' | 'corta' = 'completa', sinPierna = false): Ejercicio[] {
+  const aSinPierna = sesion === 'A' && sinPierna
+  const todos = aSinPierna ? A_SIN_PIERNA : ejerciciosDe(sesion)
   if (sesion === 'CASA') return todos
   if (version === 'corta') {
     // tres series también si se cambia por una alternativa (las de A van a 4 en la completa)
-    const lista = todos.filter((e) => CORTA[sesion].includes(e.id)).map((e) => ({ ...e, series: 3, alternativas: e.alternativas.map((a) => ({ ...a, series: Math.min(a.series, 3) })) }))
+    const lista = todos.filter((e) => (aSinPierna ? CORTA_A_SIN_PIERNA : CORTA[sesion]).includes(e.id)).map((e) => ({ ...e, series: 3, alternativas: e.alternativas.map((a) => ({ ...a, series: Math.min(a.series, 3) })) }))
     const ruta = RUTA[sesion]
     return lista.sort((a, b) => ruta.indexOf(a.zona!) - ruta.indexOf(b.zona!) || a.orden - b.orden)
   }

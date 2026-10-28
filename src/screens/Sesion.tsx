@@ -8,7 +8,8 @@ import { minutosCalentamiento, minutosCierre } from '../logic/duracion'
 import { listaDeSesion, posponer, recortar, segundosRestantes, hechosDe, terminarAqui as cerrarAqui } from '../logic/sesion'
 import { comoQuedo } from '../logic/registro'
 import { sugerirPeso, subioDePeso, porSesion } from '../logic/progresion'
-import { claveFecha, minutosDe } from '../logic/fechas'
+import { claveFecha, minutosAhora } from '../logic/fechas'
+import { franjaDe, topeDe, lineaSesion, type Franja } from '../logic/horario'
 import { unidadDe, incrementoDe, pesoDeSet, pesoInicial, aKg, convertir, formatoPeso, redondearAPaso, type Unidad } from '../logic/unidades'
 import { useWakeLock } from '../hooks/useWakeLock'
 import { useAlto } from '../hooks/useAlto'
@@ -34,8 +35,6 @@ export function rangoDe(e: Ejercicio | Alternativa): string {
 }
 /** diámetro del spec acotado al espacio disponible */
 const acotar = (d: number, alto: number, ancho: number) => Math.max(88, Math.min(d, alto - 4, ancho - 8))
-/** "8:22": siempre con minutos y sin am/pm, la sesión siempre es de tarde */
-const horaDe = (ms: number) => { const d = new Date(ms); const h = d.getHours() % 12 || 12; return `${h}:${String(d.getMinutes()).padStart(2, '0')}` }
 
 export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }: Props) {
   const { settings, sets } = datos
@@ -43,6 +42,9 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
   const ligera = !!sesion.ligera
   const casa = sesion.tipo === 'CASA'
   useWakeLock(true)
+  // mañana o noche: en la mañana no hay cierre, el tope es 8:15 y la línea habla del sauna (RUTINA-FINAL.md v7, 3)
+  const franja: Franja = sesion.momento ?? (franjaDe(new Date(sesion.inicio)) === 'manana' ? 'manana' : 'noche')
+  const manana = franja === 'manana'
   const lista = useMemo(() => listaDeSesion(sesion), [sesion])
   const ruta = useMemo(() => rutaDe(lista), [lista])
   const pasos = useMemo<Paso[]>(() => {
@@ -51,8 +53,9 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
       const item = cambio ? (cambio.alternativaId === base.id ? base : base.alternativas.find((a) => a.id === cambio.alternativaId) ?? base) : itemDeRutina(base, settings.reemplazos)
       return { tipo: 'ejercicio', base, item, series: casa ? item.series : seriesPara(item.series, ligera), indice }
     })
-    return casa ? [...ejercicios, { tipo: 'resumen' }] : [{ tipo: 'calentamiento' }, ...ejercicios, { tipo: 'cierre' }, { tipo: 'resumen' }]
-  }, [lista, sesion.cambios, settings.reemplazos, ligera, casa])
+    if (casa) return [...ejercicios, { tipo: 'resumen' }]
+    return [{ tipo: 'calentamiento' }, ...ejercicios, ...(manana ? [] : [{ tipo: 'cierre' } as Paso]), { tipo: 'resumen' }]
+  }, [lista, sesion.cambios, settings.reemplazos, ligera, casa, manana])
   const indice = Math.min(activa.paso, pasos.length - 1)
   const paso = pasos[indice]
   const ej = paso.tipo === 'ejercicio' ? paso : null
@@ -67,7 +70,11 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
   const [seriesHoy, setSeriesHoy] = useState(false)
   const cerrarAccion = useCallback(() => setAccion(null), [])
   const descansando = activa.descansoFin !== undefined
-  const topeMs = useMemo(() => { const m = minutosDe(settings.horaTope); return new Date(sesion.fecha + 'T00:00:00').getTime() + m * 60000 }, [sesion.fecha, settings.horaTope])
+  const topeMs = useMemo(() => {
+    const inicio = new Date(sesion.inicio)
+    const m = topeDe(inicio, settings, franja) ?? 24 * 60
+    return new Date(sesion.fecha + 'T00:00:00').getTime() + m * 60000
+  }, [sesion.fecha, sesion.inicio, settings, franja])
 
   // Recorte en el camino (RUTINA-FINAL.md, 3): si lo que falta ya no cabe antes de la última pesa, quita abdomen, brazos, press militar o aperturas
   const hechosAntes = useRef(hechos.length)
@@ -158,11 +165,11 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
     if (casa || paso.tipo === 'resumen') return null
     const i = ej ? ej.indice : paso.tipo === 'calentamiento' ? 0 : lista.length
     const restante = paso.tipo === 'calentamiento' ? minCal * 60 + segundosRestantes(lista, 0, 0, ligera) : paso.tipo === 'cierre' ? 0 : segundosRestantes(lista, i, hechos.length, ligera, descansando ? Math.max(0, ((activa.descansoFin ?? 0) - Date.now()) / 1000) : 0)
-    const nombre = version === 'corta' ? 'la corta' : 'la completa'
     const quitados = sesion.recortados?.length ? ` · se quitó ${sesion.recortados.map((id) => nombreDe(id).toLowerCase()).join(' y ')}` : ''
-    return `Empezaste ${horaDe(sesion.inicio)} · va ${nombre} · terminas pesas ${horaDe(Date.now() + restante * 1000)}${quitados}`
+    const fin = new Date(Date.now() + restante * 1000)
+    return lineaSesion(minutosAhora(new Date(sesion.inicio)), minutosAhora(fin), version === 'corta' ? 'corta' : 'completa', franja, settings) + quitados
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [casa, paso, ej, lista, hechos.length, ligera, descansando, version, sesion.inicio, minCal, sesion.recortados])
+  }, [casa, paso, ej, lista, hechos.length, ligera, descansando, version, sesion.inicio, minCal, sesion.recortados, franja, settings])
   const otraVersion: Version = version === 'corta' ? 'completa' : 'corta'
   const zonaActual: Zona | undefined = ej?.base.zona
   const sig = ej && indice + 1 < pasos.length ? pasos[indice + 1] : null
@@ -207,7 +214,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
           {indice > 0 && <Fila texto={ej && ej.indice > 0 ? 'Ejercicio anterior' : 'Paso anterior'} onClick={() => { setMenu(false); ir(indice - 1) }} />}
           {paso.tipo !== 'resumen' && <Fila texto={ej ? 'Saltar ejercicio' : 'Saltar'} onClick={saltar} />}
           <Fila texto="Seguir después" detalle="Se queda guardada donde vas" onClick={() => { setMenu(false); onSalir() }} />
-          <Fila texto="Terminar aquí" detalle="Guarda lo hecho, cuenta y ofrece el cierre de 5 min" onClick={terminar} />
+          <Fila texto="Terminar aquí" detalle={manana ? 'Guarda lo hecho y cuenta' : 'Guarda lo hecho, cuenta y ofrece el cierre de 5 min'} onClick={terminar} />
           <Fila texto="Descartar sesión" detalle="Se borran las series de hoy" onClick={descartar} />
         </Grupo>
         {!casa && (

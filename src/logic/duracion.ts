@@ -42,13 +42,13 @@ export function segundosPesas(lista: Ejercicio[], ligera = false): number {
 export function minutosHastaUltimaPesa(lista: Ejercicio[], version: Version, ligera = false): number {
   return minutosCalentamiento(version) + segundosPesas(lista, ligera) / 60
 }
-/** Minutos totales estimados, redondeados. CASA son 12 por definición. */
+/** Minutos estimados de calentamiento y pesas, redondeados; el cierre no cuenta (en la mañana no hay y en la noche se puede saltar). CASA son 12. */
 export function duracionEstimada(lista: Ejercicio[], version: Version, opciones: { ligera?: boolean; casa?: boolean } = {}): number {
   const { ligera = false, casa = false } = opciones
   if (casa) return 12
-  return Math.round(minutosHastaUltimaPesa(lista, version, ligera) + minutosCierre(version))
+  return Math.round(minutosHastaUltimaPesa(lista, version, ligera))
 }
 /** Minutos hasta la última pesa de la completa y de la corta de una sesión de club (para la versión automática) */
-export function duracionesDe(sesion: Letra): Duraciones {
-  return { completa: minutosHastaUltimaPesa(listaDe(sesion, 'completa'), 'completa'), corta: minutosHastaUltimaPesa(listaDe(sesion, 'corta'), 'corta') }
+export function duracionesDe(sesion: Letra, sinPierna = false): Duraciones {
+  return { completa: minutosHastaUltimaPesa(listaDe(sesion, 'completa', sinPierna), 'completa'), corta: minutosHastaUltimaPesa(listaDe(sesion, 'corta', sinPierna), 'corta') }
 }

@@ -5,7 +5,7 @@ import { usePantalla, useMedidas } from '../design/pantallaActiva'
 import { estadoSemana, elegirSesion, ultimaPropia, avisoRescate, casaDeSemana, casaDisponible, CASA_MAX, estadoFrida, diasParaMoverFrida, claveSemana, diaFridaPlaneado, semanaSinFrida } from '../logic/semana'
 import { diasSinRegistro, diasDeSemanaHastaHoy, armarRegistro, textoUltima, sugeridaPara, type DiaPendiente } from '../logic/registro'
 import { duracionEstimada, minutosHastaUltimaPesa } from '../logic/duracion'
-import { estadoTiempo, estadoSiSalgo, versionParaHora, textoManana, type Duraciones } from '../logic/horario'
+import { estadoTiempo, estadoSiSalgo, versionParaHora, topeDe, type Duraciones } from '../logic/horario'
 import { porSesion } from '../logic/progresion'
 import { unidadDe, incrementoDe, pesoDeSet, formatoPeso } from '../logic/unidades'
 import { listaDe, itemDeRutina, NOMBRE_SESION, ZONA_NOMBRE, rutaDe } from '../data/ejercicios'
@@ -46,9 +46,11 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   const listaCorta = useMemo(() => listaDe(toca, 'corta'), [toca])
   const duraciones = useMemo<Duraciones>(() => ({ completa: minutosHastaUltimaPesa(listaCompleta, 'completa'), corta: minutosHastaUltimaPesa(listaCorta, 'corta') }), [listaCompleta, listaCorta])
   const tiempo = useMemo(() => estadoTiempo(ahora, settings, duraciones), [ahora, settings, duraciones])
-  const siSalgo = settings.horaSalida ? estadoSiSalgo(settings.horaSalida, settings, duraciones, domingo) : null
-  const versionAuto = siSalgo ? siSalgo.version : tiempo.version
-  const version: Version = versionAuto === 'casa' ? 'corta' : versionAuto
+  // "Salgo de la oficina a las": solo cuenta para la noche, y mientras no haya llegado
+  const siSalgo = settings.horaSalida && tiempo.franja === 'noche' ? estadoSiSalgo(settings.horaSalida, settings, duraciones, ahora) : null
+  const conSalida = siSalgo && siSalgo.llegadaMin > ahora.getHours() * 60 + ahora.getMinutes() ? siSalgo : null
+  const versionAuto = conSalida ? conSalida.version : tiempo.version
+  const version: Version = versionAuto === 'completa' ? 'completa' : 'corta'
   const lista = version === 'corta' ? listaCorta : listaCompleta
   const minutos = useMemo(() => duracionEstimada(lista, version), [lista, version])
   const [hojaLista, setHojaLista] = useState(false)
@@ -124,17 +126,17 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   }
   /** Empezar: la versión se decide con la hora real al tocar; si no alcanza ni la corta, ofrece CASA */
   function empezar() {
-    const v = versionParaHora(new Date(), duraciones, minutosDe(settings.horaTope))
-    if (v === 'casa') { setHojaCasa(true); return }
+    const v = versionParaHora(new Date(), duraciones, settings)
+    if (v === 'casa' || v === 'noche' || v === 'cerrado') { setHojaCasa(true); return }
     onEmpezar(toca, v)
   }
 
   let linea: string
-  if (siSalgo) linea = `Sales a las ${formatoHora(minutosDe(settings.horaSalida!))}: ${siSalgo.version === 'casa' ? 'ya no alcanza ni la corta' : `alcanza la ${siSalgo.version === 'corta' ? 'corta' : 'completa'}`}.`
-  else if (tiempo.version === 'casa') linea = `${tiempo.titulo} ${textoManana(ahora, DIAS_NOMBRE)}`
+  if (conSalida) linea = `Sales a las ${formatoHora(minutosDe(settings.horaSalida!))}: ${conSalida.version === 'casa' ? 'ya no alcanza ni la corta' : `alcanza la ${conSalida.version === 'corta' ? 'corta' : 'completa'}`}.`
+  else if (tiempo.version === 'casa' || tiempo.version === 'noche' || tiempo.version === 'cerrado') linea = `${tiempo.titulo} ${tiempo.detalle}`
   else if (tiempo.minutosParaTope > 180 && !domingo) linea = ''
   else linea = tiempo.detalle
-  const nombreVersion = versionAuto === 'casa' ? 'corta de todas formas' : versionAuto
+  const nombreVersion = versionAuto === 'completa' || versionAuto === 'corta' ? versionAuto : 'corta de todas formas'
   const pantallaFrida = !sesionEnCurso && !alDia && !preguntaFrida && !pregunta && frida.hoyEsFrida && !verSesionHoy
   // "Semana: 2 de 3" nunca se parte entre renglones
   const textoSemana = <span className="sin-partir">Semana: {semana.hechas} de {semana.meta}</span>
@@ -227,7 +229,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
             <BotonTexto onClick={() => confirm('¿Descartar la sesión a medias?') && onDescartar()}>Descartar</BotonTexto>
           </>
         ) : !pantallaFrida && !pregunta && !preguntaFrida ? (
-          <BotonPrincipal onClick={empezar}>{versionAuto === 'casa' && !siSalgo ? 'Empezar de todas formas' : 'Empezar'}</BotonPrincipal>
+          <BotonPrincipal onClick={empezar}>{versionAuto !== 'completa' && versionAuto !== 'corta' && !conSalida ? 'Empezar de todas formas' : 'Empezar'}</BotonPrincipal>
         ) : null}
       </div>
 
@@ -244,7 +246,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
         </Grupo>
       </Hoja>
       <Hoja abierta={hojaCasa} titulo="Ya no alcanza ni la corta" onCerrar={() => setHojaCasa(false)}>
-        <p className="t-cuerpo tenue">Las pesas terminarían después de las {formatoHora(minutosDe(settings.horaTope))}. Queda casa, 12 minutos, o la corta de todas formas.</p>
+        <p className="t-cuerpo tenue">Las pesas terminarían después de las {formatoHora(topeDe(new Date(), settings) ?? minutosDe(settings.ultimaPesaNoche))}. Queda casa, 12 minutos, o la corta de todas formas.</p>
         <Grupo>
           {casaDisponible(sesiones, ahora, sets) && <Fila texto="Casa, 12 minutos" detalle={`Llevas ${casaHechas} de ${CASA_MAX} esta semana`} onClick={() => { setHojaCasa(false); onEmpezar('CASA', 'completa') }} />}
           <Fila texto={`Corta de todas formas: ${toca}`} detalle={listaCorta.map((e) => e.nombre.toLowerCase()).join(', ')} onClick={() => { setHojaCasa(false); onEmpezar(toca, 'corta') }} />
