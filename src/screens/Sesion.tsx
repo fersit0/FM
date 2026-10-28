@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Sesion as SesionTipo, Ejercicio, Alternativa, SetLog, Version, Modo, Zona } from '../data/tipos'
 import type { SesionActiva } from '../hooks/useSesionActiva'
@@ -70,8 +70,12 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
   const topeMs = useMemo(() => { const m = minutosDe(settings.horaTope); return new Date(sesion.fecha + 'T00:00:00').getTime() + m * 60000 }, [sesion.fecha, settings.horaTope])
 
   // Recorte en el camino (RUTINA-FINAL.md, 3): si lo que falta ya no cabe antes de la última pesa, quita abdomen, brazos, press militar o aperturas
+  const hechosAntes = useRef(hechos.length)
   useEffect(() => {
-    if (casa || !ej) return
+    // borrar una serie no es avanzar: no recorta ni tapa el Deshacer del borrado
+    const borro = hechos.length < hechosAntes.current
+    hechosAntes.current = hechos.length
+    if (casa || !ej || borro) return
     const disponibles = (topeMs - Date.now()) / 1000
     const quitar = recortar(lista, ej.indice, hechos.length, disponibles, ligera)
     if (quitar.length === 0) return
@@ -192,7 +196,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
       {paso.tipo === 'cierre' && <PasoTiempo key="cierre" titulo="Cierre" detalle={`${minCierre} min a elección: saco en la terraza o elíptica.`} nota={CIERRE.saco(minCierre)} minutos={minCierre} linea={null} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
       {paso.tipo === 'resumen' && <Resumen datos={datos} sesion={sesion} sets={sets} lista={lista} onTerminar={onTerminar} />}
 
-      {accion && <Deshacer texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
+      {accion && <Deshacer clave={accion} texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
 
       <Hoja abierta={menu} onCerrar={() => setMenu(false)}>
         <Grupo>

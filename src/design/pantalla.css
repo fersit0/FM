@@ -93,8 +93,9 @@ button.sesion-linea { min-height: 44px; padding: 4px 0; }
 .deshacer { position: fixed; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 96px); z-index: 35; background: var(--tinta); color: var(--piedra); padding: 10px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--piedra); }
 .deshacer button { color: var(--rojo); font-weight: 700; font-size: 17px; min-height: 44px; padding: 0 8px; }
 body[data-pantalla='descanso'] .deshacer { background: var(--piedra); color: var(--cobalto); box-shadow: none; }
-/* en la sesión abajo están los controles (reps, Serie hecha, +15 s, las cifras del resumen) y las hojas: el aviso va arriba, sobre la cabecera */
-.sesion .deshacer { top: calc(var(--safe-top) + 8px); bottom: auto; }
+/* en la sesión abajo están los controles (reps, Serie hecha, +15 s, las cifras del resumen) y las hojas: el aviso va arriba, debajo de la
+   cabecera (✕, Terminar aquí) y del Cerrar de las hojas completas, para que tocar esos nunca toque Deshacer */
+.sesion .deshacer { top: calc(var(--safe-top) + 60px); bottom: auto; }
 /* Pantallas cortas (iPhone SE instalado, 667): foto 16:9 compacta, menos aire */
 @media (max-height: 700px) {
   .sesion-foto .foto { aspect-ratio: 16 / 9; max-height: min(12dvh, 100%); }

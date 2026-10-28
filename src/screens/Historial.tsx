@@ -75,7 +75,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
         {sesion && <DetalleSesion datos={datos} sesion={datos.sesiones.find((s) => s.id === sesion.id) ?? sesion} onBorrada={() => { setSesion(null); setSemana(null) }} onAccion={setAccion} />}
       </Hoja>
       <RegistrarHoja datos={datos} ahora={ahora} abierta={agregar} onCerrar={() => setAgregar(false)} onGuardado={(s, reemplazada) => setAccion({ texto: `${textoDia(s.fecha)}: ${etiquetaDe(s)} registrada.`, deshacer: async () => { if (reemplazada) await datos.guardarSesion(reemplazada); else await datos.borrarSesion(s.id) } })} />
-      {accion && <Deshacer texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
+      {accion && <Deshacer clave={accion} texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
       <PesoHoja datos={datos} ahora={ahora} abierta={peso} onCerrar={() => setPeso(false)} onAccion={setAccion} />
       <FotosHoja datos={datos} ahora={ahora} abierta={fotos} onCerrar={() => setFotos(false)} onAccion={setAccion} />
       <CinturaHoja datos={datos} ahora={ahora} abierta={cinturaAbierta} onCerrar={() => setCinturaAbierta(false)} onAccion={setAccion} />

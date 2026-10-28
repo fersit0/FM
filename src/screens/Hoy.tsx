@@ -231,7 +231,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
         ) : null}
       </div>
 
-      {accion && <Deshacer texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
+      {accion && <Deshacer clave={accion} texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
 
       <Hoja abierta={hojaLista} titulo={`${toca}: ${NOMBRE_SESION[toca]}`} onCerrar={() => setHojaLista(false)}>
         <p className="t-nota tenue">{rutaDe(lista).map((z) => ZONA_NOMBRE[z]).join(' → ')}</p>
