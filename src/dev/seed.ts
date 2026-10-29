@@ -1,6 +1,6 @@
 // Datos ficticios de 4 semanas, activables con ?seed=1 (y ?seed=0 para borrarlos)
 import { borrarTodo, guardarSesion, guardarSet } from '../data/db'
-import { ejerciciosDe, EJERCICIOS } from '../data/ejercicios'
+import { ejerciciosDe, EJERCICIOS, A_SIN_PIERNA } from '../data/ejercicios'
 import { FOTOS_BASE } from '../data/fotos'
 import { claveFecha, inicioSemana, sumarDias } from '../logic/fechas'
 import { leerSettings, escribirSettings } from '../data/settings'
@@ -8,12 +8,12 @@ import type { Sesion, SetLog } from '../data/tipos'
 import { sesionRegistrada } from '../logic/registro'
 
 declare global {
-  interface Window { fmBiblioteca?: { ejercicios: unknown; fotos: unknown } }
+  interface Window { fmBiblioteca?: { ejercicios: unknown; aSinPierna: unknown; fotos: unknown } }
 }
 
 export async function sembrarSiToca(): Promise<void> {
   // en desarrollo las pruebas de punta a punta leen la biblioteca real desde aquí
-  if (import.meta.env.DEV) window.fmBiblioteca = { ejercicios: EJERCICIOS, fotos: FOTOS_BASE }
+  if (import.meta.env.DEV) window.fmBiblioteca = { ejercicios: EJERCICIOS, aSinPierna: A_SIN_PIERNA, fotos: FOTOS_BASE }
   const params = new URLSearchParams(location.search)
   const seed = params.get('seed')
   const frida = params.get('frida')

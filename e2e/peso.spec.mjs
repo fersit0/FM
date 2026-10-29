@@ -98,8 +98,8 @@ test('cerrar la app a medio ajuste conserva peso y reps', async ({ page }) => {
 })
 
 test('CASA va en kg y arranca en 4', async ({ page }) => {
-  // viernes: día sin gym, se ofrece casa
-  await reloj(page, '2026-10-09T10:00:00')
+  // viernes en la noche, ya sin "¿Vas en la noche?": se ofrece casa (en la mañana no)
+  await reloj(page, '2026-10-09T21:05:00')
   await page.goto('')
   await contestarNo(page)
   await page.getByRole('button', { name: /Casa, 12 minutos/ }).click()

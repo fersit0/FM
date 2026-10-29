@@ -6,13 +6,14 @@ import { limpiar, menu, pausa, reloj, registrar, contestarNo } from './comun.mjs
 
 const normal = (t) => t.replace(/\s+/g, ' ').trim()
 
-/** Lista de una sesión según la biblioteca real de la app */
+/** Lista de una sesión según la biblioteca real de la app ('A sin pierna': la de la sección 4b) */
 async function listaDe(page, sesion) {
   return page.evaluate(({ sesion }) => {
-    const { ejercicios, fotos } = window.fmBiblioteca
+    const { ejercicios, aSinPierna, fotos } = window.fmBiblioteca
     const archivos = (clave) => { const f = fotos[clave]; return f ? [f.a, f.b].filter(Boolean) : [] }
     const item = (e) => ({ id: e.id, nombre: e.nombre, series: e.series, repsMin: e.repsMin, repsMax: e.repsMax, modo: e.modo, ilustracion: e.ilustracion, fotos: archivos(e.ilustracion), caso: e.caso })
-    return ejercicios.filter((e) => e.sesion === sesion).sort((a, b) => a.orden - b.orden).map((e) => ({ ...item(e), sesion: e.sesion, alternativas: e.alternativas.map(item) }))
+    const lista = sesion === 'A sin pierna' ? aSinPierna : ejercicios.filter((e) => e.sesion === sesion)
+    return [...lista].sort((a, b) => a.orden - b.orden).map((e) => ({ ...item(e), sesion: e.sesion, alternativas: e.alternativas.map(item) }))
   }, { sesion })
 }
 async function fotosDe(loc) {
@@ -100,9 +101,21 @@ test('sesión A: cada alternativa reemplaza todo y regresa', async ({ page }) =>
 test('sesión B: cada alternativa reemplaza todo y regresa', async ({ page }) => {
   const lista = await listaDe(page, 'B')
   expect(lista).toHaveLength(7)
+  // C el martes y A el miércoles: hoy jueves toca B (una de club por día: la A no puede ser de hoy)
   await registrar(page, '2026-10-06', 'C')
-  await registrar(page, null, 'A')
+  await registrar(page, '2026-10-07', 'A')
   await expect(page.locator('h1')).toContainText('B:')
+  await page.getByRole('button', { name: /^Empezar/ }).click()
+  await page.getByRole('button', { name: 'Saltar' }).click()
+  await revisarSesion(page, lista)
+})
+
+test('A sin pierna: cada alternativa reemplaza todo y regresa', async ({ page }) => {
+  const lista = await listaDe(page, 'A sin pierna')
+  expect(lista.map((e) => e.id)).toEqual(['press-inclinado', 'aperturas-inclinadas', 'remo-pecho-apoyado', 'laterales', 'triceps-cabeza', 'crunch'])
+  // Frida pierna el lunes: hoy jueves toca A sin pierna
+  await limpiar(page, 'pierna')
+  await expect(page.locator('h1')).toHaveText('A: Pecho y espalda')
   await page.getByRole('button', { name: /^Empezar/ }).click()
   await page.getByRole('button', { name: 'Saltar' }).click()
   await revisarSesion(page, lista)
@@ -119,7 +132,8 @@ test('sesión C: cada alternativa reemplaza todo y regresa', async ({ page }) =>
 
 test('CASA: cada alternativa reemplaza todo y regresa', async ({ page }) => {
   const lista = await listaDe(page, 'CASA')
-  await reloj(page, '2026-10-09T10:00:00')
+  // en la mañana no se ofrece CASA: viernes en la noche, ya sin "¿Vas en la noche?" y sin tiempo para la corta
+  await reloj(page, '2026-10-09T21:05:00')
   await page.goto('')
   await contestarNo(page)
   await page.getByRole('button', { name: /Casa, 12 minutos/ }).click()
@@ -182,14 +196,15 @@ test('"Ocupado: después" manda el ejercicio al final de su zona y, si sigue ocu
 })
 
 test('recorte en el camino: con la proyección pasada de la última pesa quita abdomen, brazos y puente o aperturas, nunca el press, los laterales ni la goblet', async ({ page }) => {
-  // A: empezar a las 20:10 da completa; a media sesión el reloj salta a las 20:50 y ya no cabe todo
+  // A el jueves en la noche: empezar a las 20:10 da completa; a media sesión el reloj salta a las 20:50 y ya no cabe
+  // todo antes de las 21:15
   await limpiar(page, 'hecha')
-  await reloj(page, '2026-10-07T20:10:00')
+  await reloj(page, '2026-10-08T20:10:00')
   await page.goto('')
-  await expect(page.getByText(/unos 62 min · completa/)).toBeVisible()
+  await expect(page.getByText(/unos \d+ min · completa/)).toBeVisible()
   await page.getByRole('button', { name: /^Empezar/ }).click()
   await page.getByRole('button', { name: 'Saltar' }).click()
-  await reloj(page, '2026-10-07T20:50:00')
+  await reloj(page, '2026-10-08T20:50:00')
   await page.getByRole('button', { name: 'Serie hecha' }).click()
   await expect(page.locator('.deshacer')).toContainText('Para terminar a tiempo se quitó')
   const texto = await page.locator('.deshacer').innerText()
