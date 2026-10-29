@@ -29,6 +29,14 @@ export function franjaDe(fecha: Date, min = minutosAhora(fecha)): Franja {
   if (dow === 1) return 'cerrado'
   return 'noche'
 }
+/**
+ * Franja de una sesión ya empezada, por el día y la hora de inicio: entre semana antes de las 12, mañana; lo demás, noche
+ * (también sábado y domingo antes de las 12, y el lunes en la tarde). No sale del momento, que es solo la etiqueta del
+ * registro: un domingo a las 11 el momento es mañana, pero el tope es el de las 18:45 y hay cierre.
+ */
+export function franjaDeSesion(inicioMs: number): 'manana' | 'noche' {
+  return franjaDe(new Date(inicioMs)) === 'manana' ? 'manana' : 'noche'
+}
 /** Tope de la última pesa (minuto del día) para esa franja: 8:15 en la mañana, 21:15 en la noche, 18:45 el domingo */
 export function topeDe(fecha: Date, settings: Horario, franja = franjaDe(fecha)): number | null {
   if (franja === 'cerrado') return null

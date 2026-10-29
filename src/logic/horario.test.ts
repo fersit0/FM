@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { versionAutomatica, versionParaHora, estadoTiempo, estadoSiSalgo, limites, franjaDe, topeDe, lineaSesion } from './horario'
+import { versionAutomatica, versionParaHora, estadoTiempo, estadoSiSalgo, limites, franjaDe, franjaDeSesion, topeDe, lineaSesion } from './horario'
 import { duracionEstimada, minutosHastaUltimaPesa, segundosPesas, segundosPorSerie, duracionesDe } from './duracion'
 import { listaDe } from '../data/ejercicios'
 import { SETTINGS_DEFAULT } from '../data/tipos'
@@ -65,6 +65,16 @@ describe('franjas y topes (RUTINA-FINAL.md v7, 3)', () => {
     expect(topeDe(en('11:00', DOM), S)).toBe(minutosDe('18:45'))
     expect(topeDe(en('18:00', LUN), S)).toBeNull()
     expect(topeDe(en('06:45', MAR), { ...S, salidaManana: '09:00', minBano: 20 })).toBe(minutosDe('08:40'))
+  })
+  it('la sesión ya empezada toma la franja del día y la hora de inicio: el sábado y el domingo antes de las 12 son como la noche', () => {
+    const tope = (d: Date) => topeDe(d, S, franjaDeSesion(d.getTime()))
+    expect(franjaDeSesion(en('11:50', MAR).getTime())).toBe('manana')
+    expect(tope(en('11:50', MAR))).toBe(minutosDe('08:15'))
+    expect(franjaDeSesion(en('11:00', DOM).getTime())).toBe('noche')
+    expect(tope(en('11:00', DOM))).toBe(minutosDe('18:45'))
+    expect(franjaDeSesion(en('10:00', SAB).getTime())).toBe('noche')
+    expect(tope(en('10:00', SAB))).toBe(minutosDe('21:15'))
+    expect(franjaDeSesion(en('20:15', MAR).getTime())).toBe('noche')
   })
 })
 

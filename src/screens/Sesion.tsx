@@ -9,7 +9,7 @@ import { listaDeSesion, posponer, recortar, segundosRestantes, hechosDe, termina
 import { comoQuedo } from '../logic/registro'
 import { sugerirPeso, subioDePeso, porSesion } from '../logic/progresion'
 import { claveFecha, minutosAhora } from '../logic/fechas'
-import { franjaDe, topeDe, lineaSesion, type Franja } from '../logic/horario'
+import { franjaDeSesion, topeDe, lineaSesion, type Franja } from '../logic/horario'
 import { unidadDe, incrementoDe, pesoDeSet, pesoInicial, aKg, convertir, formatoPeso, redondearAPaso, type Unidad } from '../logic/unidades'
 import { useWakeLock } from '../hooks/useWakeLock'
 import { useAlto } from '../hooks/useAlto'
@@ -42,8 +42,9 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
   const ligera = !!sesion.ligera
   const casa = sesion.tipo === 'CASA'
   useWakeLock(true)
-  // mañana o noche: en la mañana no hay cierre, el tope es 8:15 y la línea habla del sauna (RUTINA-FINAL.md v7, 3)
-  const franja: Franja = sesion.momento ?? (franjaDe(new Date(sesion.inicio)) === 'manana' ? 'manana' : 'noche')
+  // mañana o noche por el día y la hora de inicio: entre semana en la mañana no hay cierre, el tope es 8:15 y la línea
+  // habla del sauna; en fin de semana siempre es como la noche (RUTINA-FINAL.md v7, 3)
+  const franja: Franja = franjaDeSesion(sesion.inicio)
   const manana = franja === 'manana'
   const lista = useMemo(() => listaDeSesion(sesion), [sesion])
   const ruta = useMemo(() => rutaDe(lista), [lista])
