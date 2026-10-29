@@ -2,7 +2,8 @@ import { useEffect, type ReactNode } from 'react'
 import { BotonTexto } from './Botones'
 
 /** Hoja tinta que sube en 420 ms. Dos alturas. */
-export function Hoja({ abierta, titulo, altura = 'media', onCerrar, children }: { abierta: boolean; titulo?: string; altura?: 'media' | 'completa'; onCerrar: () => void; children: ReactNode }) {
+/** `pie`: lo que va fijo abajo, fuera de lo que se recorre (el botón principal siempre completo y visible) */
+export function Hoja({ abierta, titulo, altura = 'media', onCerrar, children, pie }: { abierta: boolean; titulo?: string; altura?: 'media' | 'completa'; onCerrar: () => void; children: ReactNode; pie?: ReactNode }) {
   useEffect(() => {
     if (!abierta) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCerrar()
@@ -15,6 +16,7 @@ export function Hoja({ abierta, titulo, altura = 'media', onCerrar, children }: 
         {altura === 'completa' ? <BotonTexto className="hoja-cerrar" onClick={onCerrar}>Cerrar</BotonTexto> : <div className="hoja-asa" aria-hidden="true" />}
         {titulo && <h2 className="t-ejercicio">{titulo}</h2>}
         <div className="hoja-cuerpo">{children}</div>
+        {pie && <div className="hoja-pie">{pie}</div>}
       </section>
     </div>
   )

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Sesion as SesionTipo, Ejercicio, Alternativa, SetLog, Version, Modo, Zona } from '../data/tipos'
 import type { SesionActiva } from '../hooks/useSesionActiva'
@@ -386,6 +386,16 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
   const [error, setError] = useState(false)
   const [editando, setEditando] = useState(false)
   const [texto, setTexto] = useState('')
+  // en pantallas cortas, con la línea de la mañana larga y los dos avisos, la foto puede quedar en una tira que no sirve:
+  // entonces no sale en ese ejercicio
+  const fotoRef = useRef<HTMLDivElement>(null)
+  const [fotoChica, setFotoChica] = useState<string | null>(null)
+  useLayoutEffect(() => {
+    const el = fotoRef.current
+    if (!el || fotoChica === item.id) return
+    const h = el.getBoundingClientRect().height
+    if (h > 0 && h < 56) setFotoChica(item.id)
+  })
   const guardarBorrador = (p: number, r: number, u: Unidad) => setActiva({ ...activa, borrador: { itemId: item.id, peso: p, reps: r, unidad: u } })
   const setPeso = (v: number) => { setPesoState(v); guardarBorrador(v, reps, unidad) }
   const setReps = (v: number) => { setRepsState(v); guardarBorrador(peso, v, unidad) }
@@ -465,7 +475,7 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
         {esAlternativa && <p className="t-nota tenue sesion-alternativa">{'caso' in item && <span className="caso">{item.caso}. </span>}<button onClick={onVolverOriginal}>Volver al original</button></p>}
         {aviso && <p className="t-cuerpo tenue sesion-aviso">{aviso}</p>}
         {avisoAprox && <p className="t-cuerpo tenue sesion-aviso">{avisoAprox}</p>}
-        <div className="sesion-foto"><Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="toque" /></div>
+        {fotoChica !== item.id && <div className="sesion-foto" ref={fotoRef}><Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="toque" /></div>}
       </div>
       <div className="sesion-medio" ref={medio}>
         {conPeso && <button className="mas-menos" aria-label={`Menos ${incremento} ${unidad}`} onClick={() => mover(-1)}><svg viewBox="0 0 28 28"><path d="M6 14h16" /></svg></button>}

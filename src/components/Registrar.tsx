@@ -80,7 +80,10 @@ export function RegistrarHoja({ datos, ahora, abierta, onCerrar, onGuardado, fec
     cerrar()
   }
   return (
-    <Hoja abierta={abierta} titulo="Registrar sesión" onCerrar={cerrar}>
+    <Hoja abierta={abierta} titulo="Registrar sesión" onCerrar={cerrar} pie={<>
+      {aviso && <p className="t-cuerpo">{aviso}</p>}
+      {pendiente ? <BotonPrincipal onClick={cambiar}>Cambiar a {NOMBRE_ELECCION(eleccion)}</BotonPrincipal> : <BotonPrincipal onClick={() => guardar()}>Guardar</BotonPrincipal>}
+    </>}>
       <p className="t-cuerpo tenue">Una sesión hecha sin la app. Se puede editar o borrar en Historial.</p>
       <Grupo>
         <Fila texto="Fecha"><input type="date" value={fecha} max={hoy} onChange={(e) => { setFecha(e.target.value); deDia(e.target.value); setAviso(null); setPendiente(null) }} aria-label="Fecha" /></Fila>
@@ -101,8 +104,6 @@ export function RegistrarHoja({ datos, ahora, abierta, onCerrar, onGuardado, fec
         </Fila>
         {tipo === 'FRIDA' && <Fila texto="Nota"><input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Opcional" aria-label="Nota" maxLength={80} style={{ width: 140, textAlign: 'right', borderBottom: '1px solid var(--separador)' }} /></Fila>}
       </Grupo>
-      {aviso && <p className="t-cuerpo">{aviso}</p>}
-      {pendiente ? <BotonPrincipal onClick={cambiar}>Cambiar a {NOMBRE_ELECCION(eleccion)}</BotonPrincipal> : <BotonPrincipal onClick={() => guardar()}>Guardar</BotonPrincipal>}
     </Hoja>
   )
 }
