@@ -223,7 +223,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     libre: { titulo: 'Libre', nota: 'Si entrenas, regístralo y cuenta.' },
     completa: { titulo: 'Semana completa', nota: `Hoy sauna. Si quieres pesas extra, va la ${queToca}.` },
     cerrado: { titulo: 'Club cerrado', nota: `Los lunes abre de 7 a 11. Mañana ${manana.split(' ')[0]} toca ${textoEleccion(elegirSesion(sesiones, settings.fridaPlan, sumarDias(ahora, 1), sets))}.` },
-    hecha: { titulo: `${letraHoy} hecha`, nota: textoSigue },
+    hecha: { titulo: `${letraHoy} hecha`, nota: aviso ? '' : textoSigue },
     hoyno: { titulo: 'Hoy no', nota: `Tu semana se acomoda.${textoSigue ? ` ${textoSigue}` : ''}` },
   }
   // las preguntas y la pantalla de Frida van primero; luego "¿Vas en la noche?"; luego lo del día

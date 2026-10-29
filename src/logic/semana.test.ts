@@ -250,4 +250,9 @@ describe('avisos de la semana (RUTINA-FINAL.md v7, 2)', () => {
     expect(avisoSemana(s, undefined, dia(DOM, '19:10:00'))).toBeNull()
     expect(avisoSemana([...s, sesion(JUE, 'B')], undefined, dia(DOM, '09:00:00'))).toBeNull()
   })
+  it('viernes ya hecha su sesión y todavía en menos de 3: el rescate; el domingo ya hecha la suya, nada', () => {
+    const t = [sesion(MAR, 'A')]
+    expect(avisoSemana([...t, sesion(VIE, 'B')], SIN_FRIDA, dia(VIE, '09:00:00'))).toBe('Vas en 2 de 3; el domingo antes de las 7 pm te toca C.')
+    expect(avisoSemana([...t, sesion(DOM, 'B')], undefined, dia(DOM, '12:00:00'))).toBeNull()
+  })
 })

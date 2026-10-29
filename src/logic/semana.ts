@@ -189,22 +189,24 @@ export const DOMINGO_CIERRE = 19 * 60
 /**
  * Avisos de la semana, una línea en Hoy (RUTINA-FINAL.md v7, 2). Jueves, ya hecha la sesión del día o desde las 21:00:
  * "Vas en 2 de 3. Mañana viernes toca B: prende tus alarmas de Pesas extra." o "Semana completa. Mañana viernes, sauna.".
- * Viernes (desde las 21:00 o con "Hoy no") y domingo hasta las 19:00, si va en menos de 3: el rescate del domingo.
+ * Viernes (ya hecha su sesión, desde las 21:00 o con "Hoy no") y domingo hasta las 19:00 sin sesión de club, si va en
+ * menos de 3: el rescate del domingo.
  */
 export function avisoSemana(sesiones: Sesion[], plan: PlanFrida | undefined, ahora: Date, sets: SetLog[] = [], noFui: string[] = []): string | null {
   const { hechas: n } = estadoSemana(sesiones, ahora, sets)
   const dow = ahora.getDay()
   const min = minutosAhora(ahora)
   const hoy = claveFecha(ahora)
+  const hechaHoy = hechas(sesiones, sets).some((s) => s.fecha === hoy && ES_CLUB(s.tipo))
   if (dow === 4) {
-    const hechaHoy = hechas(sesiones, sets).some((s) => s.fecha === hoy && ES_CLUB(s.tipo))
     if (!hechaHoy && min < NOCHE_MIN) return null
     if (n >= META) return 'Semana completa. Mañana viernes, sauna.'
     return `Vas en ${n} de ${META}. Mañana viernes toca ${textoEleccion(elegirSesion(sesiones, plan, sumarDias(ahora, 1), sets))}: prende tus alarmas de Pesas extra.`
   }
   if (n >= META) return null
-  if (dow === 5 && (min >= NOCHE_MIN || noFui.includes(hoy))) return `Vas en ${n} de ${META}; el domingo antes de las 7 pm te toca ${textoEleccion(elegirSesion(sesiones, plan, sumarDias(ahora, 2), sets))}.`
-  if (dow === 0 && min < DOMINGO_CIERRE) return `Vas en ${n} de ${META}; hoy antes de las 7 pm te toca ${textoEleccion(elegirSesion(sesiones, plan, ahora, sets))}.`
+  if (dow === 5 && (min >= NOCHE_MIN || noFui.includes(hoy) || hechaHoy)) return `Vas en ${n} de ${META}; el domingo antes de las 7 pm te toca ${textoEleccion(elegirSesion(sesiones, plan, sumarDias(ahora, 2), sets))}.`
+  // una de club por día: hecha la del domingo, ya no hay rescate
+  if (dow === 0 && min < DOMINGO_CIERRE && !hechaHoy) return `Vas en ${n} de ${META}; hoy antes de las 7 pm te toca ${textoEleccion(elegirSesion(sesiones, plan, ahora, sets))}.`
   return null
 }
 
