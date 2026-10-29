@@ -10,15 +10,18 @@ export function TuSemana({ dias, onDia }: { dias: DiaTuSemana[]; onDia: (fecha: 
   return (
     <div className="tira" role="list" aria-label="Tu semana">
       {dias.map((d) => {
-        // si el mismo día hay club y Frida, se ve la de club
+        // si el mismo día hay club y Frida, se ve la de club con una F chica
         const h = d.hecho.find((x) => x.tipo !== 'FRIDA') ?? d.hecho[0]
+        const fridaHecha = h && h.tipo !== 'FRIDA' ? d.hecho.find((x) => x.tipo === 'FRIDA') : undefined
         const nombre = `${DIAS_NOMBRE[desdeClave(d.fecha).getDay()]} ${desdeClave(d.fecha).getDate()}`
-        const texto = h ? `${h.tipo === 'FRIDA' ? `Frida ${h.fridaTipo}` : h.tipo}${h.noche ? ', en la noche' : ''}` : d.plan ? `toca ${d.plan === 'F' ? 'Frida' : d.plan}` : 'nada'
+        const texto = h
+          ? `${h.tipo === 'FRIDA' ? `Frida ${h.fridaTipo}` : h.tipo}${h.noche ? ', en la noche' : ''}${fridaHecha ? ` y Frida ${fridaHecha.fridaTipo}` : ''}`
+          : d.plan ? `toca ${d.plan === 'F' ? 'Frida' : d.plan}${d.conFrida ? ' y Frida' : ''}` : 'nada'
         const marca = (
           <>
             <span className="tira-letra" aria-hidden="true">{d.letra}</span>
-            <span className={`tira-marca ${h ? 'hecho' : d.plan ? 'plan' : 'vacio'}`} aria-hidden="true">
-              {h ? (h.tipo === 'FRIDA' ? <>F<small>{h.fridaTipo === 'pierna' ? 'P' : 'T'}</small></> : h.tipo) : d.plan}
+            <span className={`tira-marca ${h ? 'hecho' : d.plan ? 'plan' : 'vacia'}`} aria-hidden="true">
+              {h ? (h.tipo === 'FRIDA' ? <>F<small>{h.fridaTipo === 'pierna' ? 'P' : 'T'}</small></> : <>{h.tipo}{fridaHecha && <small>F</small>}</>) : <>{d.plan}{d.conFrida && <small>F</small>}</>}
             </span>
             <span className={`tira-noche ${h?.noche ? 'si' : ''}`} aria-hidden="true" />
           </>

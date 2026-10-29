@@ -175,7 +175,7 @@ export function estadoSemana(sesiones: Sesion[], fecha: Date, sets: SetLog[] = [
 export const textoEleccion = (e: Pick<Eleccion, 'tipo' | 'sinPierna'>) => `${e.tipo}${e.sinPierna ? ' sin pierna' : ''}`
 export const NOCHE_MIN = 21 * 60
 /** el domingo el club cierra a las 7 */
-const DOMINGO_CIERRE = 19 * 60
+export const DOMINGO_CIERRE = 19 * 60
 /**
  * Avisos de la semana, una línea en Hoy (RUTINA-FINAL.md v7, 2). Jueves, ya hecha la sesión del día o desde las 21:00:
  * "Vas en 2 de 3. Mañana viernes toca B: prende tus alarmas de Pesas extra." o "Semana completa. Mañana viernes, sauna.".

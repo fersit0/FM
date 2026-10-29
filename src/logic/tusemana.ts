@@ -1,10 +1,12 @@
 // Tu semana en Hoy (RUTINA-FINAL.md v7, 2): una tira de lunes a domingo con lo hecho y lo que falta. Puro, sin React.
 // El plan acomoda las sesiones base que faltan en los días que quedan, con esta preferencia: martes, jueves, viernes y
-// domingo; Frida en su día planeado; respetando la regla de espalda (la de elegirSesion). Se recalcula sola con cada
-// registro, con cada cambio de tipo de Frida y con "Hoy no".
+// domingo; Frida en su día planeado; respetando la regla de espalda (la de elegirSesion). Un martes o jueves con Frida
+// también lleva su sesión de club (una de club por día, más Frida). Hoy lleva letra solo mientras el día todavía da
+// para una sesión de club: hasta las 21:00, y el domingo hasta las 19:00; después, lo que falta pasa a los días que
+// siguen. Se recalcula sola con cada registro, con cada cambio de tipo de Frida y con "Hoy no".
 import type { Sesion, SetLog, Club, FridaTipo, Settings } from '../data/tipos'
-import { claveFecha, inicioSemana, sumarDias, desdeClave } from './fechas'
-import { hechas, elegirSesion, faltantes, estadoFrida, fridaTipoDe } from './semana'
+import { claveFecha, inicioSemana, sumarDias, desdeClave, minutosAhora } from './fechas'
+import { hechas, elegirSesion, faltantes, estadoFrida, fridaTipoDe, NOCHE_MIN, DOMINGO_CIERRE } from './semana'
 
 export interface HechoDia {
   tipo: Club | 'FRIDA'
@@ -19,8 +21,10 @@ export interface DiaTuSemana {
   hoy: boolean
   pasado: boolean
   hecho: HechoDia[]
-  /** lo planeado: la letra de la sesión de club o F para Frida; null en los días sin plan */
+  /** lo planeado: la letra de la sesión de club, o F si solo es Frida; null en los días sin plan */
   plan: Club | 'F' | null
+  /** también va Frida ese día (con la de club en `plan`) */
+  conFrida?: boolean
 }
 const LETRAS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 /** martes, jueves, viernes y domingo, en ese orden (son también el orden de la semana) */
@@ -48,25 +52,28 @@ export function tuSemana(sesiones: Sesion[], sets: SetLog[], settings: Pick<Sett
     dias[fechas.indexOf(frida.planeada)].plan = 'F'
     supuestas.push(virtual(frida.planeada, 'FRIDA'))
   }
-  // hoy: si no hay sesión de club, lo que toca (si es día de pesas, o eligió una a mano, y no dijo "Hoy no")
+  /** La de club planeada ese día; si ya llevaba Frida, se queda con las dos */
+  const ponClub = (i: number, tipo: Club) => {
+    if (dias[i].plan === 'F') dias[i].conFrida = true
+    dias[i].plan = tipo
+    supuestas.push(virtual(fechas[i], tipo))
+  }
+  // hoy: si no hay sesión de club, lo que toca (si es día de pesas, o eligió una a mano, y no dijo "Hoy no"), mientras
+  // el día todavía dé para una de club
   const iHoy = fechas.indexOf(hoy)
   const clubHoy = dias[iHoy].hecho.some((h) => h.tipo !== 'FRIDA')
   const eligioHoy = settings.sesionElegida?.fecha === hoy
-  if (!clubHoy && !settings.noFui?.includes(hoy) && (DIAS_DE_PESAS.includes(iHoy) || eligioHoy) && dias[iHoy].plan === null) {
+  const diaAbierto = minutosAhora(ahora) < (iHoy === 6 ? DOMINGO_CIERRE : NOCHE_MIN)
+  if (!clubHoy && !settings.noFui?.includes(hoy) && (DIAS_DE_PESAS.includes(iHoy) || eligioHoy) && diaAbierto) {
     const e = elegirSesion(supuestas, plan, ahora, sets, settings.sesionElegida)
-    if (!e.extra) {
-      dias[iHoy].plan = e.tipo
-      supuestas.push(virtual(hoy, e.tipo))
-    }
+    if (!e.extra) ponClub(iHoy, e.tipo)
   }
-  // lo que falta, en los días de pesas que quedan después de hoy (sin cruzarse con Frida)
+  // lo que falta, en los días de pesas que quedan después de hoy
   for (const i of DIAS_DE_PESAS) {
-    if (fechas[i] <= hoy || dias[i].plan !== null) continue
+    if (fechas[i] <= hoy || (dias[i].plan !== null && dias[i].plan !== 'F')) continue
     const d = desdeClave(fechas[i])
     if (faltantes(supuestas, plan, d, sets).length === 0) break
-    const e = elegirSesion(supuestas, plan, d, sets)
-    dias[i].plan = e.tipo
-    supuestas.push(virtual(fechas[i], e.tipo))
+    ponClub(i, elegirSesion(supuestas, plan, d, sets).tipo)
   }
   return dias
 }
