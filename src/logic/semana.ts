@@ -96,6 +96,11 @@ export function semanaSinFrida(sesiones: Sesion[], plan: PlanFrida | undefined, 
 export function sesionesBase(sesiones: Sesion[], plan: PlanFrida | undefined, fecha: Date, sets: SetLog[] = []): ('FRIDA' | Club)[] {
   return [semanaSinFrida(sesiones, plan, fecha, sets) ? 'C' : 'FRIDA', 'A', 'B']
 }
+/** Los siete días de la semana de `fecha`: desde "¿Fuiste con Frida el lunes?", "Se movió a…" puede ser un día que ya pasó */
+export function diasDeLaSemana(fecha: Date): string[] {
+  const ini = inicioSemana(fecha)
+  return Array.from({ length: 7 }, (_, i) => claveFecha(sumarDias(ini, i)))
+}
 /** Días de la semana de `fecha` a los que se puede mover Frida: de hoy en adelante, hasta el domingo */
 export function diasParaMoverFrida(fecha: Date): string[] {
   const ini = inicioSemana(fecha)
