@@ -1,4 +1,4 @@
-// Biblioteca de ejercicios: RUTINA-FINAL.md versión 6 (secciones 3 a 7). Ids estables por movimiento; un id compartido
+// Biblioteca de ejercicios: RUTINA-FINAL.md versión 7 (secciones 3 a 7). Ids estables por movimiento; un id compartido
 // entre ejercicio y alternativa (o entre sesiones) comparte historial. Sin pares: cada ejercicio termina sus series y
 // luego el siguiente. Tres sesiones de club: A pecho y pierna, B torso completo, C espalda y hombro (semanas sin Frida).
 import type { Ejercicio, Alternativa, Letra, Zona } from './tipos'
@@ -30,14 +30,14 @@ export const REGLAS_GLOBALES: { titulo: string; texto: string }[] = [
   { titulo: 'Serie de aproximación', texto: 'En el primer ejercicio de la sesión y en el primer press si no es el primero, 10 repeticiones con la mitad del peso. No se registra.' },
   { titulo: 'Series seguidas', texto: 'Cada ejercicio se termina completo antes de pasar al siguiente. El descanso corre al tocar la serie.' },
   { titulo: 'Zonas', texto: 'La sesión recorre bancos, poleas y terraza en orden y visita cada zona una sola vez. Si algo está ocupado, "Ocupado: después" lo manda al final de su zona.' },
-  { titulo: 'Qué sesión toca', texto: 'Cada semana tiene tres sesiones base: Frida (o C si esa semana no hay), A y B. Si faltan varias, C, luego A, luego B. Después de Frida o de C no va B ni C mientras falte A. Con las tres hechas, la extra alterna A y B.' },
-  { titulo: 'Frida', texto: 'El día con Frida es espalda, hombro y bíceps a su ritmo y con su app. En FM solo se registra ("Fui con Frida") y cuenta para la meta.' },
-  { titulo: 'Versión automática', texto: 'Al tocar Empezar, la app ve la hora real: si las pesas de la completa terminan antes de la última pesa (21:10), va completa; si no, corta; si tampoco, casa. Si a media sesión no alcanza, quita abdomen, luego brazos, luego aperturas o puente, y avisa. En domingo o antes de las 7 pm, siempre completa.' },
-  { titulo: 'Terminar aquí', texto: 'Siempre a la mano durante la sesión: cierra con lo hecho, cuenta para la meta y ofrece el cierre de cardio de 5 min.' },
+  { titulo: 'Qué sesión toca', texto: 'Cada semana tiene tres sesiones base: Frida (o C si esa semana no hay), A y B. Si faltan varias, C, luego A, luego B. Después de Frida torso o de C no va B ni C mientras falte A; Frida pierna no bloquea nada. Con las tres hechas, la extra es C si Frida fue pierna (nunca dos C en la semana); si no, A o B, la contraria de la última. Una de club por día, más Frida si cae el mismo día.' },
+  { titulo: 'Frida', texto: 'Con Frida, a su ritmo y con su app: unas semanas pierna y otras torso (espalda, hombro y bíceps). En FM solo se registra: "Fui con Frida" y luego Pierna o Torso. Cuenta para la meta. Si fue pierna, la A de esa semana sale sin pierna: pecho y espalda.' },
+  { titulo: 'Versión automática', texto: 'Al tocar Empezar, la app ve la hora real. Entre semana antes de las 12: completa si las pesas terminan a las 8:15 o antes; si no, corta; si tampoco, ya no alcanza en la mañana y queda la noche. En la noche y en fin de semana la última pesa es a las 21:15, el domingo a las 18:45: completa, corta o casa. El lunes en la tarde el club no abre. Si a media sesión no alcanza, quita abdomen, luego brazos, luego aperturas o puente, y avisa.' },
+  { titulo: 'Terminar aquí', texto: 'Siempre a la mano durante la sesión: cierra con lo hecho y cuenta para la meta. En la noche y en fin de semana ofrece el cierre de cardio de 5 min.' },
   { titulo: 'Dolor', texto: 'Molestia muscular es normal; dolor agudo en una articulación (hombro, codo, rodilla, espalda baja) no. Si aparece, cambiar a la alternativa ese día. No se aguanta.' },
   { titulo: 'Semana pesada', texto: 'Si dos semanas seguidas se llega muerto, la siguiente se hacen 2 series por ejercicio con el mismo peso y se retoma. La app lo ofrece, no lo impone.' },
 ]
-export const VERSION_CORTA_TEXTO = 'Unos 30 min: calentamiento 5 min; tres ejercicios a 3 series (A: press inclinado, laterales y goblet; B: press plano, laterales y jalón cerrado; C: jalón ancho, press militar y laterales); cierre de 5 min. Cuenta como sesión. La app la elige sola por la hora.'
+export const VERSION_CORTA_TEXTO = 'Unos 25 min: calentamiento 4 min y tres ejercicios a 3 series (A: press inclinado, laterales y goblet; A sin pierna: press inclinado, remo con pecho apoyado y laterales; B: press plano, laterales y jalón cerrado; C: jalón ancho, press militar y laterales). En la noche y en fin de semana, cierre de 5 min. Cuenta como sesión. La app la elige sola por la hora.'
 export const REGLA_ALTERNATIVA = 'Primero "Ocupado: después". Si sigue ocupado, la alternativa: solo mancuernas, banco, colchoneta o el cuerpo, en la misma zona o en la terraza. Se oculta si su id ya está en la sesión.'
 
 // ---- alternativas compartidas (mismo id = mismo historial) ----

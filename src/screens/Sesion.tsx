@@ -189,13 +189,13 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
           {paso.tipo !== 'cierre' && <BotonTexto onClick={terminar}>Terminar aquí</BotonTexto>}
         </header>
       )}
-      {paso.tipo === 'calentamiento' && <PasoTiempo key="cal" titulo="Calentamiento" detalle={`Elíptica ${minCal} min, ritmo en el que puedes platicar.`} nota={CALENTAMIENTO.siOcupada} minutos={minCal} linea={linea} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
+      {paso.tipo === 'calentamiento' && <PasoTiempo key="cal" titulo="Calentamiento" detalle={`Elíptica o caminadora ${minCal} min, ritmo en el que puedes platicar.`} nota={CALENTAMIENTO.siOcupada} minutos={minCal} linea={linea} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
       {ej && !descansando && (
         <PasoSerie key={`${ej.base.id}-${ej.item.id}`} datos={datos} sesion={sesion} ej={ej} lista={lista} hechos={hechos} sets={sets} activa={activa} setActiva={setActiva} linea={linea} onCambiarVersion={casa ? undefined : () => cambiarVersion(otraVersion, ligera)} otraVersion={otraVersion} onTecnica={() => setTecnica(true)} onSiguiente={() => ir(indice + 1)} onSeries={() => setSeriesHoy(true)} onVolverOriginal={() => elegirAlternativa(null)} onOcupado={casa ? undefined : ocupado} pospuesto={pospuesto}
           onGuardado={(id) => setAccion((a) => (a && a.texto.startsWith('Para terminar') ? a : { texto: 'Serie guardada.', deshacer: async () => { await datos.borrarSet(id); setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined }) } }))} />
       )}
       {ej && descansando && activa.descansoFin !== undefined && (
-        <PasoDescanso key={`d${activa.descansoFin}`} ej={ej} hechos={hechos} siguiente={siguienteEj} fin={activa.descansoFin} total={activa.descansoSeg ?? ej.item.descansoSeg} avisado={!!activa.avisado} unidades={settings.unidades} linea={linea}
+        <PasoDescanso key={`d${activa.descansoFin}`} ej={ej} hechos={hechos} siguiente={siguienteEj} conCierre={!manana} fin={activa.descansoFin} total={activa.descansoSeg ?? ej.item.descansoSeg} avisado={!!activa.avisado} unidades={settings.unidades} linea={linea}
           onMas={() => setActiva({ ...activa, descansoFin: (activa.descansoFin ?? Date.now()) + 15_000, descansoSeg: (activa.descansoSeg ?? ej.item.descansoSeg) + 15 })}
           onAvisar={() => { abrirAtajo(((activa.descansoFin ?? Date.now()) - Date.now()) / 1000); setActiva({ ...activa, avisado: true }) }}
           onSaltar={() => { const antes = { ...activa }; setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined }); setAccion({ texto: 'Descanso saltado.', deshacer: () => setActiva(antes) }) }}
@@ -497,7 +497,7 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
 }
 
 // ---------- 6.3 Descanso ----------
-function PasoDescanso({ ej, hechos, siguiente, fin, total, avisado, unidades, linea, onMas, onAvisar, onSaltar, onSiguienteEjercicio }: { ej: PasoEjercicio; hechos: SetLog[]; siguiente: PasoEjercicio | null; fin: number; total: number; avisado: boolean; unidades?: Record<string, Unidad>; linea: string | null; onMas: () => void; onAvisar: () => void; onSaltar: () => void; onSiguienteEjercicio: () => void }) {
+function PasoDescanso({ ej, hechos, siguiente, conCierre, fin, total, avisado, unidades, linea, onMas, onAvisar, onSaltar, onSiguienteEjercicio }: { ej: PasoEjercicio; hechos: SetLog[]; siguiente: PasoEjercicio | null; conCierre: boolean; fin: number; total: number; avisado: boolean; unidades?: Record<string, Unidad>; linea: string | null; onMas: () => void; onAvisar: () => void; onSaltar: () => void; onSiguienteEjercicio: () => void }) {
   usePantalla('descanso')
   const { W } = useMedidas()
   const [medio, alto, ancho] = useAlto<HTMLDivElement>()
@@ -520,7 +520,7 @@ function PasoDescanso({ ej, hechos, siguiente, fin, total, avisado, unidades, li
   // al terminar la última serie de una zona, la app dice a cuál sigue
   const cambiaZona = ejercicioCompleto && siguiente && siguiente.base.zona && siguiente.base.zona !== ej.base.zona
   const sigue = ejercicioCompleto
-    ? siguiente ? `${cambiaZona ? `Ahora a ${ZONA_NOMBRE[siguiente.base.zona!].toLowerCase()}: ` : 'Sigue: '}${siguiente.item.nombre.toLowerCase()}` : 'Sigue: el cierre'
+    ? siguiente ? `${cambiaZona ? `Ahora a ${ZONA_NOMBRE[siguiente.base.zona!].toLowerCase()}: ` : 'Sigue: '}${siguiente.item.nombre.toLowerCase()}` : conCierre ? 'Sigue: el cierre' : 'Sigue: el sauna'
     : `Sigue: serie ${hechos.length + 1}${pesoUlt !== null ? `, ${formatoPeso(pesoUlt, unidad)}` : ''}`
   return (
     <div className="panel">

@@ -46,10 +46,10 @@ export function pesoDeSet(s: SetLog, unidad: Unidad, paso = pasoPorDefecto(unida
   return desdeKg(s.pesoKg, unidad, paso)
 }
 
-/** Pesos iniciales sin historial (RUTINA-FINAL.md, 10). Gym en lb, mancuernas por mano; CASA en kg. */
+/** Pesos iniciales sin historial (RUTINA-FINAL.md v7, 10). Gym en lb, mancuernas por mano; CASA en kg. */
 const INICIAL_LB: Record<string, number> = {
-  jalon: 90, 'remo-polea': 90, 'press-inclinado': 30, 'press-militar': 25, 'triceps-cabeza': 20, laterales: 10, 'curl-alternado': 20,
-  'press-plano': 35, 'aperturas-mancuernas': 15, 'remo-pecho-apoyado': 30, 'jalon-cerrado': 80, 'triceps-polea': 40, 'curl-martillo': 20,
+  jalon: 90, 'remo-polea': 90, 'press-inclinado': 30, 'aperturas-inclinadas': 15, 'press-militar': 25, 'triceps-cabeza': 20, laterales: 10, 'curl-alternado': 20,
+  'press-plano': 35, 'aperturas-mancuernas': 15, 'remo-pecho-apoyado': 15, 'puente-gluteo': 35, 'jalon-cerrado': 80, 'triceps-polea': 40, 'curl-martillo': 20,
   goblet: 45, 'sentadilla-mancuernas': 25, 'triceps-patada': 10, 'remo-mancuerna': 45, 'press-piso': 30, 'press-militar-pie': 20, 'laterales-sentado': 10,
 }
 const INICIAL_KG: Record<string, number> = { 'laterales-casa': 4, 'remo-mancuerna-casa': 12 }
