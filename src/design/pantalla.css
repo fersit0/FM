@@ -44,11 +44,27 @@
 .dia-fila { flex-wrap: wrap; }
 .inicio-aldia .inicio-texto { margin-top: 0; }
 .inicio-aldia .inicio-pie { margin-top: auto; }
+/* con muchos días la lista se recorre y "Listo" queda fijo arriba de la barra, siempre completo; en pantallas bajas el
+   título baja de tamaño para que quepan más días sin recorrer */
+/* el sticky se mide desde el borde de adentro de .inicio, que ya deja el lugar de la barra; los 18 px de abajo tapan el
+   hueco entre el pie y la barra */
+.inicio-aldia .inicio-pie { position: sticky; bottom: -18px; background: var(--fondo); padding: 12px 0 18px; margin-bottom: -18px; }
+@media (max-height: 700px) { .inicio-aldia .t-titulo { font-size: 34px; } }
 /* el día ("mar 6") nunca se encoge; si no cabe todo, los botones bajan al renglón de abajo */
 .dia-fila .fila-texto { flex: none; }
 .dia-fila .dia-botones { justify-content: flex-start; gap: 4px; }
 .dia-fila .dia-boton { padding: 0 9px; font-size: 15px; min-height: 44px; min-width: 44px; }
 @media (max-height: 700px) { .inicio { gap: 10px; } .t-inicio { font-size: 44px; } .inicio-pie { gap: 8px; } }
+/* iPhone SE dentro de Safari (553 de alto): con Tu semana, todo más compacto para que Empezar quede completo arriba de la barra */
+@media (max-height: 600px) {
+  .inicio { padding-top: calc(var(--safe-top) + 8px); gap: 8px; }
+  .inicio-texto { gap: 8px; }
+  .t-inicio { font-size: 36px; }
+  .inicio-nota { font-size: 17px; }
+  .tira { margin: 0 0 2px; }
+  .tira-marca { width: 30px; height: 30px; font-size: 14px; }
+  .tira-marca small { margin-bottom: 7px; }
+}
 
 /* Ficha */
 .ficha-foto { margin: 0 calc(-1 * var(--margen)); }

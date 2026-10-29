@@ -124,12 +124,13 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   let modo: Modo = 'club'
   if (!sesionEnCurso && clubDeHoy) modo = 'hecha'
   else if (!sesionEnCurso && settings.sesionElegida?.fecha !== claveHoy && !verSesionHoy) {
-    if (settings.noFui?.includes(claveHoy)) modo = 'hoyno'
-    else if (lunesManana) modo = 'cardio'
+    if (lunesManana) modo = 'cardio'
     else if (dow === 1) modo = 'cerrado'
     else if (dow === 3) modo = 'descanso'
     else if (dow === 6) modo = 'libre'
     else if (dow === 5 && semana.hechas >= semana.meta) modo = 'completa'
+    // "Hoy no" (o "No hubo" en el día de Frida) solo cambia un día que ofrecía sesión de club
+    if (modo === 'club' && settings.noFui?.includes(claveHoy)) modo = 'hoyno'
   }
   // en la mañana no se ofrece CASA (RUTINA-FINAL.md v7, 3)
   const ofrecerCasa = !sesionEnCurso && modo === 'club' && tiempo.franja === 'noche' && casaDisponible(sesiones, ahora, sets) && (versionAuto === 'casa' || sinGym)
