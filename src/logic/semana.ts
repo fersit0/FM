@@ -80,6 +80,10 @@ export function fridaDeSemana(sesiones: Sesion[], fecha: Date, sets: SetLog[] = 
 export function fridaPiernaEnSemana(sesiones: Sesion[], fecha: Date, sets: SetLog[] = [], antesDe?: string): boolean {
   return sesionesDeSemana(sesiones, fecha, sets).some((s) => s.tipo === 'FRIDA' && fridaTipoDe(s) === 'pierna' && (!antesDe || s.fecha < antesDe))
 }
+/** El día de Frida de la semana de `fecha`: el de la FRIDA registrada (registrarla otro día lo vuelve el día de Frida), si no el planeado */
+export function diaDeFrida(sesiones: Sesion[], plan: PlanFrida | undefined, fecha: Date, sets: SetLog[] = []): string | null {
+  return fridaDeSemana(sesiones, fecha, sets)?.fecha ?? diaFridaPlaneado(plan, fecha)
+}
 /** Trabaja espalda: C o FRIDA torso (o sin tipo). FRIDA pierna no (RUTINA-FINAL.md v7, 2) */
 const esEspalda = (s: Sesion) => s.tipo === 'C' || (s.tipo === 'FRIDA' && fridaTipoDe(s) === 'torso')
 
@@ -142,7 +146,8 @@ export function elegirSesion(sesiones: Sesion[], plan: PlanFrida | undefined, ho
     const ayer = claveFecha(sumarDias(hoy, -1))
     const manana = claveFecha(sumarDias(hoy, 1))
     const ayerEspalda = hechas(sesiones, sets).some((s) => s.fecha === ayer && esEspalda(s))
-    const e = estadoFrida(sesiones, plan, hoy, sets)
+    // con la semana de mañana: el domingo cuenta la Frida del lunes siguiente
+    const e = estadoFrida(sesiones, plan, sumarDias(hoy, 1), sets)
     const fridaManana = e.hecha === null && e.planeada === manana
     if (ayerEspalda || fridaManana) return con('A', false)
   }

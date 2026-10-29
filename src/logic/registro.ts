@@ -4,7 +4,7 @@
 import type { Sesion, SetLog, SesionTipo, Settings, FridaTipo, Momento } from '../data/tipos'
 import { listaDe } from '../data/ejercicios'
 import { claveFecha, desdeClave, inicioSemana, sumarDias, minutosAhora } from './fechas'
-import { cuenta, hechas, elegirSesion, diaFridaPlaneado, sesionesDeSemana, fridaPiernaEnSemana, fridaTipoDe, META, type PlanFrida } from './semana'
+import { cuenta, hechas, elegirSesion, diaFridaPlaneado, diaDeFrida, sesionesDeSemana, fridaTipoDe, META, type PlanFrida } from './semana'
 
 /** Fecha y hora de la A del 7 oct 2026 que Fer hizo sin la app (RUTINA-FINAL.md, 2.7) */
 export const CARGA_INICIAL = { fecha: '2026-10-07', tipo: 'A' as const }
@@ -63,7 +63,7 @@ export function esDiaDeGym(fecha: string, sesiones: Sesion[], sets: SetLog[] = [
   const d = desdeClave(fecha)
   const dow = d.getDay()
   if (dow === 2 || dow === 4) return true
-  if (diaFridaPlaneado(plan, d) === fecha) return true
+  if (diaDeFrida(sesiones, plan, d, sets) === fecha) return true
   if (dow === 5 || dow === 0) return llevabaAntes(fecha, sesiones, sets) < META
   return false
 }
@@ -76,8 +76,9 @@ export function esDiaDePesas(fecha: string, sesiones: Sesion[], sets: SetLog[] =
 export function momentoDe(ms: number): Momento {
   return minutosAhora(new Date(ms)) < 12 * 60 ? 'manana' : 'noche'
 }
-/** Al registrar después: noche el día de Frida, mañana los demás */
-export function momentoPorDefecto(fecha: string, plan?: PlanFrida): Momento {
+/** Al registrar después: Frida en la noche y las de club en la mañana; sin saber qué fue, noche el día de Frida y mañana los demás */
+export function momentoPorDefecto(fecha: string, plan?: PlanFrida, tipo?: SesionTipo): Momento {
+  if (tipo) return tipo === 'FRIDA' ? 'noche' : 'manana'
   return diaFridaPlaneado(plan, desdeClave(fecha)) === fecha ? 'noche' : 'manana'
 }
 
@@ -124,10 +125,10 @@ export function diasSinRegistro(sesiones: Sesion[], sets: SetLog[], settings: Pi
   }
   return out
 }
-/** Qué tocaba un día: FRIDA si era el planeado de su semana, si no la que la app habría elegido con lo hecho antes de ese día */
+/** Qué tocaba un día: FRIDA si era el día de Frida de su semana, si no la que la app habría elegido con lo hecho antes de ese día */
 export function sugeridaPara(fecha: string, sesiones: Sesion[], sets: SetLog[], plan?: PlanFrida): 'A' | 'B' | 'C' | 'FRIDA' {
   const d = desdeClave(fecha)
-  if (diaFridaPlaneado(plan, d) === fecha) return 'FRIDA'
+  if (diaDeFrida(sesiones, plan, d, sets) === fecha) return 'FRIDA'
   return elegirSesion(sesiones.filter((s) => s.fecha < fecha), plan, d, sets).tipo
 }
 
@@ -156,8 +157,8 @@ export function armarRegistro(sesiones: Sesion[], fecha: string, tipo: SesionTip
   if (fecha > hoy) return { error: 'Esa fecha todavía no llega.' }
   const { fridaTipo, momento } = opciones
   const conMomento = (s: Sesion): Sesion => (momento ? { ...s, momento } : s)
-  // la A sale sin pierna si esa semana ya había FRIDA pierna antes de ese día (RUTINA-FINAL.md v7, 4b)
-  const sinPierna = tipo === 'A' && fridaPiernaEnSemana(sesiones, desdeClave(fecha), [], fecha)
+  // la A sale sin pierna si esa semana ya había FRIDA pierna antes: otro día antes, o el mismo día en la mañana con la A en la noche (RUTINA-FINAL.md v7, 4b)
+  const sinPierna = tipo === 'A' && sesionesDeSemana(sesiones, desdeClave(fecha)).some((s) => s.tipo === 'FRIDA' && fridaTipoDe(s) === 'pierna' && (s.fecha < fecha || (s.fecha === fecha && s.momento === 'manana' && momento === 'noche')))
   const conPierna = (s: Sesion): Sesion => (tipo === 'A' ? { ...s, sinPierna } : { ...s, sinPierna: undefined })
   if (esClub(tipo)) {
     const otra = sesiones.find((s) => s.fecha === fecha && esClub(s.tipo))

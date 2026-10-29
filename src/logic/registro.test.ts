@@ -184,6 +184,29 @@ describe('v7: registro con mañana o noche, Frida con tipo y "¿Vas en la noche?
     expect(preguntarNoche(en(VIE, '09:00'), [sesion(LUN, 'FRIDA'), sesion(MAR, 'A')], [], {})).toBe(true)
     expect(preguntarNoche(en(VIE, '09:00'), [sesion(LUN, 'FRIDA'), sesion(MAR, 'A'), sesion(JUE, 'B')], [], {})).toBe(false)
   })
+  it('al registrar después con el tipo: Frida en la noche y las de club en la mañana', () => {
+    expect(momentoPorDefecto(MAR, undefined, 'FRIDA')).toBe('noche')
+    expect(momentoPorDefecto(LUN, undefined, 'A')).toBe('manana')
+  })
+  it('Frida registrada otro día: ese es el día de Frida y el planeado deja de ser día de gym', () => {
+    const sab = '2026-10-10'
+    const plan = { [LUN]: sab }
+    expect(esDiaDeGym(sab, [], [], plan)).toBe(true)
+    expect(esDiaDeGym(sab, [sesion(MIE, 'FRIDA')], [], plan)).toBe(false)
+    expect(esDiaDeGym(MIE, [sesion(MIE, 'FRIDA')], [], plan)).toBe(true)
+    // ya no pregunta "¿Entrenaste el sábado?" con Frida sugerida
+    const pend = diasSinRegistro([sesion(MIE, 'FRIDA')], [], { fridaPlan: plan }, new Date('2026-10-12T09:00:00'))
+    expect(pend.map((d) => d.fecha)).toEqual([JUE, VIE, '2026-10-11'])
+    expect(sugeridaPara(sab, [sesion(MIE, 'FRIDA')], [], plan)).not.toBe('FRIDA')
+  })
+  it('Frida pierna en la mañana y la A en la noche del mismo día: la A sale sin pierna; Frida en la noche, no', () => {
+    const fm = sesion(MAR, 'FRIDA', true, { fridaTipo: 'pierna', momento: 'manana' })
+    const r = armarRegistro([fm], MAR, 'A', MIE, undefined, { momento: 'noche' })
+    expect('sesion' in r && r.sesion.sinPierna).toBe(true)
+    const fn = sesion(MAR, 'FRIDA', true, { fridaTipo: 'pierna', momento: 'noche' })
+    const r2 = armarRegistro([fn], MAR, 'A', MIE, undefined, { momento: 'manana' })
+    expect('sesion' in r2 && r2.sesion.sinPierna).toBe(false)
+  })
   it('línea de Hoy con Frida: "Frida fue pierna el lunes"; las viejas sin tipo, torso', () => {
     expect(textoFrida(fp(LUN), DIAS_NOMBRE)).toBe('Frida fue pierna el lunes')
     expect(textoFrida(sesion(LUN, 'FRIDA'), DIAS_NOMBRE)).toBe('Frida fue torso el lunes')

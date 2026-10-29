@@ -40,9 +40,9 @@ export function RegistrarHoja({ datos, ahora, abierta, onCerrar, onGuardado, fec
   const [fecha, setFecha] = useState(fechaInicial ?? hoy)
   const [eleccion, setEleccion] = useState<Eleccion>('A')
   const tipo = tipoDe(eleccion)
-  // por defecto mañana en martes, jueves y viernes, y noche el día de Frida; se puede cambiar con un toque
+  // por defecto Frida en la noche y las de club en la mañana; se puede cambiar con un toque
   const [momentoElegido, setMomento] = useState<Momento | null>(null)
-  const momento = momentoElegido ?? momentoPorDefecto(fecha, datos.settings.fridaPlan)
+  const momento = momentoElegido ?? momentoPorDefecto(fecha, datos.settings.fridaPlan, tipo)
   useEffect(() => { if (abierta) { setFecha(fechaInicial ?? hoy); setMomento(null) } }, [abierta, fechaInicial, hoy])
   const [nota, setNota] = useState('')
   const [aviso, setAviso] = useState<string | null>(null)

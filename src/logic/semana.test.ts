@@ -203,6 +203,10 @@ describe('v7: Frida con tipo, A sin pierna y elección (RUTINA-FINAL.md v7, 2)',
     expect(elegirSesion([ft(MAR)], plan, dia(MIE)).tipo).toBe('A')
     // Frida planeada para mañana y sin tipo cuenta como torso: A
     expect(elegirSesion([], { [LUN]: JUE }, dia(MIE)).tipo).toBe('A')
+    // también el domingo, con la Frida del lunes siguiente: sin Frida esta semana y faltando C y A, A (no C)
+    expect(elegirSesion([sesion(JUE, 'B')], SIN_FRIDA, dia(DOM, '10:00:00')).tipo).toBe('A')
+    // si el lunes siguiente no hay Frida, C
+    expect(elegirSesion([sesion(JUE, 'B')], { ...SIN_FRIDA, '2026-10-12': null }, dia(DOM, '10:00:00')).tipo).toBe('C')
   })
   it('la A sale sin pierna solo si la FRIDA pierna se registró antes; registrarla después no cambia la A ya hecha', () => {
     expect(fridaPiernaEnSemana([fp(LUN)], dia(MAR), [], MAR)).toBe(true)

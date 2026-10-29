@@ -136,7 +136,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
       setAccion({ texto: eraFrida ? `${textoDia(fecha)}: sin Frida. Esta semana entra C.` : `${textoDia(fecha)}: no fuiste.`, deshacer: () => datos.setSettings(antes) })
       return
     }
-    const arm = armarRegistro(sesiones, fecha, r, claveHoy, notaFrida?.trim() || undefined, { fridaTipo, momento: momentoPorDefecto(fecha, settings.fridaPlan) })
+    const arm = armarRegistro(sesiones, fecha, r, claveHoy, notaFrida?.trim() || undefined, { fridaTipo, momento: momentoPorDefecto(fecha, settings.fridaPlan, r) })
     if ('error' in arm) return
     await datos.guardarSesion(arm.sesion)
     datos.setSettings({ ...settings, fridaPlan: plan, noFui: (settings.noFui ?? []).filter((d) => d !== fecha) })
@@ -403,7 +403,7 @@ function PonAlDia({ datos, ahora }: { datos: Datos; ahora: Date }) {
       }
       noFui.delete(d.fecha)
       if (registrado === 'FRIDA' && r !== 'FRIDA') for (const s of sesiones.filter((x) => x.fecha === d.fecha && x.tipo === 'FRIDA')) await datos.borrarSesion(s.id)
-      const arm = armarRegistro(sesiones, d.fecha, r, claveHoy)
+      const arm = armarRegistro(sesiones, d.fecha, r, claveHoy, undefined, { momento: momentoPorDefecto(d.fecha, plan, r) })
       if ('sesion' in arm) await datos.guardarSesion(arm.sesion)
     }
     datos.setSettings({ ...settings, noFui: [...noFui], fridaPlan: plan, semanaAlDiaV5: true, semanaAlDiaV6: true })
