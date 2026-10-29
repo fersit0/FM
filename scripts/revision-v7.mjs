@@ -21,7 +21,7 @@ function revisar() {
   const W = innerWidth
   const out = []
   if (document.scrollingElement.scrollWidth > W + 1) out.push(`scroll de lado (${document.scrollingElement.scrollWidth} px)`)
-  for (const el of document.querySelectorAll('.pantalla, .hoja-fondo.abierta .hoja-cuerpo')) if (el.scrollWidth > el.clientWidth + 1) out.push(`scroll de lado en ${el.className} (${el.scrollWidth} de ${el.clientWidth})`)
+  for (const el of document.querySelectorAll('.pantalla, .hoja-fondo.abierta .hoja-cuerpo')) if (el.scrollWidth > el.clientWidth + 1 && !['hidden', 'clip'].includes(getComputedStyle(el).overflowX)) out.push(`scroll de lado en ${el.className} (${el.scrollWidth} de ${el.clientWidth})`)
   const visible = (el) => {
     const r = el.getBoundingClientRect(); const cs = getComputedStyle(el)
     return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.opacity !== '0' && !el.closest('.hoja-fondo:not(.abierta)') && !el.closest('.oculto-visual')
@@ -32,6 +32,8 @@ function revisar() {
   for (const el of document.querySelectorAll('button, a, input:not([type=file]), select, textarea, label.secundario, [role=switch]')) {
     if (!visible(el) || !dentro(el)) continue
     const r = el.getBoundingClientRect()
+    // fuera de la pantalla a propósito y sin foco: el interruptor escondido de la vibración en iOS
+    if (el.tabIndex === -1 && (r.right <= 0 || r.left >= W)) continue
     if (r.height < 43.5 || r.width < 43.5) out.push(`toque chico ${Math.round(r.width)}×${Math.round(r.height)}: ${nombre(el)}`)
     if (r.right > W + 1 || r.left < -1) out.push(`fuera del ancho: ${nombre(el)}`)
     if (el.matches('input, select, textarea') && parseFloat(getComputedStyle(el).fontSize) < 16) out.push(`campo con letra < 16 px: ${nombre(el)}`)
@@ -139,8 +141,8 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
     await hoja().getByRole('button', { name: /Remo a una mano/ }).first().click(); await page.locator('.sesion-titulo-fila h1', { hasText: 'Remo a una mano' }).waitFor(); await sinDeshacer(); await paso('sesion-alternativa-larga')
     await page.getByRole('button', { name: 'Terminar aquí' }).first().click(); await page.waitForTimeout(800); await paso('sesion-final-manana')
   })
-  await intenta('martes-750', async () => {
-    await escena('2026-10-06T07:50:00', '&frida=torso'); await page.getByText(/Hoy toca A/).waitFor(); await paso('hoy-martes-750-corta')
+  await intenta('martes-745', async () => {
+    await escena('2026-10-06T07:45:00', '&frida=torso'); await page.getByText(/Hoy toca A/).waitFor(); await paso('hoy-martes-745-corta')
     await page.getByRole('button', { name: /^Empezar/ }).click(); await page.getByRole('button', { name: 'Saltar' }).click(); await page.getByText(/Serie 1 de/).waitFor(); await paso('sesion-corta-sauna-y-bano')
   })
   await intenta('martes-830', async () => {
