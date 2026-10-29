@@ -171,19 +171,31 @@ export function estadoSemana(sesiones: Sesion[], fecha: Date, sets: SetLog[] = [
   return { hechas: n, meta: META, bonus: n >= META, dias, fridaHecha: semana.some((s) => s.tipo === 'FRIDA') }
 }
 
-/** Jueves en la noche (desde las 8) y domingo en la mañana: si la semana va en menos de 3, qué toca el domingo */
-export const NOCHE_MIN = 20 * 60
-export function avisoRescate(sesiones: Sesion[], plan: PlanFrida | undefined, ahora: Date, sets: SetLog[] = []): string | null {
+/** "B", "A sin pierna" */
+export const textoEleccion = (e: Pick<Eleccion, 'tipo' | 'sinPierna'>) => `${e.tipo}${e.sinPierna ? ' sin pierna' : ''}`
+export const NOCHE_MIN = 21 * 60
+/** el domingo el club cierra a las 7 */
+const DOMINGO_CIERRE = 19 * 60
+/**
+ * Avisos de la semana, una línea en Hoy (RUTINA-FINAL.md v7, 2). Jueves, ya hecha la sesión del día o desde las 21:00:
+ * "Vas en 2 de 3. Mañana viernes toca B: prende tus alarmas de Pesas extra." o "Semana completa. Mañana viernes, sauna.".
+ * Viernes (desde las 21:00 o con "Hoy no") y domingo hasta las 19:00, si va en menos de 3: el rescate del domingo.
+ */
+export function avisoSemana(sesiones: Sesion[], plan: PlanFrida | undefined, ahora: Date, sets: SetLog[] = [], noFui: string[] = []): string | null {
   const { hechas: n } = estadoSemana(sesiones, ahora, sets)
-  if (n >= META) return null
   const dow = ahora.getDay()
   const min = minutosAhora(ahora)
-  const esJuevesNoche = dow === 4 && min >= NOCHE_MIN
-  const esDomingoManana = dow === 0 && min < 15 * 60
-  if (!esJuevesNoche && !esDomingoManana) return null
-  const domingo = esDomingoManana ? ahora : sumarDias(ahora, 3)
-  const { tipo } = elegirSesion(sesiones, plan, domingo, sets)
-  return `Vas en ${n} de ${META}; ${esDomingoManana ? 'hoy' : 'el domingo'} antes de las 3 pm te toca ${tipo}.`
+  const hoy = claveFecha(ahora)
+  if (dow === 4) {
+    const hechaHoy = hechas(sesiones, sets).some((s) => s.fecha === hoy && ES_CLUB(s.tipo))
+    if (!hechaHoy && min < NOCHE_MIN) return null
+    if (n >= META) return 'Semana completa. Mañana viernes, sauna.'
+    return `Vas en ${n} de ${META}. Mañana viernes toca ${textoEleccion(elegirSesion(sesiones, plan, sumarDias(ahora, 1), sets))}: prende tus alarmas de Pesas extra.`
+  }
+  if (n >= META) return null
+  if (dow === 5 && (min >= NOCHE_MIN || noFui.includes(hoy))) return `Vas en ${n} de ${META}; el domingo antes de las 7 pm te toca ${textoEleccion(elegirSesion(sesiones, plan, sumarDias(ahora, 2), sets))}.`
+  if (dow === 0 && min < DOMINGO_CIERRE) return `Vas en ${n} de ${META}; hoy antes de las 7 pm te toca ${textoEleccion(elegirSesion(sesiones, plan, ahora, sets))}.`
+  return null
 }
 
 /** Número de series de un ejercicio: las de la rutina, salvo la semana ligera (2 con el mismo peso) */

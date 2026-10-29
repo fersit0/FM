@@ -1,30 +1,34 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import type { Sesion, Version, Letra, Club } from '../data/tipos'
+import type { Sesion, Version, Letra, Club, FridaTipo } from '../data/tipos'
 import { usePantalla, useMedidas } from '../design/pantallaActiva'
-import { estadoSemana, elegirSesion, ultimaPropia, avisoRescate, casaDeSemana, casaDisponible, CASA_MAX, estadoFrida, diasParaMoverFrida, claveSemana, diaFridaPlaneado, semanaSinFrida } from '../logic/semana'
-import { diasSinRegistro, diasDeSemanaHastaHoy, armarRegistro, textoUltima, sugeridaPara, type DiaPendiente } from '../logic/registro'
+import { estadoSemana, elegirSesion, ultimaPropia, avisoSemana, textoEleccion, casaDeSemana, casaDisponible, CASA_MAX, estadoFrida, fridaDeSemana, fridaPiernaEnSemana, diasParaMoverFrida, claveSemana, diaFridaPlaneado, semanaSinFrida, cuenta } from '../logic/semana'
+import { diasSinRegistro, diasDeSemanaHastaHoy, armarRegistro, textoUltima, textoFrida, sugeridaPara, preguntarNoche, momentoPorDefecto, type DiaPendiente } from '../logic/registro'
 import { duracionEstimada, minutosHastaUltimaPesa } from '../logic/duracion'
-import { estadoTiempo, estadoSiSalgo, versionParaHora, topeDe, type Duraciones } from '../logic/horario'
+import { estadoTiempo, estadoTiempoEnMinutos, estadoSiSalgo, versionParaHora, topeDe, limites, MEDIODIA, type Duraciones } from '../logic/horario'
+import { tuSemana } from '../logic/tusemana'
 import { porSesion } from '../logic/progresion'
 import { unidadDe, incrementoDe, pesoDeSet, formatoPeso } from '../logic/unidades'
-import { listaDe, itemDeRutina, NOMBRE_SESION, ZONA_NOMBRE, rutaDe } from '../data/ejercicios'
-import { claveFecha, DIAS_NOMBRE, formatoHora, minutosDe, fechaCorta, desdeClave } from '../logic/fechas'
+import { listaDe, itemDeRutina, nombreSesion, ZONA_NOMBRE, rutaDe } from '../data/ejercicios'
+import { claveFecha, DIAS_NOMBRE, formatoHora, minutosDe, minutosAhora, fechaCorta, desdeClave, sumarDias } from '../logic/fechas'
 import { tocaRespaldo } from '../logic/respaldo'
 import { Circulo, BotonPrincipal, BotonTexto, Hoja, Grupo, Fila, Pez, Deshacer } from '../components/fm'
 import { BotonesDia, RegistrarHoja, textoDia, type Respuesta } from '../components/Registrar'
+import { TuSemana } from '../components/TuSemana'
 
 interface Props {
   datos: Datos
   ahora: Date
   sesionEnCurso: Sesion | null
-  onEmpezar: (tipo: Letra, version: Version) => void
+  onEmpezar: (tipo: Letra, version: Version, sinPierna?: boolean) => void
   onSeguir: () => void
   onDescartar: () => void
   onAjustes: () => void
 }
 type Accion = { texto: string; deshacer: () => void | Promise<void> }
 const CLUB: Club[] = ['A', 'B', 'C']
+/** Qué muestra Hoy según el día (RUTINA-FINAL.md v7, 2): la sesión, o el lunes en la mañana cardio, el miércoles descanso, el sábado libre, el viernes con la semana completa sauna, el lunes en la tarde el club cerrado */
+type Modo = 'club' | 'cardio' | 'descanso' | 'libre' | 'completa' | 'cerrado'
 
 /** 6.1 Inicio: círculo rojo cortado arriba a la derecha, texto abajo a la izquierda, Empezar. */
 export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescartar, onAjustes }: Props) {
@@ -32,24 +36,31 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   const { W, H } = useMedidas()
   const { sesiones, sets, settings } = datos
   const claveHoy = claveFecha(ahora)
-  const domingo = ahora.getDay() === 0
+  const dow = ahora.getDay()
+  const domingo = dow === 0
+  const minHoy = minutosAhora(ahora)
   const semana = useMemo(() => estadoSemana(sesiones, ahora, sets), [sesiones, ahora, sets])
-  // Frida y elección de la sesión de club (RUTINA-FINAL.md, 2)
+  // Frida y elección de la sesión de club (RUTINA-FINAL.md v7, 2)
   const frida = useMemo(() => estadoFrida(sesiones, settings.fridaPlan, ahora, sets), [sesiones, settings.fridaPlan, ahora, sets])
   const sinFrida = useMemo(() => semanaSinFrida(sesiones, settings.fridaPlan, ahora, sets), [sesiones, settings.fridaPlan, ahora, sets])
+  const fridaSemana = useMemo(() => fridaDeSemana(sesiones, ahora, sets), [sesiones, ahora, sets])
   const eleccion = useMemo(() => elegirSesion(sesiones, settings.fridaPlan, ahora, sets, settings.sesionElegida), [sesiones, settings.fridaPlan, ahora, sets, settings.sesionElegida])
-  const toca = eleccion.tipo
+  const { tipo: toca, sinPierna } = eleccion
   const ultima = useMemo(() => ultimaPropia(sesiones, sets), [sesiones, sets])
-  const rescate = useMemo(() => avisoRescate(sesiones, settings.fridaPlan, ahora, sets), [sesiones, settings.fridaPlan, ahora, sets])
-  // versión automática por hora (RUTINA-FINAL.md, 3)
-  const listaCompleta = useMemo(() => listaDe(toca, 'completa'), [toca])
-  const listaCorta = useMemo(() => listaDe(toca, 'corta'), [toca])
+  const aviso = useMemo(() => avisoSemana(sesiones, settings.fridaPlan, ahora, sets, settings.noFui), [sesiones, settings.fridaPlan, ahora, sets, settings.noFui])
+  const dias = useMemo(() => tuSemana(sesiones, sets, settings, ahora), [sesiones, sets, settings, ahora])
+  // versión automática por hora, mañana o noche (RUTINA-FINAL.md v7, 3)
+  const listaCompleta = useMemo(() => listaDe(toca, 'completa', sinPierna), [toca, sinPierna])
+  const listaCorta = useMemo(() => listaDe(toca, 'corta', sinPierna), [toca, sinPierna])
   const duraciones = useMemo<Duraciones>(() => ({ completa: minutosHastaUltimaPesa(listaCompleta, 'completa'), corta: minutosHastaUltimaPesa(listaCorta, 'corta') }), [listaCompleta, listaCorta])
   const tiempo = useMemo(() => estadoTiempo(ahora, settings, duraciones), [ahora, settings, duraciones])
+  // "Voy en la noche" ya dicho: lo de hoy se calcula para la noche
+  const vaNoche = settings.vaEnLaNoche === claveHoy && tiempo.franja === 'manana'
+  const tiempoNoche = useMemo(() => estadoTiempoEnMinutos(MEDIODIA, ahora, settings, duraciones), [ahora, settings, duraciones])
   // "Salgo de la oficina a las": solo cuenta para la noche, y mientras no haya llegado
-  const siSalgo = settings.horaSalida && tiempo.franja === 'noche' ? estadoSiSalgo(settings.horaSalida, settings, duraciones, ahora) : null
-  const conSalida = siSalgo && siSalgo.llegadaMin > ahora.getHours() * 60 + ahora.getMinutes() ? siSalgo : null
-  const versionAuto = conSalida ? conSalida.version : tiempo.version
+  const siSalgo = settings.horaSalida && (tiempo.franja === 'noche' || vaNoche) ? estadoSiSalgo(settings.horaSalida, settings, duraciones, ahora) : null
+  const conSalida = siSalgo && siSalgo.llegadaMin > minHoy ? siSalgo : null
+  const versionAuto = conSalida ? conSalida.version : vaNoche ? tiempoNoche.version : tiempo.version
   const version: Version = versionAuto === 'completa' ? 'completa' : 'corta'
   const lista = version === 'corta' ? listaCorta : listaCompleta
   const minutos = useMemo(() => duracionEstimada(lista, version), [lista, version])
@@ -57,6 +68,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   const [hojaCasa, setHojaCasa] = useState(false)
   const [hojaPrefiero, setHojaPrefiero] = useState(false)
   const [registrar, setRegistrar] = useState(false)
+  const [registrarFecha, setRegistrarFecha] = useState<string | undefined>(undefined)
   const [accion, setAccion] = useState<Accion | null>(null)
   const cerrarAccion = useCallback(() => setAccion(null), [])
   const [versionNueva, setVersionNueva] = useState(() => typeof window.fmActualizar === 'function')
@@ -66,11 +78,14 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     return () => window.removeEventListener('fm:version-nueva', f)
   }, [])
   const casaHechas = casaDeSemana(sesiones, ahora, sets)
-  const sinGym = ahora.getDay() === 5 || ahora.getDay() === 6
-  const ofrecerCasa = !sesionEnCurso && casaDisponible(sesiones, ahora, sets) && (versionAuto === 'casa' || sinGym)
+  const sinGym = dow === 5 || dow === 6
   const [hojaMover, setHojaMover] = useState(false)
   const [verSesionHoy, setVerSesionHoy] = useState(false)
   const [nota, setNota] = useState('')
+  // "Fui con Frida": no se guarda nada hasta elegir Pierna o Torso (RUTINA-FINAL.md v7, 2.2)
+  const [fridaPara, setFridaPara] = useState<{ fecha: string; nota?: string } | null>(null)
+  // al tocar Empezar en la mañana cuando ya no alcanza: "¿Vas en la noche?"
+  const [forzarNoche, setForzarNoche] = useState(false)
   const filas = useMemo(() => lista.map((base) => {
     const e = itemDeRutina(base, settings.reemplazos)
     const grupos = porSesion(sets, e.id)
@@ -92,9 +107,26 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   const preguntaFrida = !alDia && !sesionEnCurso ? frida.pendiente : null
   const pendientes = useMemo(() => diasSinRegistro(sesiones, sets, settings, ahora).filter((d) => d.fecha !== frida.pendiente), [sesiones, sets, settings, ahora, frida.pendiente])
   const pregunta: DiaPendiente | null = !alDia && !preguntaFrida && pendientes.length ? pendientes[0] : null
+  // "¿Vas en la noche?" (RUTINA-FINAL.md v7, 2.4)
+  const vasNoche = !sesionEnCurso && !alDia && !preguntaFrida && !pregunta && (forzarNoche || preguntarNoche(ahora, sesiones, sets, settings))
+  // Frida: el día planeado, salvo el lunes en la mañana (cardio) o martes y jueves en la mañana (pesas; Frida es en la noche)
+  const lunesManana = dow === 1 && minHoy < MEDIODIA
+  const pesasManana = (dow === 2 || dow === 4) && minHoy < MEDIODIA
+  const pantallaFrida = !sesionEnCurso && !alDia && !preguntaFrida && !pregunta && !vasNoche && frida.hoyEsFrida && !verSesionHoy && !lunesManana && !pesasManana
+  const hechaHoy = sesiones.some((s) => s.fecha === claveHoy && (s.tipo === 'A' || s.tipo === 'B' || s.tipo === 'C') && cuenta(s, sets))
+  let modo: Modo = 'club'
+  if (!sesionEnCurso && settings.sesionElegida?.fecha !== claveHoy && !verSesionHoy && !hechaHoy) {
+    if (lunesManana) modo = 'cardio'
+    else if (dow === 1) modo = 'cerrado'
+    else if (dow === 3) modo = 'descanso'
+    else if (dow === 6) modo = 'libre'
+    else if (dow === 5 && semana.hechas >= semana.meta) modo = 'completa'
+  }
+  const ofrecerCasa = !sesionEnCurso && modo === 'club' && casaDisponible(sesiones, ahora, sets) && (versionAuto === 'casa' || (sinGym && tiempo.franja === 'noche'))
 
-  /** Contesta por un día: registra A, B, C o Frida, o lo marca "No fui". En el día planeado de Frida, lo que no sea Frida deja la semana sin Frida. */
-  async function contestar(fecha: string, r: Respuesta, notaFrida?: string) {
+  /** Contesta por un día: registra A, B, C o Frida (con su tipo), o lo marca "No fui". En el día planeado de Frida, lo que no sea Frida deja la semana sin Frida. */
+  async function contestar(fecha: string, r: Respuesta, notaFrida?: string, fridaTipo?: FridaTipo) {
+    if (r === 'FRIDA' && !fridaTipo) { setFridaPara({ fecha, nota: notaFrida }); return }
     const semanaDe = claveSemana(desdeClave(fecha))
     const eraFrida = diaFridaPlaneado(settings.fridaPlan, desdeClave(fecha)) === fecha
     const antes = settings
@@ -104,12 +136,13 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
       setAccion({ texto: eraFrida ? `${textoDia(fecha)}: sin Frida. Esta semana entra C.` : `${textoDia(fecha)}: no fuiste.`, deshacer: () => datos.setSettings(antes) })
       return
     }
-    const arm = armarRegistro(sesiones, fecha, r, claveHoy, notaFrida?.trim() || undefined)
+    const arm = armarRegistro(sesiones, fecha, r, claveHoy, notaFrida?.trim() || undefined, { fridaTipo, momento: momentoPorDefecto(fecha, settings.fridaPlan) })
     if ('error' in arm) return
     await datos.guardarSesion(arm.sesion)
     datos.setSettings({ ...settings, fridaPlan: plan, noFui: (settings.noFui ?? []).filter((d) => d !== fecha) })
     setNota('')
-    setAccion({ texto: `${textoDia(fecha)}: ${r === 'FRIDA' ? 'Frida' : r} registrada.`, deshacer: async () => { if (arm.reemplaza) await datos.guardarSesion(arm.reemplaza); else await datos.borrarSesion(arm.sesion.id); datos.setSettings(antes) } })
+    setFridaPara(null)
+    setAccion({ texto: `${textoDia(fecha)}: ${r === 'FRIDA' ? `Frida ${fridaTipo}` : r} registrada.`, deshacer: async () => { if (arm.reemplaza) await datos.guardarSesion(arm.reemplaza); else await datos.borrarSesion(arm.sesion.id); datos.setSettings(antes) } })
   }
   function moverFrida(fecha: string | null) {
     const antes = settings
@@ -124,24 +157,69 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     setHojaPrefiero(false)
     setAccion({ texto: `Hoy ${tipo}.`, deshacer: () => datos.setSettings(antes) })
   }
-  /** Empezar: la versión se decide con la hora real al tocar; si no alcanza ni la corta, ofrece CASA */
+  /** "Voy en la noche" se queda como plan del día; "Hoy no" va a noFui y la semana se recalcula */
+  function vasEnLaNoche(va: boolean) {
+    const antes = settings
+    setForzarNoche(false)
+    if (va) datos.setSettings({ ...settings, vaEnLaNoche: claveHoy })
+    else datos.setSettings({ ...settings, noFui: [...(settings.noFui ?? []).filter((d) => d !== claveHoy), claveHoy] })
+    setAccion({ texto: va ? 'Vas en la noche.' : 'Hoy no. Tu semana se acomoda.', deshacer: () => datos.setSettings(antes) })
+  }
+  function abrirRegistrar(fecha?: string) {
+    setRegistrarFecha(fecha)
+    setRegistrar(true)
+  }
+  /** Empezar: la versión se decide con la hora real al tocar. En la mañana, si ya no alcanza, "¿Vas en la noche?"; en la noche, CASA. */
   function empezar() {
     const v = versionParaHora(new Date(), duraciones, settings)
-    if (v === 'casa' || v === 'noche' || v === 'cerrado') { setHojaCasa(true); return }
-    onEmpezar(toca, v)
+    if (v === 'noche') { setForzarNoche(true); return }
+    if (v === 'casa' || v === 'cerrado') { setHojaCasa(true); return }
+    onEmpezar(toca, v, sinPierna)
   }
 
-  let linea: string
-  if (conSalida) linea = `Sales a las ${formatoHora(minutosDe(settings.horaSalida!))}: ${conSalida.version === 'casa' ? 'ya no alcanza ni la corta' : `alcanza la ${conSalida.version === 'corta' ? 'corta' : 'completa'}`}.`
-  else if (tiempo.version === 'casa' || tiempo.version === 'noche' || tiempo.version === 'cerrado') linea = `${tiempo.titulo} ${tiempo.detalle}`
-  else if (tiempo.minutosParaTope > 180 && !domingo) linea = ''
-  else linea = tiempo.detalle
-  const nombreVersion = versionAuto === 'completa' || versionAuto === 'corta' ? versionAuto : 'corta de todas formas'
-  const pantallaFrida = !sesionEnCurso && !alDia && !preguntaFrida && !pregunta && frida.hoyEsFrida && !verSesionHoy
   // "Semana: 2 de 3" nunca se parte entre renglones
   const textoSemana = <span className="sin-partir">Semana: {semana.hechas} de {semana.meta}</span>
-  const lineaHoy = `Hoy toca ${toca}${eleccion.extra ? `, extra${domingo ? ' y opcional' : ''}` : ''} · ${textoUltima(ultima, DIAS_NOMBRE)} · `
-  const tituloSesion = sesionEnCurso ? (sesionEnCurso.tipo === 'CASA' ? 'Casa' : sesionEnCurso.tipo === 'FRIDA' ? 'Frida' : `${sesionEnCurso.tipo}: ${NOMBRE_SESION[sesionEnCurso.tipo]}`) : `${toca}: ${NOMBRE_SESION[toca]}`
+  const queToca = textoEleccion(eleccion)
+  let linea: string
+  if (conSalida) linea = `Sales a las ${formatoHora(minutosDe(settings.horaSalida!))}: ${conSalida.version === 'casa' ? 'ya no alcanza ni la corta' : `alcanza la ${conSalida.version === 'corta' ? 'corta' : 'completa'}`}.`
+  else if (vaNoche) linea = `En la noche: ${tiempoNoche.detalle.charAt(0).toLowerCase()}${tiempoNoche.detalle.slice(1)}`
+  else if (tiempo.version !== 'completa' && tiempo.version !== 'corta') linea = `${tiempo.titulo} ${tiempo.detalle}`
+  else if (tiempo.minutosParaTope > 180) linea = ''
+  else linea = tiempo.detalle
+  const nombreVersion = versionAuto === 'completa' || versionAuto === 'corta' ? versionAuto : 'corta de todas formas'
+  const lineaArriba: ReactNode = modo === 'cardio'
+    ? <>Hoy: cardio tranqui 25 min y sauna{frida.hoyEsFrida ? ' · en la noche, Frida' : ''}</>
+    : modo === 'completa' ? <>Semana completa · hoy sauna</>
+      : modo === 'club' ? <>Hoy toca {queToca}{eleccion.extra ? `, extra${domingo ? ' y opcional' : ''}` : ''} · {fridaSemana ? textoFrida(fridaSemana, DIAS_NOMBRE) : textoUltima(ultima, DIAS_NOMBRE)} · {textoSemana}</>
+        : <>{modo === 'descanso' ? 'Hoy descanso' : modo === 'libre' ? 'Sábado libre' : 'El club abre los lunes de 7 a 11'} · {textoSemana}</>
+  const tituloSesion = sesionEnCurso
+    ? (sesionEnCurso.tipo === 'CASA' ? 'Casa' : sesionEnCurso.tipo === 'FRIDA' ? 'Frida' : `${sesionEnCurso.tipo}: ${nombreSesion(sesionEnCurso.tipo, sesionEnCurso.sinPierna)}`)
+    : `${toca}: ${nombreSesion(toca, sinPierna)}`
+  const manana = textoDia(claveFecha(sumarDias(ahora, 1)))
+  const tituloModo: Record<Exclude<Modo, 'club'>, { titulo: string; nota: string }> = {
+    cardio: { titulo: 'Cardio tranqui', nota: `25 min en la elíptica o caminadora, a ritmo de platicar, y sauna. Las pesas, mañana ${DIAS_NOMBRE[(dow + 1) % 7]}.` },
+    descanso: { titulo: 'Descanso', nota: `Si vas igual, va la ${queToca} y cuenta.` },
+    libre: { titulo: 'Libre', nota: 'Si entrenas, regístralo y cuenta.' },
+    completa: { titulo: 'Semana completa', nota: `Hoy sauna. Si quieres pesas extra, va la ${queToca}.` },
+    cerrado: { titulo: 'Club cerrado', nota: `Los lunes abre de 7 a 11. Mañana ${manana.split(' ')[0]} toca ${textoEleccion(elegirSesion(sesiones, settings.fridaPlan, sumarDias(ahora, 1), sets))}.` },
+  }
+  // las preguntas y la pantalla de Frida van primero; luego "¿Vas en la noche?"; luego lo del día
+  const pantallaClub = !preguntaFrida && !pregunta && !pantallaFrida && !vasNoche
+  // el pez nunca sobre el círculo rojo: con la tira el texto sube y, si ya no cabe debajo del círculo, no sale
+  const textoRef = useRef<HTMLDivElement>(null)
+  const [pezCabe, setPezCabe] = useState(true)
+  useLayoutEffect(() => {
+    const el = textoRef.current
+    if (el) setPezCabe(el.getBoundingClientRect().top - 30 >= 0.11 * H + 0.31 * W + 4)
+  })
+  // el renglón le deja su lugar aunque no salga, para que esconderlo no mueva el texto (y no vuelva a caber y a salir)
+  const lugarPez = pantallaClub && modo === 'club' && versionAuto !== 'completa' && !sesionEnCurso
+  const conPez = lugarPez && pezCabe
+  const limNoche = limites(duraciones, topeDe(sumarDias(ahora, 0), settings, 'noche') ?? minutosDe(settings.ultimaPesaNoche))
+  const siSaleHoy = settings.horaSalida ? estadoSiSalgo(settings.horaSalida, settings, duraciones, ahora) : null
+  const textoNoche = siSaleHoy
+    ? `Si sales a las ${formatoHora(minutosDe(settings.horaSalida!))}, llegas ${formatoHora(siSaleHoy.llegadaMin)}: ${siSaleHoy.version === 'completa' ? 'alcanza la completa' : siSaleHoy.version === 'corta' ? 'alcanza la corta' : 'ya no alcanza ni la corta'}.`
+    : `En la noche alcanza la completa si empiezas a las ${formatoHora(limNoche.completa)} o antes, y la corta hasta las ${formatoHora(limNoche.corta)}.`
 
   if (alDia && !sesionEnCurso) return <PonAlDia datos={datos} ahora={ahora} />
 
@@ -149,16 +227,11 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     <div className="pantalla inicio">
       <Circulo d={0.62 * W} style={{ position: 'absolute', left: 0.83 * W, top: 0.11 * H, transform: 'translate(-50%, -50%)' }} />
       <div className="inicio-arriba">
-        <div className="puntos" aria-label={`Semana: ${semana.hechas} de ${semana.meta}`}>
-          {semana.dias.map((d) => {
-            const clase = `punto ${d.tipos.length ? 'hecho' : ''} ${d.fecha === claveHoy ? 'hoy' : ''}`
-            return <span key={d.fecha} className={clase} title={d.fecha === frida.planeada && !frida.hecha ? 'Frida' : undefined} />
-          })}
-        </div>
+        <span />
         <BotonTexto onClick={onAjustes}>Ajustes</BotonTexto>
       </div>
 
-      <div className="inicio-texto">
+      <div className="inicio-texto" ref={textoRef}>
         {preguntaFrida ? (
           <>
             <p className="t-sub">Antes de armar la sesión</p>
@@ -174,19 +247,33 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
         ) : pantallaFrida ? (
           <>
             <p className="t-sub">Hoy vas con Frida</p>
-            <h1 className="t-inicio">Espalda, hombro y bíceps</h1>
-            <p className="t-unidad tenue inicio-nota">A su ritmo y con su app. Aquí solo se registra y cuenta para la semana.</p>
+            <TuSemana dias={dias} onDia={abrirRegistrar} />
+            <h1 className="t-inicio">Pierna o torso</h1>
+            <p className="t-unidad tenue inicio-nota">A su ritmo y con su app. Aquí solo se registra qué hicieron y cuenta para la semana.</p>
             <input className="inicio-nota-frida" value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Nota, opcional" aria-label="Nota" maxLength={80} />
+          </>
+        ) : vasNoche ? (
+          <>
+            <p className="t-sub">No fuiste en la mañana</p>
+            <TuSemana dias={dias} onDia={abrirRegistrar} />
+            <h1 className="t-inicio">{toca}: {nombreSesion(toca, sinPierna)}</h1>
+            <p className="t-unidad tenue inicio-nota">{textoNoche}</p>
           </>
         ) : (
           <>
-            <p className={`t-nota tenue inicio-linea${versionAuto !== 'completa' && !sesionEnCurso ? ' con-pez' : ''}`}>{sesionEnCurso ? 'Sesión a medias · ' : lineaHoy}{textoSemana}</p>
-            {versionAuto !== 'completa' && !sesionEnCurso && <Pez expresion="picaro" tamano={72} style={{ right: 0, top: -30 }} />}
-            <h1 className="t-inicio">{tituloSesion}</h1>
+            <p className={`t-nota tenue inicio-linea${lugarPez ? ' con-pez' : ''}`}>{sesionEnCurso ? <>Sesión a medias · {textoSemana}</> : lineaArriba}</p>
+            {conPez && <Pez expresion="picaro" tamano={72} style={{ right: 0, top: -30 }} />}
+            <TuSemana dias={dias} onDia={abrirRegistrar} />
+            <h1 className="t-inicio">{sesionEnCurso || modo === 'club' ? tituloSesion : tituloModo[modo].titulo}</h1>
+            {modo === 'club' && !sesionEnCurso && sinPierna && <p className="t-nota tenue">Sin pierna: esta semana la hiciste con Frida.</p>}
             <div style={{ position: 'relative' }}>
-              <button className="t-unidad tenue inicio-nota" onClick={() => setHojaLista(true)}>
-                {sesionEnCurso ? `Empezaste hace ${Math.max(1, Math.round((ahora.getTime() - sesionEnCurso.inicio) / 60000))} min.` : `${lista.length} ejercicios, unos ${minutos} min · ${nombreVersion}${linea ? `. ${linea}` : ''}${rescate ? ` ${rescate}` : ''}`}
-              </button>
+              {sesionEnCurso || modo === 'club' ? (
+                <button className="t-unidad tenue inicio-nota" onClick={() => setHojaLista(true)}>
+                  {sesionEnCurso ? `Empezaste hace ${Math.max(1, Math.round((ahora.getTime() - sesionEnCurso.inicio) / 60000))} min.` : `${lista.length} ejercicios, unos ${minutos} min · ${nombreVersion}${linea ? `. ${linea}` : ''}${aviso ? ` ${aviso}` : ''}`}
+                </button>
+              ) : (
+                <p className="t-unidad tenue inicio-nota">{tituloModo[modo].nota}{aviso ? ` ${aviso}` : ''}</p>
+              )}
             </div>
           </>
         )}
@@ -196,7 +283,10 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
         {versionNueva && <button className="inicio-linea-roja" onClick={() => window.fmActualizar?.()}>Hay versión nueva. Toca para actualizar.</button>}
         {preguntaFrida && (
           <>
-            <BotonPrincipal onClick={() => contestar(preguntaFrida, 'FRIDA')}>Fui con Frida</BotonPrincipal>
+            <div className="botones-fila">
+              <BotonPrincipal onClick={() => contestar(preguntaFrida, 'FRIDA', undefined, 'pierna')}>Pierna</BotonPrincipal>
+              <BotonPrincipal onClick={() => contestar(preguntaFrida, 'FRIDA', undefined, 'torso')}>Torso</BotonPrincipal>
+            </div>
             <div className="botones-fila" style={{ justifyContent: 'center' }}>
               <BotonTexto onClick={() => setHojaMover(true)}>Se movió a…</BotonTexto>
               <BotonTexto onClick={() => contestar(preguntaFrida, 'no')}>No hubo</BotonTexto>
@@ -206,50 +296,68 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
         {pregunta && <BotonesDia marcado={pregunta.sugerida} onElegir={(r) => contestar(pregunta.fecha, r)} />}
         {pantallaFrida && frida.planeada && (
           <>
-            <BotonPrincipal onClick={() => contestar(frida.planeada!, 'FRIDA', nota)}>Fui con Frida</BotonPrincipal>
+            <BotonPrincipal onClick={() => setFridaPara({ fecha: frida.planeada!, nota })}>Fui con Frida</BotonPrincipal>
             <div className="botones-fila" style={{ justifyContent: 'center' }}>
               <BotonTexto onClick={() => setHojaMover(true)}>Se movió a…</BotonTexto>
               <BotonTexto onClick={() => contestar(frida.planeada!, 'no')}>No hubo</BotonTexto>
             </div>
-            <BotonTexto onClick={() => setVerSesionHoy(true)}>Mejor hago {toca} hoy</BotonTexto>
+            {tiempo.franja !== 'cerrado' && <BotonTexto onClick={() => setVerSesionHoy(true)}>Mejor hago {queToca} hoy</BotonTexto>}
           </>
         )}
-        {!pregunta && !preguntaFrida && !pantallaFrida && !sesionEnCurso && !frida.hecha && <BotonTexto onClick={() => setHojaMover(true)}>{frida.planeada ? `Frida: ${textoDia(frida.planeada)}. Mover` : 'Esta semana sin Frida. Cambiar'}</BotonTexto>}
+        {vasNoche && (
+          <>
+            <BotonPrincipal onClick={() => vasEnLaNoche(true)}>Voy en la noche</BotonPrincipal>
+            <div className="botones-fila" style={{ justifyContent: 'center' }}>
+              <BotonTexto onClick={() => { setForzarNoche(false); abrirRegistrar(claveHoy) }}>Ya fui</BotonTexto>
+              <BotonTexto onClick={() => vasEnLaNoche(false)}>Hoy no</BotonTexto>
+            </div>
+          </>
+        )}
+        {pantallaClub && !sesionEnCurso && !frida.hecha && <BotonTexto onClick={() => setHojaMover(true)}>{frida.planeada ? `Frida: ${textoDia(frida.planeada)}. Mover` : 'Esta semana sin Frida. Cambiar'}</BotonTexto>}
         {recordarRespaldo && <BotonTexto onClick={onAjustes}>{settings.ultimoRespaldo ? 'Ya pasaron 2 semanas del último respaldo. Descárgalo en Ajustes.' : 'Descarga tu primer respaldo en Ajustes.'}</BotonTexto>}
-        {!pregunta && !preguntaFrida && !pantallaFrida && !sesionEnCurso && (
+        {pantallaClub && !sesionEnCurso && (
           <div className="botones-fila" style={{ justifyContent: 'center' }}>
             <BotonTexto onClick={() => setHojaPrefiero(true)}>Hoy prefiero…</BotonTexto>
-            <BotonTexto onClick={() => setRegistrar(true)}>Registrar sesión</BotonTexto>
+            <BotonTexto onClick={() => abrirRegistrar()}>Registrar sesión</BotonTexto>
           </div>
         )}
-        {ofrecerCasa && !pregunta && !preguntaFrida && <BotonTexto onClick={() => onEmpezar('CASA', 'completa')}>Casa, 12 minutos. Llevas {casaHechas} de {CASA_MAX}.</BotonTexto>}
+        {ofrecerCasa && <BotonTexto onClick={() => onEmpezar('CASA', 'completa')}>Casa, 12 minutos. Llevas {casaHechas} de {CASA_MAX}.</BotonTexto>}
         {sesionEnCurso ? (
           <>
             <BotonPrincipal onClick={onSeguir}>Seguir sesión</BotonPrincipal>
             <BotonTexto onClick={() => confirm('¿Descartar la sesión a medias?') && onDescartar()}>Descartar</BotonTexto>
           </>
-        ) : !pantallaFrida && !pregunta && !preguntaFrida ? (
-          <BotonPrincipal onClick={empezar}>{versionAuto !== 'completa' && versionAuto !== 'corta' && !conSalida ? 'Empezar de todas formas' : 'Empezar'}</BotonPrincipal>
+        ) : pantallaClub && modo === 'club' ? (
+          <BotonPrincipal onClick={empezar}>{versionAuto !== 'completa' && versionAuto !== 'corta' && !conSalida && !vaNoche ? 'Empezar de todas formas' : 'Empezar'}</BotonPrincipal>
+        ) : pantallaClub && modo !== 'cerrado' ? (
+          <BotonTexto onClick={empezar}>{modo === 'completa' ? `Pesas extra: ${queToca}` : `Empezar ${queToca} igual`}</BotonTexto>
         ) : null}
       </div>
 
       {accion && <Deshacer clave={accion} texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
 
-      <Hoja abierta={hojaLista} titulo={`${toca}: ${NOMBRE_SESION[toca]}`} onCerrar={() => setHojaLista(false)}>
+      <Hoja abierta={fridaPara !== null} titulo="¿Qué hicieron?" onCerrar={() => setFridaPara(null)}>
+        <p className="t-cuerpo tenue">Con Frida{fridaPara ? `, el ${textoDia(fridaPara.fecha)}` : ''}. Cambia lo que toca en la semana: con pierna, tu A sale sin pierna.</p>
+        <div className="botones-fila">
+          <BotonPrincipal onClick={() => fridaPara && contestar(fridaPara.fecha, 'FRIDA', fridaPara.nota, 'pierna')}>Pierna</BotonPrincipal>
+          <BotonPrincipal onClick={() => fridaPara && contestar(fridaPara.fecha, 'FRIDA', fridaPara.nota, 'torso')}>Torso</BotonPrincipal>
+        </div>
+      </Hoja>
+      <Hoja abierta={hojaLista} titulo={`${toca}: ${nombreSesion(toca, sinPierna)}`} onCerrar={() => setHojaLista(false)}>
         <p className="t-nota tenue">{rutaDe(lista).map((z) => ZONA_NOMBRE[z]).join(' → ')}</p>
         <Grupo>{filas.map((f, i) => <Fila key={f.id} num={i + 1} texto={f.nombre} detalle={f.zona} dato={f.dato} />)}</Grupo>
       </Hoja>
       <Hoja abierta={hojaPrefiero} titulo="Hoy prefiero" onCerrar={() => setHojaPrefiero(false)}>
         <p className="t-cuerpo tenue">Cambia la sesión de hoy con un toque. Mañana la app vuelve a elegir sola.</p>
         <Grupo>
-          {CLUB.map((t) => <Fila key={t} texto={`${t}: ${NOMBRE_SESION[t]}`} detalle={t === 'C' && !sinFrida ? 'Solo en semanas sin Frida, pero puedes' : semana.dias.some((d) => d.tipos.includes(t)) ? 'Ya la hiciste esta semana: sería extra' : undefined} dato={t === toca ? 'Hoy' : ''} onClick={() => preferir(t)} />)}
+          {CLUB.map((t) => <Fila key={t} texto={`${t}: ${nombreSesion(t, t === 'A' && fridaPiernaEnSemana(sesiones, ahora, sets))}`} detalle={t === 'C' && !sinFrida ? 'Solo en semanas sin Frida, pero puedes' : semana.dias.some((d) => d.tipos.includes(t)) ? 'Ya la hiciste esta semana: sería extra' : undefined} dato={t === toca ? 'Hoy' : ''} onClick={() => preferir(t)} />)}
         </Grupo>
       </Hoja>
-      <Hoja abierta={hojaCasa} titulo="Ya no alcanza ni la corta" onCerrar={() => setHojaCasa(false)}>
-        <p className="t-cuerpo tenue">Las pesas terminarían después de las {formatoHora(topeDe(new Date(), settings) ?? minutosDe(settings.ultimaPesaNoche))}. Queda casa, 12 minutos, o la corta de todas formas.</p>
+      <Hoja abierta={hojaCasa} titulo={tiempo.franja === 'cerrado' ? 'El club ya cerró' : 'Ya no alcanza ni la corta'} onCerrar={() => setHojaCasa(false)}>
+        <p className="t-cuerpo tenue">{tiempo.franja === 'cerrado' ? 'Los lunes abre de 7 a 11. Queda casa, 12 minutos.' : `Las pesas terminarían después de las ${formatoHora(topeDe(new Date(), settings) ?? minutosDe(settings.ultimaPesaNoche))}. Queda casa, 12 minutos, o la corta de todas formas.`}</p>
         <Grupo>
           {casaDisponible(sesiones, ahora, sets) && <Fila texto="Casa, 12 minutos" detalle={`Llevas ${casaHechas} de ${CASA_MAX} esta semana`} onClick={() => { setHojaCasa(false); onEmpezar('CASA', 'completa') }} />}
-          <Fila texto={`Corta de todas formas: ${toca}`} detalle={listaCorta.map((e) => e.nombre.toLowerCase()).join(', ')} onClick={() => { setHojaCasa(false); onEmpezar(toca, 'corta') }} />
+          {tiempo.franja !== 'cerrado' && <Fila texto={`Corta de todas formas: ${queToca}`} detalle={listaCorta.map((e) => e.nombre.toLowerCase()).join(', ')} onClick={() => { setHojaCasa(false); onEmpezar(toca, 'corta', sinPierna) }} />}
         </Grupo>
       </Hoja>
       <Hoja abierta={hojaMover} titulo="Frida" onCerrar={() => setHojaMover(false)}>
@@ -259,7 +367,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
           <Fila texto="Esta semana no hay" detalle="Entra la sesión C: espalda y hombro" dato={frida.planeada === null ? 'Elegido' : ''} onClick={() => moverFrida(null)} />
         </Grupo>
       </Hoja>
-      <RegistrarHoja datos={datos} ahora={ahora} abierta={registrar} onCerrar={() => setRegistrar(false)} onGuardado={(s, reemplazada) => setAccion({ texto: `${textoDia(s.fecha)}: ${s.tipo === 'FRIDA' ? 'Frida' : s.tipo === 'CASA' ? 'casa' : s.tipo} registrada.`, deshacer: async () => { if (reemplazada) await datos.guardarSesion(reemplazada); else await datos.borrarSesion(s.id) } })} />
+      <RegistrarHoja datos={datos} ahora={ahora} abierta={registrar} fecha={registrarFecha} onCerrar={() => setRegistrar(false)} onGuardado={(s, reemplazada) => setAccion({ texto: `${textoDia(s.fecha)}: ${s.tipo === 'FRIDA' ? `Frida ${s.fridaTipo ?? 'torso'}` : s.tipo === 'CASA' ? 'casa' : s.tipo} registrada.`, deshacer: async () => { if (reemplazada) await datos.guardarSesion(reemplazada); else await datos.borrarSesion(s.id) } })} />
     </div>
   )
 }

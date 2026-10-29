@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { estadoSemana, avisoRescate, seriesPara, fridaTipoDe, fridaPiernaEnSemana, casaDeSemana, casaDisponible, estadoFrida, diaFridaPlaneado, diasParaMoverFrida, cuenta, ultimaPropia, semanaSinFrida, sesionesBase, faltantes, elegirSesion, type PlanFrida } from './semana'
+import { estadoSemana, avisoSemana, seriesPara, fridaTipoDe, fridaPiernaEnSemana, casaDeSemana, casaDisponible, estadoFrida, diaFridaPlaneado, diasParaMoverFrida, cuenta, ultimaPropia, semanaSinFrida, sesionesBase, faltantes, elegirSesion, type PlanFrida } from './semana'
 import type { Sesion, SetLog } from '../data/tipos'
 import { inicioSemana, claveFecha } from './fechas'
 
@@ -222,21 +222,28 @@ describe('v7: Frida con tipo, A sin pierna y elección (RUTINA-FINAL.md v7, 2)',
   })
 })
 
-describe('aviso del jueves y del domingo', () => {
+describe('avisos de la semana (RUTINA-FINAL.md v7, 2)', () => {
+  const VIE = '2026-10-09'
   const s = [sesion(LUN, 'FRIDA'), sesion(MAR, 'A')]
-  it('jueves en la noche con menos de 3 dice qué toca el domingo', () => {
-    expect(avisoRescate(s, undefined, dia(JUE, '21:00:00'))).toBe('Vas en 2 de 3; el domingo antes de las 3 pm te toca B.')
-    expect(avisoRescate([sesion(MAR, 'C')], SIN_FRIDA, dia(JUE, '21:00:00'))).toBe('Vas en 1 de 3; el domingo antes de las 3 pm te toca A.')
+  it('jueves ya hecha su sesión o desde las 21:00, con 2 de 3: mañana viernes toca B, prende tus alarmas de Pesas extra', () => {
+    expect(avisoSemana(s, undefined, dia(JUE, '21:00:00'))).toBe('Vas en 2 de 3. Mañana viernes toca B: prende tus alarmas de Pesas extra.')
+    expect(avisoSemana([sesion(MAR, 'C')], SIN_FRIDA, dia(JUE, '21:30:00'))).toBe('Vas en 1 de 3. Mañana viernes toca A: prende tus alarmas de Pesas extra.')
+    // Frida pierna: la del viernes es la A sin pierna
+    expect(avisoSemana([{ ...sesion(LUN, 'FRIDA'), fridaTipo: 'pierna' }, sesion(MAR, 'B')], undefined, dia(JUE, '21:00:00'))).toBe('Vas en 2 de 3. Mañana viernes toca A sin pierna: prende tus alarmas de Pesas extra.')
   })
-  it('no avisa jueves en la tarde ni miércoles', () => {
-    expect(avisoRescate(s, undefined, dia(JUE, '18:00:00'))).toBeNull()
-    expect(avisoRescate(s, undefined, dia(MIE, '21:00:00'))).toBeNull()
+  it('jueves con 3 de 3: semana completa, mañana sauna; en cuanto se hace la sesión del jueves, aunque sea de mañana', () => {
+    expect(avisoSemana([...s, sesion(JUE, 'B')], undefined, dia(JUE, '08:30:00'))).toBe('Semana completa. Mañana viernes, sauna.')
   })
-  it('domingo en la mañana avisa; en la tarde ya no', () => {
-    expect(avisoRescate(s, undefined, dia(DOM, '09:00:00'))).toBe('Vas en 2 de 3; hoy antes de las 3 pm te toca B.')
-    expect(avisoRescate(s, undefined, dia(DOM, '16:00:00'))).toBeNull()
+  it('jueves antes de su sesión y antes de las 21:00, o miércoles: nada', () => {
+    expect(avisoSemana(s, undefined, dia(JUE, '18:00:00'))).toBeNull()
+    expect(avisoSemana(s, undefined, dia(MIE, '21:30:00'))).toBeNull()
   })
-  it('con 3 no avisa', () => {
-    expect(avisoRescate([...s, sesion(JUE, 'B')], undefined, dia(JUE, '21:00:00'))).toBeNull()
+  it('viernes en la noche (o con "Hoy no") y domingo hasta las 7 pm, con menos de 3: el rescate del domingo', () => {
+    expect(avisoSemana(s, undefined, dia(VIE, '21:10:00'))).toBe('Vas en 2 de 3; el domingo antes de las 7 pm te toca B.')
+    expect(avisoSemana(s, undefined, dia(VIE, '09:00:00'), [], [VIE])).toBe('Vas en 2 de 3; el domingo antes de las 7 pm te toca B.')
+    expect(avisoSemana(s, undefined, dia(VIE, '09:00:00'))).toBeNull()
+    expect(avisoSemana(s, undefined, dia(DOM, '17:00:00'))).toBe('Vas en 2 de 3; hoy antes de las 7 pm te toca B.')
+    expect(avisoSemana(s, undefined, dia(DOM, '19:10:00'))).toBeNull()
+    expect(avisoSemana([...s, sesion(JUE, 'B')], undefined, dia(DOM, '09:00:00'))).toBeNull()
   })
 })
