@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cargaInicial, cierresPendientes, comoQuedo, seriesPlaneadas, diasSinRegistro, sugeridaPara, diasDeSemanaHastaHoy, armarRegistro, esDiaDeGym, textoUltima, sesionRegistrada, momentoDe, momentoPorDefecto, preguntarNoche, textoFrida } from './registro'
+import { cambiarTipo, cargaInicial, cierresPendientes, comoQuedo, seriesPlaneadas, diasSinRegistro, sugeridaPara, diasDeSemanaHastaHoy, armarRegistro, esDiaDeGym, textoUltima, sesionRegistrada, momentoDe, momentoPorDefecto, preguntarNoche, textoFrida } from './registro'
 import { elegirSesion, estadoSemana, ultimaPropia } from './semana'
 import { DIAS_NOMBRE } from './fechas'
 import type { Sesion, SetLog } from '../data/tipos'
@@ -206,6 +206,21 @@ describe('v7: registro con mañana o noche, Frida con tipo y "¿Vas en la noche?
     const fn = sesion(MAR, 'FRIDA', true, { fridaTipo: 'pierna', momento: 'noche' })
     const r2 = armarRegistro([fn], MAR, 'A', MIE, undefined, { momento: 'manana' })
     expect('sesion' in r2 && r2.sesion.sinPierna).toBe(false)
+  })
+  it('cambiar el tipo en Historial: una de club por día, y "sin pierna" solo en la A', () => {
+    const aSin = sesion(MAR, 'A', true, { sinPierna: true })
+    const b = cambiarTipo([fp(LUN), aSin], aSin, 'B')
+    expect('error' in b ? b : { tipo: b.tipo, sinPierna: b.sinPierna }).toEqual({ tipo: 'B', sinPierna: undefined })
+    // de B a A con Frida pierna antes: sin pierna
+    const bMar = sesion(MAR, 'B')
+    const a = cambiarTipo([fp(LUN), bMar], bMar, 'A')
+    expect('error' in a ? a : a.sinPierna).toBe(true)
+    // otra de club ese día: no
+    const cMar = { ...sesion(MAR, 'C'), id: 'otra' }
+    expect(cambiarTipo([bMar, cMar], cMar, 'A')).toEqual({ error: 'Ese día ya tiene B.' })
+    // a Frida: con su tipo y sin "sin pierna"
+    const f = cambiarTipo([aSin], aSin, 'FRIDA', 'pierna')
+    expect('error' in f ? f : { tipo: f.tipo, fridaTipo: f.fridaTipo, sinPierna: f.sinPierna }).toEqual({ tipo: 'FRIDA', fridaTipo: 'pierna', sinPierna: undefined })
   })
   it('línea de Hoy con Frida: "Frida fue pierna el lunes"; las viejas sin tipo, torso', () => {
     expect(textoFrida(fp(LUN), DIAS_NOMBRE)).toBe('Frida fue pierna el lunes')

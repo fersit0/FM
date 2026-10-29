@@ -148,6 +148,10 @@ export function diasDeSemanaHastaHoy(sesiones: Sesion[], sets: SetLog[], hoy: Da
 }
 
 const esClub = (t: SesionTipo) => t === 'A' || t === 'B' || t === 'C'
+/** Esa semana ya había FRIDA pierna antes de una A ese día: otro día antes, o el mismo día en la mañana con la A en la noche (RUTINA-FINAL.md v7, 4b) */
+function fridaPiernaAntes(sesiones: Sesion[], fecha: string, momento?: Momento): boolean {
+  return sesionesDeSemana(sesiones, desdeClave(fecha)).some((s) => s.tipo === 'FRIDA' && fridaTipoDe(s) === 'pierna' && (s.fecha < fecha || (s.fecha === fecha && s.momento === 'manana' && momento === 'noche')))
+}
 /**
  * Registrar una sesión hecha sin la app. Nunca en el futuro. Máximo una sesión de club (A, B o C) por día: si ese
  * día ya tiene una, se devuelve en `reemplaza` para ofrecer cambiarla en vez de duplicarla. FRIDA es una por día
@@ -157,8 +161,7 @@ export function armarRegistro(sesiones: Sesion[], fecha: string, tipo: SesionTip
   if (fecha > hoy) return { error: 'Esa fecha todavía no llega.' }
   const { fridaTipo, momento } = opciones
   const conMomento = (s: Sesion): Sesion => (momento ? { ...s, momento } : s)
-  // la A sale sin pierna si esa semana ya había FRIDA pierna antes: otro día antes, o el mismo día en la mañana con la A en la noche (RUTINA-FINAL.md v7, 4b)
-  const sinPierna = tipo === 'A' && sesionesDeSemana(sesiones, desdeClave(fecha)).some((s) => s.tipo === 'FRIDA' && fridaTipoDe(s) === 'pierna' && (s.fecha < fecha || (s.fecha === fecha && s.momento === 'manana' && momento === 'noche')))
+  const sinPierna = tipo === 'A' && fridaPiernaAntes(sesiones, fecha, momento)
   const conPierna = (s: Sesion): Sesion => (tipo === 'A' ? { ...s, sinPierna } : { ...s, sinPierna: undefined })
   if (esClub(tipo)) {
     const otra = sesiones.find((s) => s.fecha === fecha && esClub(s.tipo))
@@ -181,4 +184,15 @@ export function textoUltima(ultima: Sesion | null, nombresDia: string[]): string
   if (!ultima) return 'sin sesiones todavía'
   const d = desdeClave(ultima.fecha)
   return `la última fue ${ultima.tipo} el ${nombresDia[d.getDay()]} ${d.getDate()}`
+}
+
+/**
+ * Cambiar en Historial qué fue una sesión. Una de club por día: si ese día ya tiene otra, no se puede. La A calcula si
+ * sale sin pierna (si ya era A, se queda como estaba); B, C, Frida y casa no llevan "sin pierna"; Frida lleva su tipo.
+ */
+export function cambiarTipo(sesiones: Sesion[], s: Sesion, tipo: SesionTipo, fridaTipo?: FridaTipo): Sesion | { error: string } {
+  const otra = esClub(tipo) ? sesiones.find((x) => x.id !== s.id && x.fecha === s.fecha && esClub(x.tipo)) : undefined
+  if (otra) return { error: `Ese día ya tiene ${otra.tipo}.` }
+  const sinPierna = tipo === 'A' ? (s.tipo === 'A' ? s.sinPierna : fridaPiernaAntes(sesiones, s.fecha, s.momento)) : undefined
+  return { ...s, tipo, fridaTipo: tipo === 'FRIDA' ? fridaTipo ?? fridaTipoDe(s) : undefined, sinPierna }
 }

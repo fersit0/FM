@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Sesion, SesionTipo, FridaTipo, Momento } from '../data/tipos'
-import { armarRegistro, momentoPorDefecto } from '../logic/registro'
+import { armarRegistro, momentoPorDefecto, sugeridaPara } from '../logic/registro'
+import { cuenta, fridaTipoDe } from '../logic/semana'
 import { NOMBRE_SESION } from '../data/ejercicios'
 import { claveFecha, DIAS_NOMBRE, desdeClave } from '../logic/fechas'
 import { Hoja, Grupo, Fila, BotonPrincipal } from './fm'
@@ -43,7 +44,16 @@ export function RegistrarHoja({ datos, ahora, abierta, onCerrar, onGuardado, fec
   // por defecto Frida en la noche y las de club en la mañana; se puede cambiar con un toque
   const [momentoElegido, setMomento] = useState<Momento | null>(null)
   const momento = momentoElegido ?? momentoPorDefecto(fecha, datos.settings.fridaPlan, tipo)
-  useEffect(() => { if (abierta) { setFecha(fechaInicial ?? hoy); setMomento(null) } }, [abierta, fechaInicial, hoy])
+  /** Un día que ya tiene algo abre con eso (para cambiarlo); si no, con la de club que tocaba */
+  function deDia(f: string) {
+    const del = datos.sesiones.filter((s) => s.fecha === f && cuenta(s, datos.sets))
+    const s = del.find((x) => x.tipo === 'A' || x.tipo === 'B' || x.tipo === 'C') ?? del.find((x) => x.tipo === 'FRIDA') ?? del[0]
+    const sugerida = sugeridaPara(f, datos.sesiones, datos.sets, datos.settings.fridaPlan)
+    setEleccion(s ? (s.tipo === 'FRIDA' ? `FRIDA:${fridaTipoDe(s)}` : s.tipo) : sugerida === 'FRIDA' ? 'A' : sugerida)
+    setMomento(s?.momento ?? null)
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (abierta) { setFecha(fechaInicial ?? hoy); deDia(fechaInicial ?? hoy) } }, [abierta, fechaInicial, hoy])
   const [nota, setNota] = useState('')
   const [aviso, setAviso] = useState<string | null>(null)
   const [pendiente, setPendiente] = useState<{ sesion: Sesion; reemplaza: Sesion } | null>(null)
@@ -73,7 +83,7 @@ export function RegistrarHoja({ datos, ahora, abierta, onCerrar, onGuardado, fec
     <Hoja abierta={abierta} titulo="Registrar sesión" onCerrar={cerrar}>
       <p className="t-cuerpo tenue">Una sesión hecha sin la app. Se puede editar o borrar en Historial.</p>
       <Grupo>
-        <Fila texto="Fecha"><input type="date" value={fecha} max={hoy} onChange={(e) => { setFecha(e.target.value); setAviso(null); setPendiente(null) }} aria-label="Fecha" /></Fila>
+        <Fila texto="Fecha"><input type="date" value={fecha} max={hoy} onChange={(e) => { setFecha(e.target.value); deDia(e.target.value); setAviso(null); setPendiente(null) }} aria-label="Fecha" /></Fila>
         <Fila texto="Cuándo">
           <div className="dia-botones" role="group" aria-label="Cuándo">
             {(['manana', 'noche'] as Momento[]).map((m) => <button key={m} className={`dia-boton ${momento === m ? 'marcado' : ''}`} aria-pressed={momento === m} onClick={() => setMomento(m)}>{m === 'manana' ? 'Mañana' : 'Noche'}</button>)}
