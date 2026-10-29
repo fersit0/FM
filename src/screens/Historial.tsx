@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import type { Sesion, SesionTipo, SetLog } from '../data/tipos'
+import type { Sesion, SesionTipo, SetLog, FridaTipo, Momento } from '../data/tipos'
+import { fridaTipoDe } from '../logic/semana'
 import { usePantalla } from '../design/pantallaActiva'
 import { semanasHistorial, tocaPesarse, tocaFoto, promedioSemanal, type SemanaHistorial } from '../logic/progreso'
 import { claveFecha, fechaCorta, DIAS_NOMBRE, desdeClave, sumarDias, inicioSemana } from '../logic/fechas'
@@ -88,9 +89,9 @@ type Accion = { texto: string; deshacer: () => void | Promise<void> }
 
 /** "A completa", "B corta", "A parcial", "A registrada", "Frida", "casa" */
 function etiquetaDe(s: Sesion): string {
-  if (s.tipo === 'FRIDA') return 'Frida'
+  if (s.tipo === 'FRIDA') return `Frida ${fridaTipoDe(s)}`
   if (s.tipo === 'CASA') return 'casa'
-  return `${s.tipo} ${s.ligera ? 'ligera' : s.como ?? (s.origen === 'registro' ? 'registrada' : s.version)}`
+  return `${s.tipo}${s.sinPierna ? ' sin pierna' : ''} ${s.ligera ? 'ligera' : s.como ?? (s.origen === 'registro' ? 'registrada' : s.version)}`
 }
 
 function DetalleSesion({ datos, sesion, onBorrada, onAccion }: { datos: Datos; sesion: Sesion; onBorrada: () => void; onAccion: (a: Accion) => void }) {
@@ -101,8 +102,15 @@ function DetalleSesion({ datos, sesion, onBorrada, onAccion }: { datos: Datos; s
     <>
       <Grupo>
         <Fila texto="Qué hice" detalle={como}>
-          <select value={sesion.tipo} onChange={(e) => datos.guardarSesion({ ...sesion, tipo: e.target.value as SesionTipo })} aria-label="Qué hice">
-            <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="FRIDA">Frida</option><option value="CASA">Casa</option>
+          {/* Frida con su tipo: cambiarlo recalcula la semana y Tu semana (RUTINA-FINAL.md v7, 2.2) */}
+          <select value={sesion.tipo === 'FRIDA' ? `FRIDA:${fridaTipoDe(sesion)}` : sesion.tipo} onChange={(e) => { const [tipo, fridaTipo] = e.target.value.split(':'); datos.guardarSesion({ ...sesion, tipo: tipo as SesionTipo, fridaTipo: fridaTipo as FridaTipo | undefined }) }} aria-label="Qué hice">
+            <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="FRIDA:pierna">Frida pierna</option><option value="FRIDA:torso">Frida torso</option><option value="CASA">Casa</option>
+          </select>
+        </Fila>
+        <Fila texto="Cuándo" detalle={sesion.momento ? undefined : 'Sin dato: es de antes de que la app lo guardara'}>
+          <select value={sesion.momento ?? ''} onChange={(e) => datos.guardarSesion({ ...sesion, momento: (e.target.value || undefined) as Momento | undefined })} aria-label="Cuándo">
+            {!sesion.momento && <option value="">Sin dato</option>}
+            <option value="manana">Mañana</option><option value="noche">Noche</option>
           </select>
         </Fila>
       </Grupo>

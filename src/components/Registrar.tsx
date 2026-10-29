@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import type { Sesion, SesionTipo } from '../data/tipos'
-import { armarRegistro } from '../logic/registro'
+import type { Sesion, SesionTipo, FridaTipo, Momento } from '../data/tipos'
+import { armarRegistro, momentoPorDefecto } from '../logic/registro'
 import { NOMBRE_SESION } from '../data/ejercicios'
 import { claveFecha, DIAS_NOMBRE, desdeClave } from '../logic/fechas'
 import { Hoja, Grupo, Fila, BotonPrincipal } from './fm'
@@ -25,23 +25,37 @@ export function textoDia(fecha: string): string {
   return `${DIAS_NOMBRE[d.getDay()]} ${d.getDate()}`
 }
 
-/** "Registrar sesión": fecha (hoy por defecto, nunca en el futuro) y tipo. Si ese día ya tiene una de club, ofrece cambiarla. */
-export function RegistrarHoja({ datos, ahora, abierta, onCerrar, onGuardado }: { datos: Datos; ahora: Date; abierta: boolean; onCerrar: () => void; onGuardado: (sesion: Sesion, reemplazada: Sesion | null) => void }) {
+/** Lo que se elige en "Qué hice": la sesión, y para Frida, pierna o torso (RUTINA-FINAL.md v7, 2.5) */
+type Eleccion = Exclude<SesionTipo, 'FRIDA'> | 'FRIDA:pierna' | 'FRIDA:torso'
+const tipoDe = (e: Eleccion): SesionTipo => (e.startsWith('FRIDA') ? 'FRIDA' : (e as SesionTipo))
+const fridaDe = (e: Eleccion): FridaTipo | undefined => (e === 'FRIDA:pierna' ? 'pierna' : e === 'FRIDA:torso' ? 'torso' : undefined)
+const NOMBRE_ELECCION = (e: Eleccion) => (e === 'FRIDA:pierna' ? 'Frida pierna' : e === 'FRIDA:torso' ? 'Frida torso' : e === 'CASA' ? 'casa' : e)
+
+/**
+ * "Registrar sesión": fecha (hoy por defecto, nunca en el futuro), mañana o noche, y qué fue. Si ese día ya tiene una de
+ * club, ofrece cambiarla. `fecha` abre la hoja en ese día (al tocar un día de Tu semana).
+ */
+export function RegistrarHoja({ datos, ahora, abierta, onCerrar, onGuardado, fecha: fechaInicial }: { datos: Datos; ahora: Date; abierta: boolean; onCerrar: () => void; onGuardado: (sesion: Sesion, reemplazada: Sesion | null) => void; fecha?: string }) {
   const hoy = claveFecha(ahora)
-  const [fecha, setFecha] = useState(hoy)
-  const [tipo, setTipo] = useState<SesionTipo>('A')
+  const [fecha, setFecha] = useState(fechaInicial ?? hoy)
+  const [eleccion, setEleccion] = useState<Eleccion>('A')
+  const tipo = tipoDe(eleccion)
+  // por defecto mañana en martes, jueves y viernes, y noche el día de Frida; se puede cambiar con un toque
+  const [momentoElegido, setMomento] = useState<Momento | null>(null)
+  const momento = momentoElegido ?? momentoPorDefecto(fecha, datos.settings.fridaPlan)
+  useEffect(() => { if (abierta) { setFecha(fechaInicial ?? hoy); setMomento(null) } }, [abierta, fechaInicial, hoy])
   const [nota, setNota] = useState('')
   const [aviso, setAviso] = useState<string | null>(null)
   const [pendiente, setPendiente] = useState<{ sesion: Sesion; reemplaza: Sesion } | null>(null)
   function cerrar() { setAviso(null); setPendiente(null); onCerrar() }
   async function guardar(forzar = false) {
     if (!fecha) return
-    const r = armarRegistro(datos.sesiones, fecha, tipo, hoy, tipo === 'FRIDA' ? nota : undefined)
+    const r = armarRegistro(datos.sesiones, fecha, tipo, hoy, tipo === 'FRIDA' ? nota : undefined, { fridaTipo: fridaDe(eleccion), momento })
     if ('error' in r) { setAviso(r.error); return }
     if (r.reemplaza && !forzar) {
-      if (r.reemplaza.tipo === tipo) { setAviso(`Ese día ya tiene ${tipo === 'FRIDA' ? 'Frida' : tipo}.`); return }
+      if (r.reemplaza.tipo === tipo && (tipo !== 'FRIDA' || r.reemplaza.fridaTipo === r.sesion.fridaTipo)) { setAviso(`Ese día ya tiene ${NOMBRE_ELECCION(eleccion)}.`); return }
       setPendiente({ sesion: r.sesion, reemplaza: r.reemplaza })
-      setAviso(`El ${textoDia(fecha)} ya tiene ${r.reemplaza.tipo}. ¿La cambio a ${tipo}?`)
+      setAviso(`El ${textoDia(fecha)} ya tiene ${r.reemplaza.tipo === 'FRIDA' ? 'Frida' : r.reemplaza.tipo}. ¿La cambio a ${NOMBRE_ELECCION(eleccion)}?`)
       return
     }
     await datos.guardarSesion(r.sesion)
@@ -60,19 +74,25 @@ export function RegistrarHoja({ datos, ahora, abierta, onCerrar, onGuardado }: {
       <p className="t-cuerpo tenue">Una sesión hecha sin la app. Se puede editar o borrar en Historial.</p>
       <Grupo>
         <Fila texto="Fecha"><input type="date" value={fecha} max={hoy} onChange={(e) => { setFecha(e.target.value); setAviso(null); setPendiente(null) }} aria-label="Fecha" /></Fila>
+        <Fila texto="Cuándo">
+          <div className="dia-botones" role="group" aria-label="Cuándo">
+            {(['manana', 'noche'] as Momento[]).map((m) => <button key={m} className={`dia-boton ${momento === m ? 'marcado' : ''}`} aria-pressed={momento === m} onClick={() => setMomento(m)}>{m === 'manana' ? 'Mañana' : 'Noche'}</button>)}
+          </div>
+        </Fila>
         <Fila texto="Qué hice">
-          <select value={tipo} onChange={(e) => { setTipo(e.target.value as SesionTipo); setAviso(null); setPendiente(null) }} aria-label="Qué hice">
+          <select value={eleccion} onChange={(e) => { setEleccion(e.target.value as Eleccion); setAviso(null); setPendiente(null) }} aria-label="Qué hice">
             <option value="A">A: {NOMBRE_SESION.A.toLowerCase()}</option>
             <option value="B">B: {NOMBRE_SESION.B.toLowerCase()}</option>
             <option value="C">C: {NOMBRE_SESION.C.toLowerCase()}</option>
-            <option value="FRIDA">Fui con Frida</option>
+            <option value="FRIDA:pierna">Frida pierna</option>
+            <option value="FRIDA:torso">Frida torso</option>
             <option value="CASA">Casa</option>
           </select>
         </Fila>
         {tipo === 'FRIDA' && <Fila texto="Nota"><input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Opcional" aria-label="Nota" maxLength={80} style={{ width: 140, textAlign: 'right', borderBottom: '1px solid var(--separador)' }} /></Fila>}
       </Grupo>
       {aviso && <p className="t-cuerpo">{aviso}</p>}
-      {pendiente ? <BotonPrincipal onClick={cambiar}>Cambiar a {tipo}</BotonPrincipal> : <BotonPrincipal onClick={() => guardar()}>Guardar</BotonPrincipal>}
+      {pendiente ? <BotonPrincipal onClick={cambiar}>Cambiar a {NOMBRE_ELECCION(eleccion)}</BotonPrincipal> : <BotonPrincipal onClick={() => guardar()}>Guardar</BotonPrincipal>}
     </Hoja>
   )
 }

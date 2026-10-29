@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Ejercicio, Alternativa } from '../data/tipos'
-import { ejerciciosDe, CALENTAMIENTO, CIERRE, REGLAS_GLOBALES, VERSION_CORTA_TEXTO, REGLA_ALTERNATIVA, NOMBRE_SESION, ZONA_NOMBRE, ZONA_DETALLE, RUTA } from '../data/ejercicios'
+import { ejerciciosDe, A_SIN_PIERNA, NOMBRE_A_SIN_PIERNA, CALENTAMIENTO, CIERRE, REGLAS_GLOBALES, VERSION_CORTA_TEXTO, REGLA_ALTERNATIVA, NOMBRE_SESION, ZONA_NOMBRE, ZONA_DETALLE, RUTA } from '../data/ejercicios'
 import { porSesion } from '../logic/progresion'
 import { unidadDe, incrementoDe, pesoDeSet, formatoPeso } from '../logic/unidades'
 import { usePantalla } from '../design/pantallaActiva'
@@ -26,11 +26,18 @@ export function Ejercicios({ datos }: { datos: Datos }) {
   return (
     <div className="pantalla con-barra">
       <h1 className="t-titulo">Ejercicios</h1>
-      {(['A', 'B', 'C', 'CASA'] as const).map((letra) => (
-        <Grupo key={letra} titulo={letra === 'CASA' ? NOMBRE_SESION.CASA : `${letra}: ${NOMBRE_SESION[letra]} · ${RUTA[letra].map((z) => ZONA_NOMBRE[z]).join(' → ')}${letra === 'C' ? ' · solo semanas sin Frida' : ''}`}>
-          {ejerciciosDe(letra).map((e, i) => <Fila key={e.id} num={i + 1} texto={e.nombre} detalle={e.zona ? ZONA_NOMBRE[e.zona] : undefined} dato={ultimoPeso(e)} onClick={() => setAbierto(e)} />)}
-        </Grupo>
-      ))}
+      {(['A', 'A-SIN-PIERNA', 'B', 'C', 'CASA'] as const).map((grupo) => {
+        // la A sin pierna va justo después de la A: es la de las semanas con Frida pierna (RUTINA-FINAL.md v7, 4b)
+        const letra = grupo === 'A-SIN-PIERNA' ? 'A' : grupo
+        const titulo = grupo === 'CASA' ? NOMBRE_SESION.CASA
+          : grupo === 'A-SIN-PIERNA' ? `A: ${NOMBRE_A_SIN_PIERNA} · ${RUTA.A.map((z) => ZONA_NOMBRE[z]).join(' → ')} · semanas con Frida pierna`
+            : `${letra}: ${NOMBRE_SESION[letra]} · ${RUTA[letra].map((z) => ZONA_NOMBRE[z]).join(' → ')}${letra === 'C' ? ' · semanas sin Frida, o la extra con Frida pierna' : ''}`
+        return (
+          <Grupo key={grupo} titulo={titulo}>
+            {(grupo === 'A-SIN-PIERNA' ? A_SIN_PIERNA : ejerciciosDe(letra)).map((e, i) => <Fila key={e.id} num={i + 1} texto={e.nombre} detalle={e.zona ? ZONA_NOMBRE[e.zona] : undefined} dato={ultimoPeso(e)} onClick={() => setAbierto(e)} />)}
+          </Grupo>
+        )
+      })}
       <Grupo titulo="Reglas"><Fila texto="Calentamiento, cierre y reglas de cada serie" onClick={() => setReglas(true)} /></Grupo>
       {abierto && <FichaHoja abierta onCerrar={() => setAbierto(null)} base={abierto} item={abierto} datos={datos} series={abierto.series} conGrafica onVerAlternativa={setAlternativa} />}
       {abierto && alternativa && <FichaHoja abierta onCerrar={() => setAlternativa(null)} base={abierto} item={alternativa} datos={datos} conGrafica />}
