@@ -60,6 +60,30 @@ function revisar() {
     }
     if (el.scrollWidth > el.clientWidth + 1) out.push(`botón "${texto}" con el texto cortado`)
   }
+  // el aviso de Deshacer ocupa su lugar: nada (botón, campo o texto) se cruza con él
+  // (con una hoja abierta solo cuenta lo de la hoja; y de lo que está en una lista que se recorre, solo la parte que se ve)
+  const recorte = (el) => {
+    let r = el.getBoundingClientRect(); let { left, top, right, bottom } = r
+    for (let p = el.parentElement; p; p = p.parentElement) {
+      const cs = getComputedStyle(p)
+      if (cs.overflowY === 'visible' && cs.overflowX === 'visible') continue
+      const q = p.getBoundingClientRect(); left = Math.max(left, q.left); top = Math.max(top, q.top); right = Math.min(right, q.right); bottom = Math.min(bottom, q.bottom)
+    }
+    return { left, top, right, bottom }
+  }
+  const aviso = [...document.querySelectorAll('.deshacer')].find(visible)
+  if (aviso) {
+    const a = aviso.getBoundingClientRect()
+    for (const el of document.querySelectorAll('button, input, select, textarea, h1, h2, p, .tira, .fila')) {
+      if (!visible(el) || !dentro(el) || aviso.contains(el) || el.contains(aviso)) continue
+      const r = recorte(el)
+      if (r.bottom <= r.top || r.right <= r.left) continue
+      if (r.left < a.right - 1 && a.left < r.right - 1 && r.top < a.bottom - 1 && a.top < r.bottom - 1) out.push(`el aviso de Deshacer tapa: ${nombre(el)}`)
+    }
+  }
+  // la sesión no recorre: lo que no cabe quedaría cortado abajo
+  const ses = document.querySelector('.sesion')
+  if (ses && ses.scrollHeight > ses.clientHeight + 1) out.push(`la sesión no cabe (${ses.scrollHeight} de ${ses.clientHeight})`)
   // en Hoy, ningún renglón de texto encima del círculo rojo
   const circulo = document.querySelector('.pantalla.inicio > .circulo')
   const textoHoy = document.querySelector('.inicio-texto')
@@ -108,7 +132,6 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
     await page.screenshot({ path: `${dir}/${archivo}` })
     informe.push({ modo, tam, paso: nombre, archivo, problemas, errores: errores.splice(0) })
   }
-  const sinDeshacer = async () => { await page.locator('.deshacer').waitFor({ state: 'detached', timeout: 8000 }).catch(() => {}) }
   const cerrarHoja = async () => { await page.keyboard.press('Escape'); await page.waitForTimeout(450) }
   const hoja = () => page.locator('.hoja-fondo.abierta')
   /** Deja la semana como se pide, con el reloj en esa hora: `params` son los de ?seed=0 (frida, registro, fresco) */
@@ -130,7 +153,7 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
   await intenta('lunes-noche', async () => {
     await escena('2026-10-05T20:30:00'); await page.getByRole('button', { name: 'Fui con Frida' }).waitFor(); await paso('hoy-lunes-frida')
     await page.getByRole('button', { name: 'Fui con Frida' }).click(); await page.getByRole('button', { name: 'Pierna', exact: true }).waitFor(); await paso('hoy-lunes-frida-pierna-o-torso')
-    await hoja().getByRole('button', { name: 'Pierna', exact: true }).click(); await sinDeshacer(); await paso('hoy-lunes-frida-registrada')
+    await hoja().getByRole('button', { name: 'Pierna', exact: true }).click(); await paso('hoy-lunes-frida-registrada')
   })
   await intenta('martes-pregunta-frida', async () => { await escena('2026-10-06T06:45:00', '&frida=ninguna'); await page.getByText(/¿Fuiste con Frida el/).waitFor(); await paso('hoy-pregunta-frida') })
   await intenta('martes-645', async () => {
@@ -148,13 +171,13 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
     await page.getByRole('button', { name: /^Empezar/ }).click(); await page.locator('h1', { hasText: 'Calentamiento' }).waitFor(); await paso('sesion-calentamiento')
     await page.getByRole('button', { name: 'Saltar' }).click(); await page.getByText(/Serie 1 de/).waitFor(); await paso('sesion-serie-1')
     await page.getByRole('button', { name: 'Serie hecha' }).click(); await page.locator('h1', { hasText: /^Descanso$/ }).waitFor(); await paso('sesion-descanso')
-    await page.getByRole('button', { name: 'Saltar' }).click(); await page.getByText(/Serie 2 de/).waitFor(); await sinDeshacer(); await paso('sesion-serie-2')
+    await page.getByRole('button', { name: 'Saltar' }).click(); await page.getByText(/Serie 2 de/).waitFor(); await paso('sesion-serie-2')
     // al remo con pecho apoyado (el tercero)
     for (let i = 0; i < 2; i++) { await page.getByRole('button', { name: 'Opciones de la sesión' }).click(); await page.waitForTimeout(350); await hoja().getByText('Saltar ejercicio', { exact: true }).click(); await page.waitForTimeout(500) }
-    await page.locator('.sesion-titulo-fila h1', { hasText: 'Remo con pecho apoyado' }).waitFor(); await sinDeshacer(); await paso('sesion-remo-pecho-apoyado')
+    await page.locator('.sesion-titulo-fila h1', { hasText: 'Remo con pecho apoyado' }).waitFor(); await paso('sesion-remo-pecho-apoyado')
     await page.getByRole('button', { name: 'Opciones de la sesión' }).click(); await page.waitForTimeout(350); await paso('sesion-menu')
     await hoja().getByText('Cambiar por alternativa', { exact: true }).click(); await page.waitForTimeout(400); await paso('sesion-alternativas')
-    await hoja().getByRole('button', { name: /Remo a una mano/ }).first().click(); await page.locator('.sesion-titulo-fila h1', { hasText: 'Remo a una mano' }).waitFor(); await sinDeshacer(); await paso('sesion-alternativa-larga')
+    await hoja().getByRole('button', { name: /Remo a una mano/ }).first().click(); await page.locator('.sesion-titulo-fila h1', { hasText: 'Remo a una mano' }).waitFor(); await paso('sesion-alternativa-larga')
     await page.getByRole('button', { name: 'Terminar aquí' }).first().click(); await page.waitForTimeout(800); await paso('sesion-final-manana')
   })
   await intenta('martes-745', async () => {
@@ -164,10 +187,10 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
   await intenta('martes-830', async () => {
     await escena('2026-10-06T08:30:00', '&frida=torso'); await page.getByText('No fuiste en la mañana').waitFor(); await paso('hoy-martes-830')
     await page.getByRole('button', { name: 'Ya fui' }).click(); await paso('registrar-ya-fui'); await cerrarHoja()
-    await page.getByRole('button', { name: 'Voy en la noche' }).click(); await sinDeshacer(); await paso('hoy-voy-en-la-noche')
+    await page.getByRole('button', { name: 'Voy en la noche' }).click(); await paso('hoy-voy-en-la-noche')
   })
   await intenta('martes-hoy-no', async () => {
-    await escena('2026-10-06T08:30:00', '&frida=torso'); await page.getByRole('button', { name: 'Hoy no' }).click(); await sinDeshacer(); await paso('hoy-martes-hoy-no')
+    await escena('2026-10-06T08:30:00', '&frida=torso'); await page.getByRole('button', { name: 'Hoy no' }).click(); await paso('hoy-martes-hoy-no')
   })
   await intenta('martes-hecha', async () => { await escena('2026-10-06T10:00:00', '&frida=torso&registro=2026-10-06:A'); await page.getByText(/A hecha/).first().waitFor(); await paso('hoy-martes-a-hecha') })
   await intenta('lunes-sin-tiempo', async () => {
@@ -175,11 +198,17 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
   })
   await intenta('martes-noche', async () => {
     await escena('2026-10-06T20:20:00', '&frida=torso'); await page.getByText('No fuiste en la mañana').waitFor(); await paso('hoy-martes-2020-pregunta')
-    await page.getByRole('button', { name: 'Voy en la noche' }).click(); await sinDeshacer(); await paso('hoy-martes-2020')
+    await page.getByRole('button', { name: 'Voy en la noche' }).click(); await paso('hoy-martes-2020')
     await page.getByRole('button', { name: /^Empezar/ }).click(); await page.getByRole('button', { name: 'Saltar' }).click(); await page.getByText(/Serie 1 de/).waitFor(); await paso('sesion-noche')
     await page.getByRole('button', { name: 'Terminar aquí' }).first().click(); await page.waitForTimeout(800); await paso('sesion-cierre-noche')
   })
   await intenta('miercoles', async () => { await escena('2026-10-07T19:00:00', '&frida=torso&registro=2026-10-06:A'); await page.getByText(/Hoy descanso/).waitFor(); await paso('hoy-miercoles-descanso') })
+  await intenta('preguntas-seguidas', async () => {
+    await escena('2026-10-09T07:00:00', '&frida=torso')
+    await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('gym-app:settings')); s.noFui = []; localStorage.setItem('gym-app:settings', JSON.stringify(s)) })
+    await page.goto(base); await page.getByText(/¿Entrenaste el martes/).waitFor()
+    await page.getByRole('button', { name: 'No fui' }).click(); await page.getByText(/¿Entrenaste el jueves/).waitFor(); await paso('hoy-pregunta-con-aviso')
+  })
   await intenta('miercoles-pregunta', async () => {
     await escena('2026-10-07T07:30:00', '&frida=torso')
     await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('gym-app:settings')); s.noFui = []; localStorage.setItem('gym-app:settings', JSON.stringify(s)) })

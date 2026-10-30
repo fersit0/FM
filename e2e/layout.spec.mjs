@@ -10,7 +10,7 @@ const DISPOSITIVOS = [
   { nombre: 'iPhone 15 y 16', w: 393, h: 852, top: 59, bottom: 34, safari: 672 },
   { nombre: 'iPhone 16 Pro Max', w: 430, h: 932, top: 59, bottom: 34, safari: 752 },
 ]
-const SELECTORES = ['.sesion-cabecera', '.sesion-linea', '.sesion-titulo-fila h1', '.sesion-foto', '.sesion-arriba .t-sub', '.sesion-zona', '.sesion-aviso', '.sesion-alternativa', '.sesion .circulo', '.sesion-medio > button', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo', '.inicio-arriba', '.inicio-texto', '.inicio-pie .boton', '.inicio-pie .secundario', '.inicio-pie .dia-botones', '.dia-fila', '.barra']
+const SELECTORES = ['.sesion-cabecera', '.sesion-linea', '.sesion-titulo-fila h1', '.sesion-foto', '.sesion-arriba .t-sub', '.sesion-zona', '.sesion-aviso', '.sesion-alternativa', '.sesion .circulo', '.sesion-medio > button', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo', '.inicio-arriba', '.inicio-texto', '.inicio-pie .boton', '.inicio-pie .secundario', '.inicio-pie .dia-botones', '.dia-fila', '.barra', '.deshacer']
 
 async function revisar(page, nombre) {
   const r = await page.evaluate((sels) => {
@@ -20,6 +20,9 @@ async function revisar(page, nombre) {
       if (b.width === 0 || b.height === 0) continue
       const st = getComputedStyle(el)
       if (st.visibility === 'hidden' || el.closest('.hoja-fondo:not(.abierta)')) continue
+      // con una hoja abierta, lo de atrás queda tapado a propósito: solo cuenta lo de la hoja
+      const hojaAbierta = document.querySelectorAll('.hoja-fondo.abierta')
+      if (hojaAbierta.length && !hojaAbierta[hojaAbierta.length - 1].contains(el)) continue
       const cortado = el.scrollHeight > el.clientHeight + 1 && st.overflowY !== 'visible' && !el.classList.contains('sesion-foto') && !el.classList.contains('sesion-aviso') && !el.classList.contains('sesion-linea') && !el.classList.contains('inicio')
       cajas.push({ s, x: b.left, y: b.top, r: b.right, b: b.bottom, cortado, fuera: b.left < -1 || b.top < -1 || b.right > innerWidth + 1 || b.bottom > innerHeight + 1 })
     }
@@ -33,7 +36,7 @@ async function revisar(page, nombre) {
         const contiene = (p, q) => p.x <= q.x + 1 && p.y <= q.y + 1 && p.r >= q.r - 1 && p.b >= q.b - 1
         if (contiene(a, c) || contiene(c, a)) continue
         const cruza = a.x < c.r - 1 && c.x < a.r - 1 && a.y < c.b - 1 && c.y < a.b - 1
-        if (cruza) problemas.push(`${a.s} se encima con ${c.s}`)
+        if (cruza) problemas.push(`${a.s} (${Math.round(a.y)}–${Math.round(a.b)}) se encima con ${c.s} (${Math.round(c.y)}–${Math.round(c.b)})`)
       }
     }
     // Botón principal: completo, dentro de la pantalla y nadie encima
@@ -50,6 +53,9 @@ async function revisar(page, nombre) {
       if (el.scrollWidth > el.clientWidth + 1) problemas.push(`botón "${texto}" con el texto cortado`)
     }
     if (document.querySelector('.sesion') && document.documentElement.scrollHeight > innerHeight + 1) problemas.push('la sesión hace scroll')
+    // la sesión no recorre: lo que no cabe quedaría cortado abajo
+    const ses = document.querySelector('.sesion')
+    if (ses && ses.scrollHeight > ses.clientHeight + 1) problemas.push(`la sesión no cabe (${ses.scrollHeight} de ${ses.clientHeight})`)
     const h1 = document.querySelector('.sesion-titulo-fila h1')
     if (h1 && h1.scrollWidth > h1.clientWidth + 1) problemas.push('título cortado')
     // la línea de hora tiene que verse completa, con su botón
@@ -101,8 +107,8 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await revisar(page, 'hoy prefiero')
     await page.locator('.hoja-fondo.abierta').getByRole('button', { name: /^C:/ }).click()
     await expect(page.locator('h1')).toContainText('C:')
-    // el aviso de 5 s con Deshacer flota sobre el pie; se revisa la pantalla ya sin él
-    await expect(page.locator('.deshacer')).toHaveCount(0, { timeout: 8000 })
+    // con el aviso de Deshacer a la vista ("Hoy C."): ocupa su lugar y no tapa nada
+    await expect(page.locator('.deshacer')).toBeVisible()
     await page.waitForTimeout(500)
     await revisar(page, 'inicio')
     await page.getByRole('button', { name: /^Empezar/ }).click()

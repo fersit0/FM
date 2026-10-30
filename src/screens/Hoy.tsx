@@ -246,16 +246,24 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   }
   // las preguntas y la pantalla de Frida van primero; luego "¿Vas en la noche?"; luego lo del día
   const pantallaClub = !preguntaFrida && !pregunta && !pantallaFrida && !vasNoche
-  // el pez nunca sobre el círculo rojo: con la tira el texto sube y, si ya no cabe debajo del círculo, no sale
+  // el círculo rojo nunca queda debajo del texto: si el texto le queda cerca (pantallas bajas, línea larga), se hace más
+  // chico y, si no basta, sube; sigue arriba a la derecha, cortado. El texto no depende del círculo, así que no brinca.
   const textoRef = useRef<HTMLDivElement>(null)
-  const [pezCabe, setPezCabe] = useState(true)
+  const [textoArriba, setTextoArriba] = useState<number | null>(null)
   useLayoutEffect(() => {
     const el = textoRef.current
-    if (el) setPezCabe(el.getBoundingClientRect().top - 30 >= 0.11 * H + 0.31 * W + 4)
+    if (el && el.offsetTop !== textoArriba) setTextoArriba(el.offsetTop)
   })
-  // el renglón le deja su lugar aunque no salga, para que esconderlo no mueva el texto (y no vuelva a caber y a salir)
+  const circulo = useMemo(() => {
+    let r = 0.31 * W, cy = 0.11 * H
+    const tope = textoArriba === null ? Infinity : textoArriba - 12
+    if (cy + r > tope) { r = Math.max(0.2 * W, tope - cy); if (cy + r > tope) cy = tope - r }
+    return { r, cy }
+  }, [W, H, textoArriba])
+  // el pez nunca sobre el círculo: si ya no cabe entre el círculo y el texto, no sale. El renglón le deja su lugar aunque
+  // no salga, para que esconderlo no mueva el texto (y no vuelva a caber y a salir)
   const lugarPez = pantallaClub && modo === 'club' && versionAuto !== 'completa' && !sesionEnCurso
-  const conPez = lugarPez && pezCabe
+  const conPez = lugarPez && textoArriba !== null && textoArriba - 30 >= circulo.cy + circulo.r + 4
   const limNoche = limites(duraciones, topeDe(sumarDias(ahora, 0), settings, 'noche') ?? minutosDe(settings.ultimaPesaNoche))
   // con la hora de salida, mientras no haya llegado; ya en la tarde, lo que alcanza si empieza ya
   const siSaleHoy = settings.horaSalida ? estadoSiSalgo(settings.horaSalida, settings, duraciones, ahora) : null
@@ -270,7 +278,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
 
   return (
     <div className="pantalla inicio">
-      <Circulo d={0.62 * W} style={{ position: 'absolute', left: 0.83 * W, top: 0.11 * H, transform: 'translate(-50%, -50%)' }} />
+      <Circulo d={2 * circulo.r} style={{ position: 'absolute', left: 0.83 * W, top: circulo.cy, transform: 'translate(-50%, -50%)' }} />
       <div className="inicio-arriba">
         <span />
         <BotonTexto onClick={onAjustes}>Ajustes</BotonTexto>
@@ -325,6 +333,8 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
       </div>
 
       <div className="inicio-pie">
+        {/* el aviso de Deshacer, arriba de los botones: los empuja hacia arriba, nunca los tapa */}
+        <div className="aviso-lugar de-pantalla" data-al-fondo />
         {versionNueva && <button className="inicio-linea-roja" onClick={() => window.fmActualizar?.()}>Hay versión nueva. Toca para actualizar.</button>}
         {preguntaFrida && (
           <>

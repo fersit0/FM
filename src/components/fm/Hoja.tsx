@@ -16,6 +16,8 @@ export function Hoja({ abierta, titulo, altura = 'media', onCerrar, children, pi
         {altura === 'completa' ? <BotonTexto className="hoja-cerrar" onClick={onCerrar}>Cerrar</BotonTexto> : <div className="hoja-asa" aria-hidden="true" />}
         {titulo && <h2 className="t-ejercicio">{titulo}</h2>}
         <div className="hoja-cuerpo">{children}</div>
+        {/* aquí va el aviso de Deshacer de lo que se haga en la hoja: ocupa su lugar y no tapa nada */}
+        <div className="aviso-lugar" />
         {pie && <div className="hoja-pie">{pie}</div>}
       </section>
     </div>
