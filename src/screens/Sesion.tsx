@@ -475,7 +475,7 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
         {esAlternativa && <p className="t-nota tenue sesion-alternativa">{'caso' in item && <span className="caso">{item.caso}. </span>}<button onClick={onVolverOriginal}>Volver al original</button></p>}
         {aviso && <p className="t-cuerpo tenue sesion-aviso">{aviso}</p>}
         {avisoAprox && <p className="t-cuerpo tenue sesion-aviso">{avisoAprox}</p>}
-        {fotoChica !== item.id && <div className="sesion-foto" ref={fotoRef}><Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="toque" /></div>}
+        {fotoChica !== item.id && <div className="sesion-foto" ref={fotoRef}><Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="gif" /></div>}
       </div>
       <div className="sesion-medio" ref={medio}>
         {conPeso && <button className="mas-menos" aria-label={`Menos ${incremento} ${unidad}`} onClick={() => mover(-1)}><svg viewBox="0 0 28 28"><path d="M6 14h16" /></svg></button>}

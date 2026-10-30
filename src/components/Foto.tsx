@@ -9,10 +9,10 @@ function urlsDe(clave: string, propia?: FotoEjercicio): { a: string; b?: string;
 
 /**
  * Foto del ejercicio (RUTINA-FINAL.md, 8): propia primero, luego base. Recorte 4:3 con encuadre por ejercicio.
- * `modo`: 'toque' alterna inicio y final al tocar (sesión; las dos imágenes ya están cargadas, así que no brinca);
+ * `modo`: 'gif' alterna inicio y final sola cada segundo, como gif (sesión; las dos imágenes ya están cargadas, así que no brinca);
  * 'par' muestra las dos lado a lado con etiqueta (ficha); 'chica' miniatura. Si una imagen no carga, no se muestra nada roto.
  */
-export function Foto({ clave, ejercicioId, propias, nombre, modo = 'toque', onClick }: { clave: string; ejercicioId: string; propias: FotoEjercicio[]; nombre: string; modo?: 'toque' | 'par' | 'chica'; onClick?: () => void }) {
+export function Foto({ clave, ejercicioId, propias, nombre, modo = 'gif', onClick }: { clave: string; ejercicioId: string; propias: FotoEjercicio[]; nombre: string; modo?: 'gif' | 'par' | 'chica'; onClick?: () => void }) {
   const propia = propias.find((f) => f.ejercicioId === ejercicioId)
   const [urls, setUrls] = useState<ReturnType<typeof urlsDe>>(null)
   const [cual, setCual] = useState<0 | 1>(0)
@@ -24,6 +24,12 @@ export function Foto({ clave, ejercicioId, propias, nombre, modo = 'toque', onCl
     setCual(0)
     return () => { if (propia && u) { URL.revokeObjectURL(u.a); if (u.b) URL.revokeObjectURL(u.b) } }
   }, [propia, clave])
+  const dos = !!urls?.b
+  useEffect(() => {
+    if (modo !== 'gif' || !dos) return
+    const t = setInterval(() => setCual((c) => (c === 0 ? 1 : 0)), 1000)
+    return () => clearInterval(t)
+  }, [modo, dos, urls])
   if (!urls || fallo) return null
   const pos = ENCUADRE[clave] ?? '50% 35%'
   const img = (src: string, alt: string, lazy = true, extra?: React.CSSProperties) => <img src={src} alt={alt} width={720} height={540} loading={lazy ? 'lazy' : 'eager'} decoding="async" onError={() => setFallo(true)} style={{ objectPosition: pos, ...extra }} />
@@ -40,14 +46,12 @@ export function Foto({ clave, ejercicioId, propias, nombre, modo = 'toque', onCl
       </div>
     )
   }
-  const dos = !!urls.b
-  const toque = () => (onClick ? onClick() : dos && setCual((c) => (c === 0 ? 1 : 0)))
-  const Tag = onClick || dos ? 'button' : 'div'
+  const Tag = onClick ? 'button' : 'div'
   return (
-    <Tag className="foto ficha-foto" onClick={toque} aria-label={onClick ? `${nombre}: ver técnica` : `${nombre}, ${cual === 0 ? 'inicio' : 'final'}`}>
+    <Tag className="foto ficha-foto" onClick={onClick} role={onClick ? undefined : 'img'} aria-label={onClick ? `${nombre}: ver técnica` : `${nombre}, inicio y final`}>
       {img(urls.a, `${nombre}, inicio`, false, dos && cual === 1 ? { visibility: 'hidden' } : undefined)}
       {dos && <span className="foto-b" aria-hidden={cual !== 1}>{img(urls.b!, `${nombre}, final`, false, cual === 0 ? { visibility: 'hidden' } : undefined)}</span>}
-      {dos && <span className="foto-etiqueta">{cual === 0 ? 'Inicio' : 'Final'}{onClick ? '' : ' · toca para cambiar'}</span>}
+      {dos && <span className="foto-etiqueta">{cual === 0 ? 'Inicio' : 'Final'}</span>}
       {ref}
     </Tag>
   )
