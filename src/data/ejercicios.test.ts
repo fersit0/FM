@@ -8,7 +8,7 @@ describe('sesiones por zona, sin pares (RUTINA-FINAL.md, 4, 5 y 5c)', () => {
     const a = listaDe('A')
     expect(ids(a)).toEqual(['press-inclinado', 'aperturas-inclinadas', 'laterales', 'triceps-cabeza', 'goblet', 'puente-gluteo', 'crunch'])
     expect(a.map((e) => e.zona)).toEqual(['bancos', 'bancos', 'bancos', 'bancos', 'terraza', 'terraza', 'terraza'])
-    expect(a.map((e) => e.series)).toEqual([3, 2, 3, 2, 3, 2, 2])
+    expect(a.map((e) => e.series)).toEqual([4, 2, 4, 2, 3, 2, 2])
     expect(a.map((e) => `${e.repsMin}-${e.repsMax}`)).toEqual(['8-10', '12-15', '12-20', '10-12', '10-12', '12-15', '15-20'])
     expect(a.map((e) => e.descansoSeg)).toEqual([90, 60, 60, 60, 90, 60, 45])
     expect(rutaDe(a)).toEqual(['bancos', 'terraza'])
@@ -50,6 +50,9 @@ describe('sesiones por zona, sin pares (RUTINA-FINAL.md, 4, 5 y 5c)', () => {
     expect(ids(listaDe('B', 'corta'))).toEqual(['press-plano', 'laterales', 'jalon-cerrado'])
     expect(ids(listaDe('C', 'corta'))).toEqual(['jalon', 'press-militar', 'laterales'])
     for (const s of ['A', 'B', 'C'] as const) expect(listaDe(s, 'corta').every((e) => e.series === 3), s).toBe(true)
+    // también al cambiar por una alternativa: las de press inclinado y laterales van a 4 solo en la completa de A
+    for (const s of ['A', 'B', 'C'] as const) expect(listaDe(s, 'corta').flatMap((e) => e.alternativas).every((a) => a.series <= 3), s).toBe(true)
+    expect(listaDe('A').find((e) => e.id === 'laterales')!.alternativas[0].series).toBe(4)
     expect(rutaDe(listaDe('A', 'corta'))).toEqual(['bancos', 'terraza'])
     expect(rutaDe(listaDe('B', 'corta'))).toEqual(['bancos', 'poleas'])
     expect(rutaDe(listaDe('C', 'corta'))).toEqual(['poleas', 'bancos'])
@@ -63,7 +66,8 @@ describe('sesiones por zona, sin pares (RUTINA-FINAL.md, 4, 5 y 5c)', () => {
     expect(CALENTAMIENTO.minCorta).toBe(5)
     expect(CIERRE.minCompleta).toBe(10)
     expect(CIERRE.minCorta).toBe(5)
-    expect(CIERRE.saco).toMatch(/1 min fuerte y 1 min suave, cinco veces/)
+    expect(CIERRE.saco(10)).toMatch(/1 min fuerte y 1 min suave, cinco veces/)
+    expect(CIERRE.saco(5)).toBe('Saco: 1 min fuerte y 1 min suave, hasta los 5.')
   })
   it('el jalón cerrado y el ancho son la misma máquina; los dos remos de B y C son el mismo id', () => {
     expect(buscarEjercicio('jalon-cerrado')!.ubicar).toMatch(/misma máquina/)

@@ -23,7 +23,7 @@ test('el lunes Hoy muestra "Hoy vas con Frida"; "Fui con Frida" la registra sin 
   await page.goto('')
   await expect(page.locator('h1')).toContainText('A: Pecho y pierna')
   await expect(page.getByText(/Hoy toca A · la última fue B el domingo 13 · Semana: 1 de 3/)).toBeVisible()
-  await expect(page.getByText(/7 ejercicios, unos 58 min · completa/)).toBeVisible()
+  await expect(page.getByText(/7 ejercicios, unos 62 min · completa/)).toBeVisible()
 })
 
 test('movida al miércoles: el martes toca A porque Frida es mañana, y el miércoles Hoy muestra Frida', async ({ page }) => {

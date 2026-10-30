@@ -15,9 +15,13 @@
 .inicio-semana { margin-left: 6px; }
 /* hasta dos renglones: "Semana: X de 3" va al final y no se puede perder */
 .inicio-linea { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.sin-partir { white-space: nowrap; }
 /* con el pez (72 px, arriba a la derecha) la línea le deja su lugar y el título empieza debajo de él */
 .inicio-linea.con-pez { padding-right: 84px; min-height: 44px; }
 .inicio-nota { font-size: 20px; font-weight: 400; line-height: 1.3; text-align: left; }
+/* la nota de Frida se ve como campo: una línea abajo, como peso y cintura */
+.inicio-nota-frida { width: 100%; border-bottom: 2px solid var(--separador); font-size: 17px; }
+.inicio-nota-frida::placeholder { color: var(--texto-2); }
 /* Botones de un día: A, B, Frida, No fui */
 .dia-botones { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .dia-boton { min-height: 44px; min-width: 44px; padding: 0 16px; border-radius: 999px; box-shadow: inset 0 0 0 2px var(--texto); color: var(--texto); font-size: 17px; font-weight: 600; transition: background-color 150ms, color 150ms; }
@@ -29,8 +33,8 @@
 .inicio-aldia .inicio-pie { margin-top: auto; }
 /* el día ("mar 6") nunca se encoge; si no cabe todo, los botones bajan al renglón de abajo */
 .dia-fila .fila-texto { flex: none; }
-.dia-fila .dia-botones { justify-content: flex-start; gap: 6px; }
-.dia-fila .dia-boton { padding: 0 10px; font-size: 15px; min-height: 40px; min-width: 40px; }
+.dia-fila .dia-botones { justify-content: flex-start; gap: 4px; }
+.dia-fila .dia-boton { padding: 0 9px; font-size: 15px; min-height: 44px; min-width: 44px; }
 @media (max-height: 700px) { .inicio { gap: 10px; } .t-inicio { font-size: 44px; } .inicio-pie { gap: 8px; } }
 
 /* Ficha */
@@ -40,6 +44,14 @@
 .linea { width: 100%; height: auto; display: block; }
 .linea-eje { fill: var(--texto-2); font-size: 13px; font-family: var(--sans); }
 .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Hoja de alternativas: el nombre y "Usar siempre esta" con 44 de alto sin separar los renglones */
+.alt-boton { text-align: left; white-space: normal; padding: 13px 0; margin: -13px 0; }
+
+/* Serie editable: el nombre completo arriba, peso, reps y Borrar abajo a la derecha */
+.serie-editable { flex-wrap: wrap; gap: 4px 8px; }
+.serie-editable .fila-texto { flex-basis: 100%; }
+.serie-editable-campos { display: flex; gap: 8px; align-items: center; margin-left: auto; }
 
 /* Historial */
 .historial-cifra { display: flex; flex-direction: column; gap: 4px; }
@@ -59,7 +71,8 @@
 .sesion-titulo-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .sesion-titulo-fila h1 { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .sesion-aviso { padding-top: 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
-.sesion-aviso button, .sesion-alternativa button { color: inherit; text-decoration: underline; text-underline-offset: 3px; font: inherit; padding: 10px 4px; margin: -10px -4px; }
+/* botones dentro de un renglón de texto: 44 de alto sin mover el renglón */
+.sesion-aviso button, .sesion-alternativa button, .sesion-zona button { color: inherit; text-decoration: underline; text-underline-offset: 3px; font: inherit; padding: 13px 4px; margin: -13px -4px; }
 .sesion-ruta { text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .sesion-ruta .actual { color: var(--texto); font-weight: 600; }
 .sesion-linea { display: block; width: 100%; text-align: left; white-space: normal; font: inherit; font-size: 15px; line-height: 1.3; }
@@ -77,11 +90,12 @@ button.sesion-linea { min-height: 44px; padding: 4px 0; }
 .circulo-equivalencia { opacity: 0.7; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .resumen-cifras { display: flex; justify-content: space-between; }
 .resumen-cifra { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.deshacer { position: fixed; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 96px); z-index: 25; background: var(--tinta); color: var(--piedra); padding: 10px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--piedra); }
+.deshacer { position: fixed; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 96px); z-index: 35; background: var(--tinta); color: var(--piedra); padding: 10px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--piedra); }
 .deshacer button { color: var(--rojo); font-weight: 700; font-size: 17px; min-height: 44px; padding: 0 8px; }
 body[data-pantalla='descanso'] .deshacer { background: var(--piedra); color: var(--cobalto); box-shadow: none; }
-/* calentamiento y cierre: el botón grande va abajo y "Terminar aquí" llega aquí con su Deshacer; el aviso sube para no taparlo */
-body[data-pantalla='calentamiento'] .deshacer { top: calc(var(--safe-top) + 8px); bottom: auto; }
+/* en la sesión abajo están los controles (reps, Serie hecha, +15 s, las cifras del resumen) y las hojas: el aviso va arriba, debajo de la
+   cabecera (✕, Terminar aquí) y del Cerrar de las hojas completas, para que tocar esos nunca toque Deshacer */
+.sesion .deshacer { top: calc(var(--safe-top) + 60px); bottom: auto; }
 /* Pantallas cortas (iPhone SE instalado, 667): foto 16:9 compacta, menos aire */
 @media (max-height: 700px) {
   .sesion-foto .foto { aspect-ratio: 16 / 9; max-height: min(12dvh, 100%); }

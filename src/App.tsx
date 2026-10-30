@@ -61,7 +61,8 @@ export default function App() {
   }, [datos, setActiva])
   const cerrarAviso = useCallback(() => setAviso(null), [])
 
-  if (!datos.listo) return null
+  // hasta decidir si se retoma la sesión, nada: así no se asoma Hoy un instante antes de volver a la sesión
+  if (!datos.listo || !retomada) return null
   if (datos.necesitaMigracion) return <Migracion datos={datos} />
 
   if (enSesion && sesionEnCurso) {

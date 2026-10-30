@@ -136,7 +136,9 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   else linea = tiempo.detalle
   const nombreVersion = versionAuto === 'casa' ? 'corta de todas formas' : versionAuto
   const pantallaFrida = !sesionEnCurso && !alDia && !preguntaFrida && !pregunta && frida.hoyEsFrida && !verSesionHoy
-  const lineaHoy = `Hoy toca ${toca}${eleccion.extra ? `, extra${domingo ? ' y opcional' : ''}` : ''} · ${textoUltima(ultima, DIAS_NOMBRE)} · Semana: ${semana.hechas} de ${semana.meta}`
+  // "Semana: 2 de 3" nunca se parte entre renglones
+  const textoSemana = <span className="sin-partir">Semana: {semana.hechas} de {semana.meta}</span>
+  const lineaHoy = `Hoy toca ${toca}${eleccion.extra ? `, extra${domingo ? ' y opcional' : ''}` : ''} · ${textoUltima(ultima, DIAS_NOMBRE)} · `
   const tituloSesion = sesionEnCurso ? (sesionEnCurso.tipo === 'CASA' ? 'Casa' : sesionEnCurso.tipo === 'FRIDA' ? 'Frida' : `${sesionEnCurso.tipo}: ${NOMBRE_SESION[sesionEnCurso.tipo]}`) : `${toca}: ${NOMBRE_SESION[toca]}`
 
   if (alDia && !sesionEnCurso) return <PonAlDia datos={datos} ahora={ahora} />
@@ -176,7 +178,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
           </>
         ) : (
           <>
-            <p className={`t-nota tenue inicio-linea${versionAuto !== 'completa' && !sesionEnCurso ? ' con-pez' : ''}`}>{sesionEnCurso ? `Sesión a medias · Semana: ${semana.hechas} de ${semana.meta}` : lineaHoy}</p>
+            <p className={`t-nota tenue inicio-linea${versionAuto !== 'completa' && !sesionEnCurso ? ' con-pez' : ''}`}>{sesionEnCurso ? 'Sesión a medias · ' : lineaHoy}{textoSemana}</p>
             {versionAuto !== 'completa' && !sesionEnCurso && <Pez expresion="picaro" tamano={72} style={{ right: 0, top: -30 }} />}
             <h1 className="t-inicio">{tituloSesion}</h1>
             <div style={{ position: 'relative' }}>
@@ -229,7 +231,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
         ) : null}
       </div>
 
-      {accion && <Deshacer texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
+      {accion && <Deshacer clave={accion} texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
 
       <Hoja abierta={hojaLista} titulo={`${toca}: ${NOMBRE_SESION[toca]}`} onCerrar={() => setHojaLista(false)}>
         <p className="t-nota tenue">{rutaDe(lista).map((z) => ZONA_NOMBRE[z]).join(' → ')}</p>

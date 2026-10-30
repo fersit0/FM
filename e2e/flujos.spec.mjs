@@ -151,8 +151,21 @@ test('registrar un día pasado', async ({ page }) => {
 })
 
 test('exportar e importar respaldo', async ({ page }) => {
+  // sin hoja de compartir (WebKit de escritorio la ofrece y nunca se cierra): así baja como archivo
+  await page.evaluate(() => { Object.defineProperty(navigator, 'canShare', { value: undefined }) })
   await registrar(page, null, 'A')
   await expect(page.locator('.punto.hecho')).toHaveCount(2)
+  // peso y cintura también viajan en el respaldo
+  await page.getByRole('button', { name: 'Historial' }).click()
+  await page.getByRole('button', { name: /^Peso corporal/ }).click()
+  await page.getByLabel('Peso corporal en kilos').fill('81.5')
+  await page.locator('.hoja-fondo.abierta').getByRole('button', { name: 'Guardar' }).click()
+  await page.locator('.hoja-fondo.abierta').getByText('Cerrar').click()
+  await page.getByRole('button', { name: /^Cintura/ }).click()
+  await page.getByLabel('Cintura en centímetros').fill('88')
+  await page.locator('.hoja-fondo.abierta').getByRole('button', { name: 'Guardar' }).click()
+  await page.locator('.hoja-fondo.abierta').getByText('Cerrar').click()
+  await page.getByRole('button', { name: 'Hoy' }).click()
   await page.getByRole('button', { name: 'Ajustes' }).click()
   const descarga = page.waitForEvent('download')
   await page.getByText('Exportar respaldo').click()
@@ -169,6 +182,8 @@ test('exportar e importar respaldo', async ({ page }) => {
   await expect(page.getByText('Respaldo importado')).toBeVisible()
   await page.getByRole('button', { name: 'Historial' }).click()
   await expect(page.locator('.punto.hecho')).toHaveCount(2)
+  await expect(page.getByRole('button', { name: /^Peso corporal/ })).toContainText('81.5 kg')
+  await expect(page.getByRole('button', { name: /^Cintura/ })).toContainText('88 cm')
 })
 
 test('actualizar versión sin perder datos', async ({ page }) => {

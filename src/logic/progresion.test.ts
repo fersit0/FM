@@ -37,6 +37,14 @@ describe('doble progresión', () => {
     ]
     expect(sugerirPeso(logs, 'press-plano', 10).tipo).toBe('bajar')
   })
+  it('compara reps por serie: los laterales con 4 series en A y 3 en B no cuentan como bajada', () => {
+    const logs = [
+      ...sesionDe('a', '2026-09-07', 'laterales', 5, [15, 15, 15, 15]),
+      ...sesionDe('b', '2026-09-10', 'laterales', 5, [15, 15, 15]),
+      ...sesionDe('a2', '2026-09-14', 'laterales', 5, [15, 15, 14]),
+    ]
+    expect(sugerirPeso(logs, 'laterales', 20, 'peso', 12).tipo).toBe('repetir')
+  })
   it('una sola bajada no es suficiente para bajar', () => {
     const logs = [
       ...sesionDe('s1', '2026-09-07', 'press-plano', 16, [8, 8, 7]),

@@ -30,6 +30,11 @@ function pesoDe(sets: SetLog[]): number | null {
   return Math.max(...conPeso.map((s) => s.pesoKg as number))
 }
 
+/** reps promedio por serie: compara sesiones con distinto número de series (laterales: 4 en A, 3 en B y C) */
+function repsPorSerie(sets: SetLog[]): number {
+  return sets.length ? repsTotal(sets) / sets.length : 0
+}
+
 function repsTotal(sets: SetLog[]): number {
   return sets.reduce((acc, s) => acc + s.reps, 0)
 }
@@ -77,7 +82,7 @@ export function sugerirPeso(
   if (sesiones.length >= 3) {
     const [s1, s2, s3] = sesiones.slice(-3)
     const mismoPeso = pesoDe(s1) === peso && pesoDe(s2) === peso && peso !== null
-    if (mismoPeso && repsTotal(s2) < repsTotal(s1) && repsTotal(s3) < repsTotal(s2)) {
+    if (mismoPeso && repsPorSerie(s2) < repsPorSerie(s1) && repsPorSerie(s3) < repsPorSerie(s2)) {
       return { tipo: 'bajar', peso, texto: 'Baja un escalón.' }
     }
   }

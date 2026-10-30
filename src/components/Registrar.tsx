@@ -4,7 +4,7 @@ import type { Sesion, SesionTipo } from '../data/tipos'
 import { armarRegistro } from '../logic/registro'
 import { NOMBRE_SESION } from '../data/ejercicios'
 import { claveFecha, DIAS_NOMBRE, desdeClave } from '../logic/fechas'
-import { Hoja, Grupo, Fila, BotonTexto, BotonPrincipal } from './fm'
+import { Hoja, Grupo, Fila, BotonPrincipal } from './fm'
 
 export type Respuesta = 'A' | 'B' | 'C' | 'FRIDA' | 'no'
 const ETIQUETA: Record<Respuesta, string> = { A: 'A', B: 'B', C: 'C', FRIDA: 'Frida', no: 'No fui' }
@@ -72,7 +72,7 @@ export function RegistrarHoja({ datos, ahora, abierta, onCerrar, onGuardado }: {
         {tipo === 'FRIDA' && <Fila texto="Nota"><input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Opcional" aria-label="Nota" maxLength={80} style={{ width: 140, textAlign: 'right', borderBottom: '1px solid var(--separador)' }} /></Fila>}
       </Grupo>
       {aviso && <p className="t-cuerpo">{aviso}</p>}
-      {pendiente ? <BotonPrincipal onClick={cambiar}>Cambiar a {tipo}</BotonPrincipal> : <BotonTexto onClick={() => guardar()}>Guardar</BotonTexto>}
+      {pendiente ? <BotonPrincipal onClick={cambiar}>Cambiar a {tipo}</BotonPrincipal> : <BotonPrincipal onClick={() => guardar()}>Guardar</BotonPrincipal>}
     </Hoja>
   )
 }

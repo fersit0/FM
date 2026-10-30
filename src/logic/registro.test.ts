@@ -35,9 +35,9 @@ describe('cierre automático (2.2)', () => {
   })
   it('con la mayoría de las series queda completa; en corta, corta', () => {
     const s = sesion('2026-10-06', 'A', false)
-    expect(seriesPlaneadas(s)).toBe(17)
+    expect(seriesPlaneadas(s)).toBe(19)
     expect(comoQuedo(s, series(s.id, 12))).toBe('completa')
-    expect(comoQuedo(s, series(s.id, 8))).toBe('parcial')
+    expect(comoQuedo(s, series(s.id, 9))).toBe('parcial')
     const c = sesion('2026-10-06', 'B', false, { version: 'corta' })
     expect(seriesPlaneadas(c)).toBe(9)
     expect(comoQuedo(c, series(c.id, 5))).toBe('corta')

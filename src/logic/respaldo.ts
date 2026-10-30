@@ -1,5 +1,5 @@
 // Exportar e importar respaldo JSON. Puro salvo la conversión de blobs.
-import type { Sesion, SetLog, Bodyweight, Settings } from '../data/tipos'
+import type { Sesion, SetLog, Bodyweight, Settings, Cintura } from '../data/tipos'
 import { SETTINGS_DEFAULT } from '../data/tipos'
 
 export interface Respaldo {
@@ -10,6 +10,8 @@ export interface Respaldo {
   sesiones: Sesion[]
   sets: SetLog[]
   peso: Bodyweight[]
+  /** desde el 27 oct: los respaldos de antes no la traen */
+  cintura?: Cintura[]
   fotos: { fecha: string; tipo: string; base64: string }[]
   fotosEjercicio?: { ejercicioId: string; fecha: string; tipo: string; base64: string; base64b?: string }[]
 }
@@ -19,6 +21,7 @@ export function armarRespaldo(datos: {
   sesiones: Sesion[]
   sets: SetLog[]
   peso: Bodyweight[]
+  cintura?: Cintura[]
   fotos: { fecha: string; tipo: string; base64: string }[]
   fotosEjercicio?: { ejercicioId: string; fecha: string; tipo: string; base64: string; base64b?: string }[]
 }): Respaldo {
@@ -47,6 +50,7 @@ export function leerRespaldo(texto: string): Respaldo {
       .filter((s) => s && typeof s.sessionId === 'string' && typeof s.exerciseId === 'string')
       .map((s) => ({ ...s, id: undefined })),
     peso: lista<Bodyweight>(r.peso).filter((p) => p && typeof p.fecha === 'string' && typeof p.kg === 'number'),
+    cintura: lista<Cintura>(r.cintura).filter((c) => c && typeof c.fecha === 'string' && typeof c.cm === 'number'),
     fotos: lista<Respaldo['fotos'][number]>(r.fotos).filter((f) => f && typeof f.fecha === 'string' && typeof f.base64 === 'string'),
     fotosEjercicio: lista<NonNullable<Respaldo['fotosEjercicio']>[number]>(r.fotosEjercicio).filter((f) => f && typeof f.ejercicioId === 'string' && typeof f.base64 === 'string'),
   }

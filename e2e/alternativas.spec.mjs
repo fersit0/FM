@@ -186,7 +186,7 @@ test('recorte en el camino: con la proyección pasada de la última pesa quita a
   await limpiar(page, 'hecha')
   await reloj(page, '2026-10-07T20:10:00')
   await page.goto('')
-  await expect(page.getByText(/unos 58 min · completa/)).toBeVisible()
+  await expect(page.getByText(/unos 62 min · completa/)).toBeVisible()
   await page.getByRole('button', { name: /^Empezar/ }).click()
   await page.getByRole('button', { name: 'Saltar' }).click()
   await reloj(page, '2026-10-07T20:50:00')
