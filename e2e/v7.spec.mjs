@@ -19,6 +19,24 @@ async function escena(page, hora, params = '') {
   await page.goto('')
   await expect(page.locator('.pantalla.inicio')).toBeVisible()
 }
+/** Renglones de texto de Hoy que se enciman con el círculo rojo (se mide cada renglón, no la caja del párrafo) */
+async function encimaCirculo(page) {
+  return page.evaluate(() => {
+    const c = document.querySelector('.pantalla.inicio > .circulo').getBoundingClientRect()
+    const cx = (c.left + c.right) / 2, cy = (c.top + c.bottom) / 2, r = c.width / 2
+    const out = []
+    const caminar = document.createTreeWalker(document.querySelector('.inicio-texto'), NodeFilter.SHOW_TEXT)
+    for (let n = caminar.nextNode(); n; n = caminar.nextNode()) {
+      if (!n.textContent.trim()) continue
+      const rg = document.createRange(); rg.selectNodeContents(n)
+      for (const b of rg.getClientRects()) {
+        const x = Math.max(b.left, Math.min(cx, b.right)), y = Math.max(b.top, Math.min(cy, b.bottom))
+        if (Math.hypot(x - cx, y - cy) < r - 1) out.push(n.textContent.trim().slice(0, 40))
+      }
+    }
+    return [...new Set(out)]
+  })
+}
 async function irA(page, hora) {
   await reloj(page, hora)
   await page.goto('')
@@ -153,9 +171,19 @@ test('cambiar Frida a pierna en Historial recalcula la semana y Tu semana: la A 
 
 test('jueves: con 2 de 3, el aviso de Pesas extra para el viernes; con 3 de 3, semana completa', async ({ page }) => {
   await escena(page, '2026-10-08T21:30:00', '&frida=torso&registro=2026-10-06:A')
-  await expect(page.getByText(/Vas en 2 de 3\. Mañana viernes toca B: prende tus alarmas de Pesas extra\./)).toBeVisible()
+  // después de la última pesa lo principal es mañana, sin Empezar ni texto repetido, y nada encima del círculo rojo
+  await expect(page.locator('h1')).toHaveText('Mañana: B')
+  await expect(page.locator('.inicio-nota')).toHaveText('Vas en 2 de 3. Prende tus alarmas de Pesas extra.')
+  await expect(page.getByText(/Ya pasó la última pesa · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Empezar|^Hoy prefiero/ })).toHaveCount(0)
+  await expect(page.getByText(/Mañana viernes toca/)).toHaveCount(0)
+  expect(await encimaCirculo(page)).toEqual([])
   await escena(page, '2026-10-08T09:00:00', '&frida=torso&registro=2026-10-06:A,2026-10-08:B')
   await expect(page.getByText(/Semana completa\. Mañana viernes, sauna\./)).toBeVisible()
+  // ya en la noche: "Mañana: sauna"
+  await irA(page, '2026-10-08T21:30:00')
+  await expect(page.locator('h1')).toHaveText('Mañana: sauna')
+  await expect(page.locator('.inicio-nota')).toHaveText('Semana completa.')
   // el viernes, con la semana completa: sauna, con opción de extra
   await irA(page, '2026-10-09T07:00:00')
   await expect(page.getByText(/Semana completa · hoy sauna/)).toBeVisible()

@@ -60,6 +60,22 @@ function revisar() {
     }
     if (el.scrollWidth > el.clientWidth + 1) out.push(`botón "${texto}" con el texto cortado`)
   }
+  // en Hoy, ningún renglón de texto encima del círculo rojo
+  const circulo = document.querySelector('.pantalla.inicio > .circulo')
+  const textoHoy = document.querySelector('.inicio-texto')
+  if (circulo && textoHoy && !hoja) {
+    const c = circulo.getBoundingClientRect()
+    const cx = (c.left + c.right) / 2, cy = (c.top + c.bottom) / 2, r = c.width / 2
+    const caminar = document.createTreeWalker(textoHoy, NodeFilter.SHOW_TEXT)
+    for (let n = caminar.nextNode(); n; n = caminar.nextNode()) {
+      if (!n.textContent.trim()) continue
+      const rg = document.createRange(); rg.selectNodeContents(n)
+      for (const b of rg.getClientRects()) {
+        const x = Math.max(b.left, Math.min(cx, b.right)), y = Math.max(b.top, Math.min(cy, b.bottom))
+        if (Math.hypot(x - cx, y - cy) < r - 1) { out.push(`texto encima del círculo: ${n.textContent.trim().slice(0, 40)}`); break }
+      }
+    }
+  }
   // Tu semana: los siete días completos dentro del ancho
   const tira = document.querySelector('.tira')
   if (tira && visible(tira)) {
@@ -169,7 +185,7 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
     await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('gym-app:settings')); s.noFui = []; localStorage.setItem('gym-app:settings', JSON.stringify(s)) })
     await page.goto(base); await page.getByText(/¿Entrenaste el/).waitFor(); await paso('hoy-pregunta-dia')
   })
-  await intenta('jueves-930', async () => { await escena('2026-10-08T21:30:00', '&frida=torso&registro=2026-10-06:A'); await page.getByText(/prende tus alarmas de Pesas extra/).waitFor(); await paso('hoy-jueves-930-aviso') })
+  await intenta('jueves-930', async () => { await escena('2026-10-08T21:30:00', '&frida=torso&registro=2026-10-06:A'); await page.getByText(/Prende tus alarmas de Pesas extra/).waitFor(); await paso('hoy-jueves-930-aviso') })
   await intenta('viernes-completa', async () => { await escena('2026-10-09T07:00:00', '&frida=torso&registro=2026-10-06:A,2026-10-08:B'); await page.getByText(/Semana completa/).first().waitFor(); await paso('hoy-viernes-completa') })
   await intenta('sabado', async () => { await escena('2026-10-10T11:00:00', '&frida=torso&registro=2026-10-06:A'); await page.getByText(/Sábado libre/).waitFor(); await paso('hoy-sabado') })
   await intenta('domingo', async () => { await escena('2026-10-11T11:00:00', '&frida=pierna&registro=2026-10-06:A'); await page.getByText(/Hoy toca/).waitFor(); await paso('hoy-domingo-rescate') })

@@ -52,7 +52,7 @@ await page.getByText(/Serie 1 de/).waitFor()
 await foto('v7-sesion-a-sin-pierna')
 // Hoy jueves 9:30 pm con el aviso del viernes: Frida torso el lunes y A el martes, van 2 de 3
 await escena('2026-10-08T21:30:00', '&frida=torso&registro=2026-10-06:A')
-await page.getByText(/prende tus alarmas de Pesas extra/).waitFor()
+await page.getByText(/Prende tus alarmas de Pesas extra/).waitFor()
 await foto('v7-hoy-jueves-930')
 await browser.close()
 if (errores.length) { console.log('errores de consola:\n' + errores.join('\n')); process.exitCode = 1 }
