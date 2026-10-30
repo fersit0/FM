@@ -61,6 +61,29 @@ test('un martes sin registro hace que el jueves se pregunte por el martes, una s
   await expect(page.getByText('¿Entrenaste el martes 6?')).toHaveCount(0)
 })
 
+test('al contestar, el aviso de Deshacer ocupa su lugar y no tapa los botones de la siguiente pregunta', async ({ page }) => {
+  // viernes 9 en la mañana sin contestar martes ni jueves: dos preguntas seguidas
+  await limpiar(page, 'hecha')
+  await reloj(page, '2026-10-09T07:00:00')
+  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('gym-app:settings')); s.noFui = []; localStorage.setItem('gym-app:settings', JSON.stringify(s)) })
+  await page.goto('')
+  await expect(page.getByText('¿Entrenaste el martes 6?')).toBeVisible()
+  await page.getByRole('button', { name: 'No fui' }).click()
+  await expect(page.getByText('¿Entrenaste el jueves 8?')).toBeVisible()
+  await expect(page.locator('.deshacer')).toContainText('martes 6: no fuiste.')
+  const r = await page.evaluate(() => {
+    const a = document.querySelector('.deshacer').getBoundingClientRect()
+    return [...document.querySelectorAll('.inicio-pie .dia-boton')].map((el) => {
+      const b = el.getBoundingClientRect()
+      const encima = document.elementFromPoint((b.left + b.right) / 2, (b.top + b.bottom) / 2)
+      const rg = document.createRange(); rg.selectNodeContents(el)
+      return { texto: el.textContent, tapado: !(encima === el || el.contains(encima)), cruza: b.top < a.bottom && a.top < b.bottom, renglones: rg.getClientRects().length }
+    })
+  })
+  expect(r.map((x) => x.texto)).toEqual(['A', 'B', 'C', 'Frida', 'No fui'])
+  for (const x of r) expect(x, x.texto).toMatchObject({ tapado: false, cruza: false, renglones: 1 })
+})
+
 test('contestar "A" registra la sesión ese día y entonces toca B; "Deshacer" la quita', async ({ page }) => {
   await limpiar(page, 'hecha')
   await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('gym-app:settings')); s.noFui = []; localStorage.setItem('gym-app:settings', JSON.stringify(s)) })
