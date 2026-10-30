@@ -1,7 +1,7 @@
 // Lógica de la semana (RUTINA-FINAL.md, 2). Puro, sin React.
 // Cada semana (lunes a domingo) tiene tres sesiones base: FRIDA (o C si esa semana no hay Frida), A y B. La app elige
 // cuál toca según lo que ya se hizo. Una sesión cuenta si está terminada o si tiene al menos una serie registrada.
-import type { Sesion, SetLog, Club } from '../data/tipos'
+import type { Sesion, SetLog, Club, FridaTipo } from '../data/tipos'
 import { claveFecha, inicioSemana, sumarDias, minutosAhora } from './fechas'
 
 export const META = 3
@@ -68,6 +68,25 @@ export function estadoFrida(sesiones: Sesion[], plan: PlanFrida | undefined, hoy
   if (planeada < hoyClave) return { planeada, hecha: null, pendiente: planeada, hoyEsFrida: false }
   return { planeada, hecha: null, pendiente: null, hoyEsFrida: false }
 }
+/** Qué hicieron con Frida; las FRIDA viejas sin tipo cuentan como torso (RUTINA-FINAL.md v7, 2.3) */
+export function fridaTipoDe(s: Pick<Sesion, 'fridaTipo'>): FridaTipo {
+  return s.fridaTipo ?? 'torso'
+}
+/** La FRIDA hecha en la semana de `fecha`, si hay */
+export function fridaDeSemana(sesiones: Sesion[], fecha: Date, sets: SetLog[] = []): Sesion | null {
+  return sesionesDeSemana(sesiones, fecha, sets).find((s) => s.tipo === 'FRIDA') ?? null
+}
+/** En la semana de `fecha` ya hay una FRIDA pierna registrada (antes de `antesDe`, si se da): la A sale sin pierna */
+export function fridaPiernaEnSemana(sesiones: Sesion[], fecha: Date, sets: SetLog[] = [], antesDe?: string): boolean {
+  return sesionesDeSemana(sesiones, fecha, sets).some((s) => s.tipo === 'FRIDA' && fridaTipoDe(s) === 'pierna' && (!antesDe || s.fecha < antesDe))
+}
+/** El día de Frida de la semana de `fecha`: el de la FRIDA registrada (registrarla otro día lo vuelve el día de Frida), si no el planeado */
+export function diaDeFrida(sesiones: Sesion[], plan: PlanFrida | undefined, fecha: Date, sets: SetLog[] = []): string | null {
+  return fridaDeSemana(sesiones, fecha, sets)?.fecha ?? diaFridaPlaneado(plan, fecha)
+}
+/** Trabaja espalda: C o FRIDA torso (o sin tipo). FRIDA pierna no (RUTINA-FINAL.md v7, 2) */
+const esEspalda = (s: Sesion) => s.tipo === 'C' || (s.tipo === 'FRIDA' && fridaTipoDe(s) === 'torso')
+
 /** La semana queda sin Frida con "Esta semana no hay" o "No hubo" (plan en null) y sin FRIDA registrada */
 export function semanaSinFrida(sesiones: Sesion[], plan: PlanFrida | undefined, fecha: Date, sets: SetLog[] = []): boolean {
   const e = estadoFrida(sesiones, plan, fecha, sets)
@@ -76,6 +95,11 @@ export function semanaSinFrida(sesiones: Sesion[], plan: PlanFrida | undefined, 
 /** Sesiones base de la semana: FRIDA (o C si no hay Frida), A y B */
 export function sesionesBase(sesiones: Sesion[], plan: PlanFrida | undefined, fecha: Date, sets: SetLog[] = []): ('FRIDA' | Club)[] {
   return [semanaSinFrida(sesiones, plan, fecha, sets) ? 'C' : 'FRIDA', 'A', 'B']
+}
+/** Los siete días de la semana de `fecha`: desde "¿Fuiste con Frida el lunes?", "Se movió a…" puede ser un día que ya pasó */
+export function diasDeLaSemana(fecha: Date): string[] {
+  const ini = inicioSemana(fecha)
+  return Array.from({ length: 7 }, (_, i) => claveFecha(sumarDias(ini, i)))
 }
 /** Días de la semana de `fecha` a los que se puede mover Frida: de hoy en adelante, hasta el domingo */
 export function diasParaMoverFrida(fecha: Date): string[] {
@@ -101,29 +125,38 @@ export interface Eleccion {
   tipo: Club
   /** ya se hicieron las tres base: esta es extra (en domingo, opcional) */
   extra: boolean
+  /** A sin pierna: la semana ya tiene FRIDA pierna (RUTINA-FINAL.md v7, 4b) */
+  sinPierna: boolean
 }
 /**
- * Qué sesión de club toca hoy. Si faltan varias, C → A → B. Para no repetir espalda dos días seguidos: si ayer fue
- * FRIDA o C, o Frida está planeada para mañana, no se ofrece B ni C mientras falte A. Con las tres base hechas, la
- * extra alterna con la última A o B (C nunca es extra). "Hoy prefiero A" (`elegida`) manda solo ese día.
+ * Qué sesión de club toca hoy (RUTINA-FINAL.md v7, 2). Si faltan varias, C → A → B. Sin espalda dos días seguidos: si
+ * ayer hubo FRIDA torso (o sin tipo) o C, o Frida está planeada para mañana y todavía sin tipo, no se ofrece B ni C
+ * mientras falte A; FRIDA pierna no bloquea nada. Con las tres base hechas, la extra es C si la semana tuvo FRIDA pierna
+ * (nunca dos C en la semana); si no, A o B, la contraria de la última. La A sale sin pierna si la FRIDA pierna ya está
+ * registrada. "Hoy prefiero A" (`elegida`) manda solo ese día.
  */
 export function elegirSesion(sesiones: Sesion[], plan: PlanFrida | undefined, hoy: Date, sets: SetLog[] = [], elegida?: { fecha: string; tipo: Club }): Eleccion {
   const faltan = faltantes(sesiones, plan, hoy, sets)
   const hoyClave = claveFecha(hoy)
-  if (elegida && elegida.fecha === hoyClave) return { tipo: elegida.tipo, extra: !faltan.includes(elegida.tipo) }
+  const fridaPierna = fridaPiernaEnSemana(sesiones, hoy, sets)
+  const con = (tipo: Club, extra: boolean): Eleccion => ({ tipo, extra, sinPierna: tipo === 'A' && fridaPierna })
+  if (elegida && elegida.fecha === hoyClave) return con(elegida.tipo, !faltan.includes(elegida.tipo))
   if (faltan.length === 0) {
-    const u = ultimaPropia(sesiones, sets)
-    return { tipo: u?.tipo === 'A' ? 'B' : 'A', extra: true }
+    const yaHayC = sesionesDeSemana(sesiones, hoy, sets).some((s) => s.tipo === 'C')
+    if (fridaPierna && !yaHayC) return con('C', true)
+    const u = hechas(sesiones, sets).filter((s) => s.tipo === 'A' || s.tipo === 'B').pop()
+    return con(u?.tipo === 'A' ? 'B' : 'A', true)
   }
   if (faltan.includes('A')) {
     const ayer = claveFecha(sumarDias(hoy, -1))
     const manana = claveFecha(sumarDias(hoy, 1))
-    const ayerEspalda = hechas(sesiones, sets).some((s) => s.fecha === ayer && (s.tipo === 'FRIDA' || s.tipo === 'C'))
-    const e = estadoFrida(sesiones, plan, hoy, sets)
+    const ayerEspalda = hechas(sesiones, sets).some((s) => s.fecha === ayer && esEspalda(s))
+    // con la semana de mañana: el domingo cuenta la Frida del lunes siguiente
+    const e = estadoFrida(sesiones, plan, sumarDias(hoy, 1), sets)
     const fridaManana = e.hecha === null && e.planeada === manana
-    if (ayerEspalda || fridaManana) return { tipo: 'A', extra: false }
+    if (ayerEspalda || fridaManana) return con('A', false)
   }
-  return { tipo: faltan[0], extra: false }
+  return con(faltan[0], false)
 }
 
 export interface EstadoSemana {
@@ -148,19 +181,33 @@ export function estadoSemana(sesiones: Sesion[], fecha: Date, sets: SetLog[] = [
   return { hechas: n, meta: META, bonus: n >= META, dias, fridaHecha: semana.some((s) => s.tipo === 'FRIDA') }
 }
 
-/** Jueves en la noche (desde las 8) y domingo en la mañana: si la semana va en menos de 3, qué toca el domingo */
-export const NOCHE_MIN = 20 * 60
-export function avisoRescate(sesiones: Sesion[], plan: PlanFrida | undefined, ahora: Date, sets: SetLog[] = []): string | null {
+/** "B", "A sin pierna" */
+export const textoEleccion = (e: Pick<Eleccion, 'tipo' | 'sinPierna'>) => `${e.tipo}${e.sinPierna ? ' sin pierna' : ''}`
+export const NOCHE_MIN = 21 * 60
+/** el domingo el club cierra a las 7 */
+export const DOMINGO_CIERRE = 19 * 60
+/**
+ * Avisos de la semana, una línea en Hoy (RUTINA-FINAL.md v7, 2). Jueves, ya hecha la sesión del día o desde las 21:00:
+ * "Vas en 2 de 3. Mañana viernes toca B: prende tus alarmas de Pesas extra." o "Semana completa. Mañana viernes, sauna.".
+ * Viernes (ya hecha su sesión, desde las 21:00 o con "Hoy no") y domingo hasta las 19:00 sin sesión de club, si va en
+ * menos de 3: el rescate del domingo.
+ */
+export function avisoSemana(sesiones: Sesion[], plan: PlanFrida | undefined, ahora: Date, sets: SetLog[] = [], noFui: string[] = []): string | null {
   const { hechas: n } = estadoSemana(sesiones, ahora, sets)
-  if (n >= META) return null
   const dow = ahora.getDay()
   const min = minutosAhora(ahora)
-  const esJuevesNoche = dow === 4 && min >= NOCHE_MIN
-  const esDomingoManana = dow === 0 && min < 15 * 60
-  if (!esJuevesNoche && !esDomingoManana) return null
-  const domingo = esDomingoManana ? ahora : sumarDias(ahora, 3)
-  const { tipo } = elegirSesion(sesiones, plan, domingo, sets)
-  return `Vas en ${n} de ${META}; ${esDomingoManana ? 'hoy' : 'el domingo'} antes de las 3 pm te toca ${tipo}.`
+  const hoy = claveFecha(ahora)
+  const hechaHoy = hechas(sesiones, sets).some((s) => s.fecha === hoy && ES_CLUB(s.tipo))
+  if (dow === 4) {
+    if (!hechaHoy && min < NOCHE_MIN) return null
+    if (n >= META) return 'Semana completa. Mañana viernes, sauna.'
+    return `Vas en ${n} de ${META}. Mañana viernes toca ${textoEleccion(elegirSesion(sesiones, plan, sumarDias(ahora, 1), sets))}: prende tus alarmas de Pesas extra.`
+  }
+  if (n >= META) return null
+  if (dow === 5 && (min >= NOCHE_MIN || noFui.includes(hoy) || hechaHoy)) return `Vas en ${n} de ${META}; el domingo antes de las 7 pm te toca ${textoEleccion(elegirSesion(sesiones, plan, sumarDias(ahora, 2), sets))}.`
+  // una de club por día: hecha la del domingo, ya no hay rescate
+  if (dow === 0 && min < DOMINGO_CIERRE && !hechaHoy) return `Vas en ${n} de ${META}; hoy antes de las 7 pm te toca ${textoEleccion(elegirSesion(sesiones, plan, ahora, sets))}.`
+  return null
 }
 
 /** Número de series de un ejercicio: las de la rutina, salvo la semana ligera (2 con el mismo peso) */

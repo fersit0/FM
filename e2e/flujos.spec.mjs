@@ -29,7 +29,9 @@ test('sesión completa de principio a fin', async ({ page }) => {
   await expect(page.getByText('Listo.')).toBeVisible()
   await expect(page.locator('.resumen-cifra .t-cifra').nth(2)).not.toHaveText('0')
   await page.getByRole('button', { name: 'Cerrar' }).click()
-  await expect(page.getByText(/Hoy toca/)).toBeVisible()
+  // una de club por día: Hoy ya no ofrece otra
+  await expect(page.locator('h1')).toHaveText('A hecha')
+  await expect(page.getByRole('button', { name: /^Empezar/ })).toHaveCount(0)
   await page.getByRole('button', { name: 'Historial' }).click()
   await expect(page.locator('.t-listo.num')).toHaveText('2')
 })
@@ -43,7 +45,7 @@ test('saltar todos los ejercicios', async ({ page }) => {
   await page.getByRole('button', { name: 'Saltar' }).click()
   await expect(page.getByText('Listo.')).toBeVisible()
   await page.getByRole('button', { name: 'Cerrar' }).click()
-  await expect(page.getByText(/Hoy toca/)).toBeVisible()
+  await expect(page.locator('h1')).toHaveText('A hecha')
 })
 
 test('cambiar por alternativa y usarla siempre', async ({ page }) => {
@@ -125,36 +127,39 @@ test('terminar aquí con 0 series: ofrece el cierre de 5 min y cuenta', async ({
 })
 
 test('lunes con Frida', async ({ page }) => {
-  // el lunes 12 de la semana siguiente: Hoy muestra "Hoy vas con Frida" y "Fui con Frida" la registra con nota
-  await reloj(page, '2026-10-12T10:00:00')
+  // el lunes 12 de la semana siguiente, en la noche: Hoy muestra "Hoy vas con Frida" y "Fui con Frida" la registra con
+  // nota y su tipo (en la mañana del lunes es cardio)
+  await reloj(page, '2026-10-12T20:00:00')
   await page.goto('')
   await contestarNo(page)
   await expect(page.getByText('Hoy vas con Frida')).toBeVisible()
   await page.getByLabel('Nota').fill('espalda y bíceps')
   await page.getByRole('button', { name: 'Fui con Frida' }).click()
+  await page.locator('.hoja-fondo.abierta').getByRole('button', { name: 'Torso', exact: true }).click()
   await expect(page.getByText('Hoy vas con Frida')).toHaveCount(0)
-  await expect(page.getByText('lunes 12: Frida registrada.')).toBeVisible()
+  await expect(page.getByText('lunes 12: Frida torso registrada.')).toBeVisible()
   await page.getByRole('button', { name: 'Historial' }).click()
   await page.locator('.lista .fila').first().click()
-  await page.locator('.hoja-fondo.abierta .fila', { hasText: 'lunes 12, Frida' }).click()
+  await page.locator('.hoja-fondo.abierta .fila', { hasText: 'lunes 12, Frida torso' }).click()
   await expect(page.locator('.hoja-fondo.abierta').last()).toContainText('Nota: espalda y bíceps')
   await page.keyboard.press('Escape')
   await page.keyboard.press('Escape')
   await page.getByRole('button', { name: 'Hoy' }).click()
-  await expect(page.getByText(/Hoy toca/)).toBeVisible()
-  await expect(page.locator('.punto.hecho')).toHaveCount(1)
+  // el lunes en la noche el club no abre
+  await expect(page.locator('h1')).toHaveText('Club cerrado')
+  await expect(page.locator('.tira-marca.hecho')).toHaveCount(1)
 })
 
 test('registrar un día pasado', async ({ page }) => {
   await registrar(page, '2026-10-06', 'B')
-  await expect(page.locator('.punto.hecho')).toHaveCount(2)
+  await expect(page.locator('.tira-marca.hecho')).toHaveCount(2)
 })
 
 test('exportar e importar respaldo', async ({ page }) => {
   // sin hoja de compartir (WebKit de escritorio la ofrece y nunca se cierra): así baja como archivo
   await page.evaluate(() => { Object.defineProperty(navigator, 'canShare', { value: undefined }) })
   await registrar(page, null, 'A')
-  await expect(page.locator('.punto.hecho')).toHaveCount(2)
+  await expect(page.locator('.tira-marca.hecho')).toHaveCount(2)
   // peso y cintura también viajan en el respaldo
   await page.getByRole('button', { name: 'Historial' }).click()
   await page.getByRole('button', { name: /^Peso corporal/ }).click()
@@ -190,7 +195,7 @@ test('actualizar versión sin perder datos', async ({ page }) => {
   await registrar(page, null, 'A')
   await page.evaluate(() => { window.fmActualizar = async () => { location.reload() }; window.dispatchEvent(new Event('fm:version-nueva')) })
   await page.getByText('Hay versión nueva. Toca para actualizar.').click()
-  await expect(page.getByText(/Hoy toca/)).toBeVisible()
+  await expect(page.getByText(/Hoy: A hecha/)).toBeVisible()
   await page.getByRole('button', { name: 'Historial' }).click()
   await expect(page.locator('.punto.hecho')).toHaveCount(2)
 })

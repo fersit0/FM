@@ -1,6 +1,6 @@
 // Datos ficticios de 4 semanas, activables con ?seed=1 (y ?seed=0 para borrarlos)
 import { borrarTodo, guardarSesion, guardarSet } from '../data/db'
-import { ejerciciosDe, EJERCICIOS } from '../data/ejercicios'
+import { ejerciciosDe, EJERCICIOS, A_SIN_PIERNA } from '../data/ejercicios'
 import { FOTOS_BASE } from '../data/fotos'
 import { claveFecha, inicioSemana, sumarDias } from '../logic/fechas'
 import { leerSettings, escribirSettings } from '../data/settings'
@@ -8,12 +8,12 @@ import type { Sesion, SetLog } from '../data/tipos'
 import { sesionRegistrada } from '../logic/registro'
 
 declare global {
-  interface Window { fmBiblioteca?: { ejercicios: unknown; fotos: unknown } }
+  interface Window { fmBiblioteca?: { ejercicios: unknown; aSinPierna: unknown; fotos: unknown } }
 }
 
 export async function sembrarSiToca(): Promise<void> {
   // en desarrollo las pruebas de punta a punta leen la biblioteca real desde aquí
-  if (import.meta.env.DEV) window.fmBiblioteca = { ejercicios: EJERCICIOS, fotos: FOTOS_BASE }
+  if (import.meta.env.DEV) window.fmBiblioteca = { ejercicios: EJERCICIOS, aSinPierna: A_SIN_PIERNA, fotos: FOTOS_BASE }
   const params = new URLSearchParams(location.search)
   const seed = params.get('seed')
   const frida = params.get('frida')
@@ -28,13 +28,20 @@ export async function sembrarSiToca(): Promise<void> {
     for (let i = 1; i <= 7; i++) noFui.push(claveFecha(sumarDias(new Date(), -i)))
     escribirSettings({ ...st, cargaInicialV5: true, semanaAlDiaV5: true, semanaAlDiaV6: true, noFui })
   }
-  // frida=hecha: FRIDA registrada el lunes de esta semana; frida=no: "esta semana no hay" (entra la sesión C)
+  // frida=hecha (o torso): FRIDA torso registrada el lunes de esta semana en la noche; frida=pierna, pierna;
+  // frida=no: "esta semana no hay" (entra la sesión C)
   const lunes = claveFecha(inicioSemana(new Date()))
-  if (frida === 'hecha' || seed === '1') await guardarSesion({ id: `frida-${lunes}`, fecha: lunes, tipo: 'FRIDA', version: 'completa', inicio: new Date(lunes + 'T20:00:00').getTime(), fin: new Date(lunes + 'T21:00:00').getTime(), terminada: true })
+  const fridaTipo = frida === 'pierna' ? 'pierna' : 'torso'
+  if (frida === 'hecha' || frida === 'torso' || frida === 'pierna' || seed === '1') await guardarSesion({ id: `frida-${lunes}`, fecha: lunes, tipo: 'FRIDA', fridaTipo, momento: 'noche', version: 'completa', inicio: new Date(lunes + 'T20:00:00').getTime(), fin: new Date(lunes + 'T21:00:00').getTime(), terminada: true })
   if (frida === 'no') { const s = leerSettings(); escribirSettings({ ...s, fridaPlan: { ...(s.fridaPlan ?? {}), [lunes]: null } }) }
-  // registro=YYYY-MM-DD:TIPO deja una sesión registrada sin la app en esa fecha (para probar las preguntas de días sin registro)
+  // registro=YYYY-MM-DD:TIPO deja una sesión registrada sin la app en esa fecha (para probar las preguntas de días sin
+  // registro); varias separadas por coma; FRIDA-pierna y FRIDA-torso para Frida con tipo
   const registro = params.get('registro')
-  if (registro) { const [fecha, tipo] = registro.split(':'); await guardarSesion(sesionRegistrada(fecha, (tipo as Sesion['tipo']) || 'A')) }
+  for (const r of registro ? registro.split(',') : []) {
+    const [fecha, tipoTexto] = r.split(':')
+    const [tipo, fridaTipoR] = (tipoTexto || 'A').split('-')
+    await guardarSesion({ ...sesionRegistrada(fecha, tipo as Sesion['tipo']), ...(fridaTipoR ? { fridaTipo: fridaTipoR as 'pierna' | 'torso' } : {}) })
+  }
   history.replaceState(null, '', location.pathname)
 }
 

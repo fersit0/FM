@@ -4,9 +4,9 @@ import { listaDe, RECORTE_ORDEN } from '../data/ejercicios'
 import { segundosDeEjercicio, SEG_ENTRE_EJERCICIOS, SEG_CAMBIO_ZONA } from './duracion'
 
 /** Lista de ejercicios de una sesión en su orden actual: el guardado (si "Ocupado: después" lo cambió) sin los recortados */
-export function listaDeSesion(s: Pick<Sesion, 'tipo' | 'version' | 'orden' | 'recortados'>): Ejercicio[] {
+export function listaDeSesion(s: Pick<Sesion, 'tipo' | 'version' | 'orden' | 'recortados' | 'sinPierna'>): Ejercicio[] {
   if (s.tipo === 'FRIDA') return []
-  const base = listaDe(s.tipo, s.version)
+  const base = listaDe(s.tipo, s.version, !!s.sinPierna)
   const orden = s.orden ?? base.map((e) => e.id)
   const lista = orden.map((id) => base.find((e) => e.id === id)).filter((e): e is Ejercicio => !!e)
   for (const e of base) if (!lista.includes(e)) lista.push(e)

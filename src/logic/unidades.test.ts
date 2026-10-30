@@ -39,7 +39,7 @@ describe('unidades', () => {
     expect(pesoDeSet(viejo, 'lb')).toBe(25)
   })
   it('pesos iniciales en lb del club (RUTINA-FINAL.md, 10) y en la rejilla', () => {
-    const lb: Record<string, number> = { jalon: 90, 'remo-polea': 90, 'press-inclinado': 30, 'press-militar': 25, 'triceps-cabeza': 20, laterales: 10, 'curl-alternado': 20, 'press-plano': 35, 'aperturas-mancuernas': 15, 'remo-pecho-apoyado': 15, 'jalon-cerrado': 80, 'triceps-polea': 40, 'curl-martillo': 20, goblet: 45, 'triceps-patada': 10, 'remo-mancuerna': 45 }
+    const lb: Record<string, number> = { jalon: 90, 'remo-polea': 90, 'press-inclinado': 30, 'press-militar': 25, 'triceps-cabeza': 20, laterales: 10, 'curl-alternado': 20, 'press-plano': 35, 'aperturas-mancuernas': 15, 'remo-pecho-apoyado': 15, 'aperturas-inclinadas': 15, 'puente-gluteo': 35, 'jalon-cerrado': 80, 'triceps-polea': 40, 'curl-martillo': 20, goblet: 45, 'triceps-patada': 10, 'remo-mancuerna': 45 }
     for (const [id, v] of Object.entries(lb)) expect(pesoInicial(buscarCualquiera(id)!.item, 'lb'), id).toBe(v)
     expect(pesoInicial(buscarEjercicio('laterales-casa')!, 'kg')).toBe(4)
     // en kilos, a la rejilla de 1

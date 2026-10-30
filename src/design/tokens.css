@@ -149,6 +149,7 @@ button.kg { padding: 10px 6px; margin: -10px -6px -10px 0; min-width: 44px; min-
 .hoja-cuerpo { overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 16px; padding-bottom: 8px; }
 .hoja.completa .hoja-cuerpo { margin: 0 calc(-1 * var(--margen)); padding: 0 var(--margen) 24px; }
 .hoja-cerrar { align-self: flex-end; }
+.hoja-pie { flex: none; display: flex; flex-direction: column; gap: 12px; }
 
 /* Interruptor */
 .switch { display: inline-flex; align-items: center; flex: none; min-height: 44px; }

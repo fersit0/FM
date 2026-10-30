@@ -61,9 +61,9 @@ describe('sesiones por zona, sin pares (RUTINA-FINAL.md, 4, 5 y 5c)', () => {
     expect(ids(listaDe('CASA'))).toEqual(['laterales-casa', 'lagartijas', 'remo-liga', 'crunch'])
     expect(ids(buscarEjercicio('crunch', 'CASA')!.alternativas)).toEqual(['elevacion-piernas-piso'])
   })
-  it('calentamiento 8 min (5 en la corta) y cierre 10 (5 en la corta), saco 1 fuerte y 1 suave cinco veces', () => {
-    expect(CALENTAMIENTO.minCompleta).toBe(8)
-    expect(CALENTAMIENTO.minCorta).toBe(5)
+  it('calentamiento 5 min (4 en la corta, v7) y cierre 10 (5 en la corta), saco 1 fuerte y 1 suave cinco veces', () => {
+    expect(CALENTAMIENTO.minCompleta).toBe(5)
+    expect(CALENTAMIENTO.minCorta).toBe(4)
     expect(CIERRE.minCompleta).toBe(10)
     expect(CIERRE.minCorta).toBe(5)
     expect(CIERRE.saco(10)).toMatch(/1 min fuerte y 1 min suave, cinco veces/)

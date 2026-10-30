@@ -1,4 +1,4 @@
-// Biblioteca de ejercicios: RUTINA-FINAL.md versión 6 (secciones 3 a 7). Ids estables por movimiento; un id compartido
+// Biblioteca de ejercicios: RUTINA-FINAL.md versión 7 (secciones 3 a 7). Ids estables por movimiento; un id compartido
 // entre ejercicio y alternativa (o entre sesiones) comparte historial. Sin pares: cada ejercicio termina sus series y
 // luego el siguiente. Tres sesiones de club: A pecho y pierna, B torso completo, C espalda y hombro (semanas sin Frida).
 import type { Ejercicio, Alternativa, Letra, Zona } from './tipos'
@@ -13,13 +13,14 @@ export const ZONA_DETALLE: Record<Zona, string> = {
 }
 
 export const CALENTAMIENTO = {
-  nombre: 'Calentamiento', minCompleta: 8, minCorta: 5,
-  texto: 'Elíptica 8 min, ritmo en el que puedes platicar. Corta: 5 min.',
-  siOcupada: 'Si la elíptica está ocupada: bici fija.',
+  nombre: 'Calentamiento', minCompleta: 5, minCorta: 4,
+  texto: 'Elíptica o caminadora 5 min, ritmo en el que puedes platicar. Corta: 4 min.',
+  siOcupada: 'Si las dos están ocupadas: bici fija.',
 }
+/** En la mañana no hay cierre; en la noche y en fin de semana se ofrece al terminar y se puede saltar (RUTINA-FINAL.md v7, 3) */
 export const CIERRE = {
   nombre: 'Cierre', minCompleta: 10, minCorta: 5, minTerminarAqui: 5,
-  texto: 'Diez minutos a elección: saco en la terraza (1 min fuerte y 1 min suave, cinco veces) o elíptica. Corta o "Terminar aquí": 5 min.',
+  texto: 'En la noche y en fin de semana, diez minutos a elección: saco en la terraza (1 min fuerte y 1 min suave, cinco veces) o elíptica. Corta o "Terminar aquí": 5 min. En la mañana no hay cierre.',
   /** con 10 min son cinco vueltas; con 5 (corta o "Terminar aquí"), hasta que se acabe */
   saco: (min: number) => `Saco: 1 min fuerte y 1 min suave, ${min >= 10 ? 'cinco veces' : `hasta los ${min}`}.`,
 }
@@ -29,14 +30,14 @@ export const REGLAS_GLOBALES: { titulo: string; texto: string }[] = [
   { titulo: 'Serie de aproximación', texto: 'En el primer ejercicio de la sesión y en el primer press si no es el primero, 10 repeticiones con la mitad del peso. No se registra.' },
   { titulo: 'Series seguidas', texto: 'Cada ejercicio se termina completo antes de pasar al siguiente. El descanso corre al tocar la serie.' },
   { titulo: 'Zonas', texto: 'La sesión recorre bancos, poleas y terraza en orden y visita cada zona una sola vez. Si algo está ocupado, "Ocupado: después" lo manda al final de su zona.' },
-  { titulo: 'Qué sesión toca', texto: 'Cada semana tiene tres sesiones base: Frida (o C si esa semana no hay), A y B. Si faltan varias, C, luego A, luego B. Después de Frida o de C no va B ni C mientras falte A. Con las tres hechas, la extra alterna A y B.' },
-  { titulo: 'Frida', texto: 'El día con Frida es espalda, hombro y bíceps a su ritmo y con su app. En FM solo se registra ("Fui con Frida") y cuenta para la meta.' },
-  { titulo: 'Versión automática', texto: 'Al tocar Empezar, la app ve la hora real: si las pesas de la completa terminan antes de la última pesa (21:10), va completa; si no, corta; si tampoco, casa. Si a media sesión no alcanza, quita abdomen, luego brazos, luego aperturas o puente, y avisa. En domingo o antes de las 7 pm, siempre completa.' },
-  { titulo: 'Terminar aquí', texto: 'Siempre a la mano durante la sesión: cierra con lo hecho, cuenta para la meta y ofrece el cierre de cardio de 5 min.' },
+  { titulo: 'Qué sesión toca', texto: 'Cada semana tiene tres sesiones base: Frida (o C si esa semana no hay), A y B. Si faltan varias, C, luego A, luego B. Después de Frida torso o de C no va B ni C mientras falte A; Frida pierna no bloquea nada. Con las tres hechas, la extra es C si Frida fue pierna (nunca dos C en la semana); si no, A o B, la contraria de la última. Una de club por día, más Frida si cae el mismo día.' },
+  { titulo: 'Frida', texto: 'Con Frida, a su ritmo y con su app: unas semanas pierna y otras torso (espalda, hombro y bíceps). En FM solo se registra: "Fui con Frida" y luego Pierna o Torso. Cuenta para la meta. Si fue pierna, la A de esa semana sale sin pierna: pecho y espalda.' },
+  { titulo: 'Versión automática', texto: 'Al tocar Empezar, la app ve la hora real. Entre semana antes de las 12: completa si las pesas terminan a las 8:15 o antes; si no, corta; si tampoco, ya no alcanza en la mañana y queda la noche. En la noche y en fin de semana la última pesa es a las 21:15, el domingo a las 18:45: completa, corta o casa. El lunes en la tarde el club no abre. Si a media sesión no alcanza, quita abdomen, luego brazos, luego aperturas o puente, y avisa.' },
+  { titulo: 'Terminar aquí', texto: 'Siempre a la mano durante la sesión: cierra con lo hecho y cuenta para la meta. En la noche y en fin de semana ofrece el cierre de cardio de 5 min.' },
   { titulo: 'Dolor', texto: 'Molestia muscular es normal; dolor agudo en una articulación (hombro, codo, rodilla, espalda baja) no. Si aparece, cambiar a la alternativa ese día. No se aguanta.' },
   { titulo: 'Semana pesada', texto: 'Si dos semanas seguidas se llega muerto, la siguiente se hacen 2 series por ejercicio con el mismo peso y se retoma. La app lo ofrece, no lo impone.' },
 ]
-export const VERSION_CORTA_TEXTO = 'Unos 30 min: calentamiento 5 min; tres ejercicios a 3 series (A: press inclinado, laterales y goblet; B: press plano, laterales y jalón cerrado; C: jalón ancho, press militar y laterales); cierre de 5 min. Cuenta como sesión. La app la elige sola por la hora.'
+export const VERSION_CORTA_TEXTO = 'Unos 25 min: calentamiento 4 min y tres ejercicios a 3 series (A: press inclinado, laterales y goblet; A sin pierna: press inclinado, remo con pecho apoyado y laterales; B: press plano, laterales y jalón cerrado; C: jalón ancho, press militar y laterales). En la noche y en fin de semana, cierre de 5 min. Cuenta como sesión. La app la elige sola por la hora.'
 export const REGLA_ALTERNATIVA = 'Primero "Ocupado: después". Si sigue ocupado, la alternativa: solo mancuernas, banco, colchoneta o el cuerpo, en la misma zona o en la terraza. Se oculta si su id ya está en la sesión.'
 
 // ---- alternativas compartidas (mismo id = mismo historial) ----
@@ -246,19 +247,45 @@ export function buscarCualquiera(id: string): { item: Ejercicio | Alternativa; b
 /** Sin regla de 4 semanas (RUTINA-FINAL.md, 10) */
 export const CON_SERIE_EXTRA: string[] = []
 export const NOMBRE_SESION: Record<Letra, string> = { A: 'Pecho y pierna', B: 'Torso completo', C: 'Espalda y hombro', CASA: 'Casa, 12 minutos' }
+/** La A en semanas con Frida pierna (RUTINA-FINAL.md v7, 4b) */
+export const NOMBRE_A_SIN_PIERNA = 'Pecho y espalda'
+export const nombreSesion = (tipo: Letra, sinPierna = false) => (tipo === 'A' && sinPierna ? NOMBRE_A_SIN_PIERNA : NOMBRE_SESION[tipo])
 
 /** Orden de las zonas en cada sesión (RUTINA-FINAL.md, 4, 5 y 5c) */
 export const RUTA: Record<Letra, Zona[]> = { A: ['bancos', 'terraza'], B: ['bancos', 'poleas', 'terraza'], C: ['poleas', 'bancos', 'terraza'], CASA: [] }
 /** La corta: tres ejercicios a 3 series (RUTINA-FINAL.md, 3) */
 const CORTA: Record<'A' | 'B' | 'C', string[]> = { A: ['press-inclinado', 'laterales', 'goblet'], B: ['press-plano', 'laterales', 'jalon-cerrado'], C: ['jalon', 'press-militar', 'laterales'] }
+const CORTA_A_SIN_PIERNA = ['press-inclinado', 'remo-pecho-apoyado', 'laterales']
 
-/** Lista de ejercicios de una sesión según versión, ya en el orden del recorrido por zonas. */
-export function listaDe(sesion: Letra, version: 'completa' | 'corta' = 'completa'): Ejercicio[] {
-  const todos = ejerciciosDe(sesion)
+/**
+ * A sin pierna (RUTINA-FINAL.md v7, 4b): la A con la goblet y el puente cambiados por el remo con pecho apoyado y una
+ * serie más de aperturas. Bancos → Terraza; comparte historial por id con todo lo demás.
+ */
+const deA = (id: string): Ejercicio => EJERCICIOS.find((e) => e.sesion === 'A' && e.id === id)!
+export const A_SIN_PIERNA: Ejercicio[] = [
+  { ...deA('press-inclinado'), orden: 1 },
+  { ...deA('aperturas-inclinadas'), orden: 2, series: 3 },
+  {
+    id: 'remo-pecho-apoyado', nombre: 'Remo con pecho apoyado en banco reclinable', sesion: 'A', orden: 3, zona: 'bancos', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 75, modo: 'peso',
+    ubicar: 'El mismo banco reclinable del press, a 30°. Vas boca abajo con el pecho apoyado.',
+    colocacion: 'Boca abajo en el banco, pecho apoyado y pies firmes en el piso; una mancuerna en cada mano, brazos colgando.',
+    tecnica: ['Jala los codos hacia atrás, pegados al cuerpo, hasta pasar la línea de la espalda.', 'Aprieta los omóplatos un segundo y baja en 2 a 3 segundos.'],
+    errores: ['Despegar el pecho del banco para jalar.', 'Encoger hombros.'], ilustracion: 'remo-pecho-apoyado',
+    alternativas: [remoMancuerna('Banco reclinable ocupado')],
+  },
+  { ...deA('laterales'), orden: 4 },
+  { ...deA('triceps-cabeza'), orden: 5 },
+  { ...deA('crunch'), orden: 6 },
+]
+
+/** Lista de ejercicios de una sesión según versión, ya en el orden del recorrido por zonas. `sinPierna`: la A sin pierna. */
+export function listaDe(sesion: Letra, version: 'completa' | 'corta' = 'completa', sinPierna = false): Ejercicio[] {
+  const aSinPierna = sesion === 'A' && sinPierna
+  const todos = aSinPierna ? A_SIN_PIERNA : ejerciciosDe(sesion)
   if (sesion === 'CASA') return todos
   if (version === 'corta') {
     // tres series también si se cambia por una alternativa (las de A van a 4 en la completa)
-    const lista = todos.filter((e) => CORTA[sesion].includes(e.id)).map((e) => ({ ...e, series: 3, alternativas: e.alternativas.map((a) => ({ ...a, series: Math.min(a.series, 3) })) }))
+    const lista = todos.filter((e) => (aSinPierna ? CORTA_A_SIN_PIERNA : CORTA[sesion]).includes(e.id)).map((e) => ({ ...e, series: 3, alternativas: e.alternativas.map((a) => ({ ...a, series: Math.min(a.series, 3) })) }))
     const ruta = RUTA[sesion]
     return lista.sort((a, b) => ruta.indexOf(a.zona!) - ruta.indexOf(b.zona!) || a.orden - b.orden)
   }

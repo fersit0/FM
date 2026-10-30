@@ -6,8 +6,9 @@ import { limpiar, reloj, empezarSesion } from './comun.mjs'
 const cruza = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
 
 test('en Hoy el pez no queda encima de la línea de arriba ni del título', async ({ page }) => {
+  // semana sin Frida: el jueves en la noche toca C; a las 20:45 ya va la corta y sale el pez
   await limpiar(page, 'no')
-  await reloj(page, '2026-10-07T20:30:00')
+  await reloj(page, '2026-10-08T20:45:00')
   await page.goto('')
   await expect(page.getByText(/· corta/)).toBeVisible()
   await expect(page.locator('.inicio-texto .pez')).toBeVisible()

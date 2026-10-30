@@ -82,7 +82,15 @@ export interface Sesion {
   pospuestos?: string[]
   /** ids quitados por el recorte en el camino (RUTINA-FINAL.md, 3) */
   recortados?: string[]
+  /** FRIDA: qué hicieron (RUTINA-FINAL.md v7, 2). Las viejas sin tipo cuentan como torso. */
+  fridaTipo?: FridaTipo
+  /** antes de las 12 es mañana; las viejas no lo tienen (RUTINA-FINAL.md v7, 2) */
+  momento?: Momento
+  /** A sin pierna: la A de una semana en que Frida ya fue pierna (RUTINA-FINAL.md v7, 4b) */
+  sinPierna?: boolean
 }
+export type FridaTipo = 'pierna' | 'torso'
+export type Momento = 'manana' | 'noche'
 
 export interface SetLog {
   id?: number
@@ -123,8 +131,11 @@ export interface FotoEjercicio {
 }
 
 export interface Settings {
-  /** última pesa (HH:MM): la versión se decide con la duración estimada contra esta hora */
-  horaTope: string
+  /** salida del club en la mañana (HH:MM, 08:40): con los minutos de baño da el tope de la última pesa (8:15) */
+  salidaManana: string
+  minBano: number
+  /** última pesa en la noche de martes a sábado (HH:MM, 21:15); el domingo sale de la hora de cierre (18:45) */
+  ultimaPesaNoche: string
   minCarretera: number
   minCasaClub: number
   /** 0 = domingo ... 6 = sábado */
@@ -153,6 +164,8 @@ export interface Settings {
   semanaAlDiaV6?: boolean
   /** "Hoy prefiero A": la sesión elegida a mano para un día (RUTINA-FINAL.md, 2.7) */
   sesionElegida?: { fecha: string; tipo: Club }
+  /** "Voy en la noche": el día (YYYY-MM-DD) que se quedó con plan de ir en la noche (RUTINA-FINAL.md v7, 2.4) */
+  vaEnLaNoche?: string
 }
 
 export interface Cintura {
@@ -161,7 +174,9 @@ export interface Cintura {
 }
 
 export const SETTINGS_DEFAULT: Settings = {
-  horaTope: '21:10',
+  salidaManana: '08:40',
+  minBano: 25,
+  ultimaPesaNoche: '21:15',
   minCarretera: 60,
   minCasaClub: 30,
   diaPesaje: 0,

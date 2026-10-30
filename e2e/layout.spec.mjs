@@ -7,7 +7,7 @@ import { reloj } from './comun.mjs'
 const DISPOSITIVOS = [
   { nombre: 'iPhone SE', w: 375, h: 667, top: 20, bottom: 0, safari: 553 },
   { nombre: 'iPhone 14', w: 390, h: 844, top: 47, bottom: 34, safari: 664 },
-  { nombre: 'iPhone 15', w: 393, h: 852, top: 59, bottom: 34, safari: 672 },
+  { nombre: 'iPhone 15 y 16', w: 393, h: 852, top: 59, bottom: 34, safari: 672 },
   { nombre: 'iPhone 16 Pro Max', w: 430, h: 932, top: 59, bottom: 34, safari: 752 },
 ]
 const SELECTORES = ['.sesion-cabecera', '.sesion-linea', '.sesion-titulo-fila h1', '.sesion-foto', '.sesion-arriba .t-sub', '.sesion-zona', '.sesion-aviso', '.sesion-alternativa', '.sesion .circulo', '.sesion-medio > button', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo', '.inicio-arriba', '.inicio-texto', '.inicio-pie .boton', '.inicio-pie .secundario', '.inicio-pie .dia-botones', '.dia-fila', '.barra']
@@ -90,6 +90,11 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await page.waitForTimeout(500)
     await revisar(page, 'pregunta por un día')
     await page.getByRole('button', { name: 'No fui' }).click()
+    // jueves a las 7 pm sin sesión: primero "¿Vas en la noche?" (RUTINA-FINAL.md v7, 2.4)
+    await expect(page.getByText('No fuiste en la mañana')).toBeVisible()
+    await page.waitForTimeout(500)
+    await revisar(page, 'vas en la noche')
+    await page.getByRole('button', { name: 'Voy en la noche' }).click()
     // "Hoy prefiero C" para que salga el jalón con aviso y la alternativa de nombre más largo
     await page.getByRole('button', { name: 'Hoy prefiero…' }).click()
     await page.waitForTimeout(500)

@@ -3,7 +3,7 @@ import type { Datos } from '../hooks/useDatos'
 import type { Settings } from '../data/tipos'
 import { armarRespaldo, leerRespaldo, blobABase64, base64ABlob } from '../logic/respaldo'
 import { borrarTodo, guardarSesion, guardarSet, guardarPeso, guardarCintura, guardarFoto, guardarFotoEjercicio } from '../data/db'
-import { DIAS_NOMBRE, claveFecha, fechaCorta } from '../logic/fechas'
+import { DIAS_NOMBRE, claveFecha, fechaCorta, formatoHora, minutosDe } from '../logic/fechas'
 import { hapticosActivos, setHapticosActivos, haptico } from '../lib/haptics'
 import { sonidoActivo, setSonidoActivo, prepararAudio, sonarFinDescanso } from '../lib/sonido'
 import { PASOS_ATAJO, NOMBRE_ATAJO } from '../lib/atajos'
@@ -82,7 +82,9 @@ export function Ajustes({ datos, abierta, onCerrar, onAviso }: { datos: Datos; a
         <Fila texto="Salgo de la oficina a las" detalle={settings.horaSalida ? `Suma ${settings.minCarretera} de carretera y ${settings.minCasaClub} de casa al club` : 'Vacío: se usa la hora actual'}>
           <input type="time" value={settings.horaSalida ?? ''} onChange={(e) => set('horaSalida', e.target.value || undefined)} aria-label="Hora de salida" />
         </Fila>
-        <Fila texto="Última pesa" detalle="La versión se decide sola: completa si sus pesas terminan antes, si no corta, si no casa"><input type="time" value={settings.horaTope} onChange={(e) => set('horaTope', e.target.value)} aria-label="Última pesa" /></Fila>
+        <Fila texto="Salida del club en la mañana" detalle={`Con ${settings.minBano} min de baño, la última pesa es a las ${formatoHora(minutosDe(settings.salidaManana) - settings.minBano)}`}><input type="time" value={settings.salidaManana} onChange={(e) => e.target.value && set('salidaManana', e.target.value)} aria-label="Salida del club en la mañana" /></Fila>
+        <Fila texto="Minutos de baño"><input inputMode="numeric" value={settings.minBano} onChange={(e) => set('minBano', Math.max(0, parseInt(e.target.value || '0', 10)))} aria-label="Minutos de baño" style={{ width: 60 }} /></Fila>
+        <Fila texto="Última pesa en la noche" detalle="De martes a sábado. El domingo sale de la hora de cierre: 6:45 pm"><input type="time" value={settings.ultimaPesaNoche} onChange={(e) => e.target.value && set('ultimaPesaNoche', e.target.value)} aria-label="Última pesa en la noche" /></Fila>
         <Fila texto="Minutos de carretera"><input inputMode="numeric" value={settings.minCarretera} onChange={(e) => set('minCarretera', Math.max(0, parseInt(e.target.value || '0', 10)))} aria-label="Minutos de carretera" style={{ width: 60 }} /></Fila>
         <Fila texto="Minutos de casa al club"><input inputMode="numeric" value={settings.minCasaClub} onChange={(e) => set('minCasaClub', Math.max(0, parseInt(e.target.value || '0', 10)))} aria-label="Minutos de casa al club" style={{ width: 60 }} /></Fila>
       </Grupo>
