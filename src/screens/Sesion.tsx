@@ -189,6 +189,8 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
           {paso.tipo !== 'cierre' && <BotonTexto onClick={terminar}>Terminar aquí</BotonTexto>}
         </header>
       )}
+      {/* el aviso de Deshacer, debajo de la cabecera: el círculo se hace chico mientras está, nada queda tapado */}
+      <div className="aviso-lugar de-pantalla" />
       {paso.tipo === 'calentamiento' && <PasoTiempo key="cal" titulo="Calentamiento" detalle={`Elíptica o caminadora ${minCal} min, ritmo en el que puedes platicar.`} nota={CALENTAMIENTO.siOcupada} minutos={minCal} linea={linea} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
       {ej && !descansando && (
         <PasoSerie key={`${ej.base.id}-${ej.item.id}`} datos={datos} sesion={sesion} ej={ej} lista={lista} hechos={hechos} sets={sets} activa={activa} setActiva={setActiva} linea={linea} onCambiarVersion={casa ? undefined : () => cambiarVersion(otraVersion, ligera)} otraVersion={otraVersion} onTecnica={() => setTecnica(true)} onSiguiente={() => ir(indice + 1)} onSeries={() => setSeriesHoy(true)} onVolverOriginal={() => elegirAlternativa(null)} onOcupado={casa ? undefined : ocupado} pospuesto={pospuesto}

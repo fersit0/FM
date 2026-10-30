@@ -31,6 +31,7 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
   return (
     <div className="pantalla con-barra">
       <h1 className="t-titulo">Historial</h1>
+      <div className="aviso-lugar de-pantalla" />
       {!hayAlgo ? (
         <div className="vacio">
           <Pez expresion="dormido" tamano={120} style={{ position: 'static' }} />

@@ -37,10 +37,11 @@
 .inicio-nota-frida::placeholder { color: var(--texto-2); }
 /* Botones de un día: A, B, Frida, No fui */
 .dia-botones { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-.dia-boton { min-height: 44px; min-width: 44px; padding: 0 16px; border-radius: 999px; box-shadow: inset 0 0 0 2px var(--texto); color: var(--texto); font-size: 17px; font-weight: 600; transition: background-color 150ms, color 150ms; }
+.dia-boton { min-height: 44px; min-width: 44px; white-space: nowrap; padding: 0 16px; border-radius: 999px; box-shadow: inset 0 0 0 2px var(--texto); color: var(--texto); font-size: 17px; font-weight: 600; transition: background-color 150ms, color 150ms; }
 .dia-boton.marcado { background: var(--texto); color: var(--fondo); }
 .inicio-pie .dia-botones { width: 88%; }
-.inicio-pie .dia-boton { flex: 1; }
+/* cada botón del tamaño de su texto (nunca en dos renglones) y lo que sobra, repartido */
+.inicio-pie .dia-boton { flex: 1 1 auto; padding: 0 10px; }
 .dia-fila { flex-wrap: wrap; }
 .inicio-aldia .inicio-texto { margin-top: 0; }
 .inicio-aldia .inicio-pie { margin-top: auto; }
@@ -57,7 +58,7 @@
 @media (max-height: 700px) { .inicio { gap: 10px; } .t-inicio { font-size: 44px; } .inicio-pie { gap: 8px; } }
 /* iPhone SE dentro de Safari (553 de alto): con Tu semana, todo más compacto para que Empezar quede completo arriba de la barra */
 @media (max-height: 600px) {
-  .inicio { padding-top: calc(var(--safe-top) + 8px); gap: 8px; }
+  .inicio { padding-top: calc(var(--safe-top) + 8px); padding-bottom: calc(var(--safe-bottom) + 66px); gap: 8px; }
   .inicio-texto { gap: 8px; }
   .t-inicio { font-size: 36px; }
   .inicio-nota { font-size: 17px; }
@@ -112,6 +113,10 @@ button.sesion-linea { min-height: 44px; padding: 4px 0; }
 .sesion-foto:empty { display: none; }
 /* sin el margen negativo de la ficha: en la sesión la foto va centrada y llena el ancho, con la etiqueta adentro */
 .sesion-foto .foto { width: 100%; margin: 0; aspect-ratio: 4 / 3; max-height: min(26dvh, 100%); }
+/* mientras está el aviso de Deshacer, la foto le cede su lugar (vuelve cuando se va el aviso); en pantallas bajas (iPhone SE)
+   también la línea de la hora: así nada se encima ni se corta */
+.sesion[data-con-aviso] .sesion-foto { display: none; }
+@media (max-height: 700px) { .sesion[data-con-aviso] .sesion-linea { display: none; } }
 .sesion-medio { flex: 1 1 0; min-height: 96px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 0; }
 .sesion-abajo { display: flex; flex-direction: column; gap: 14px; flex: none; padding-top: 8px; }
 .circulo-sitio { position: relative; flex: none; }
@@ -119,12 +124,18 @@ button.sesion-linea { min-height: 44px; padding: 4px 0; }
 .circulo-equivalencia { opacity: 0.7; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .resumen-cifras { display: flex; justify-content: space-between; }
 .resumen-cifra { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.deshacer { position: fixed; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 96px); z-index: 35; background: var(--tinta); color: var(--piedra); padding: 10px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--piedra); }
+/* el aviso de Deshacer ocupa su propio lugar (en la pantalla o en la hoja abierta) y nunca tapa nada */
+.aviso-lugar { flex: none; }
+.aviso-lugar:empty { display: none; }
+.inicio-pie > .aviso-lugar { align-self: stretch; margin: 0 var(--margen); }
+.sesion > .aviso-lugar { margin-top: 8px; }
+.deshacer { background: var(--tinta); color: var(--piedra); padding: 6px 8px 6px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--piedra); }
+/* en pantallas bajas, de un renglón y más delgado, para que quepa sin sacar nada de la pantalla */
+@media (max-height: 700px) { .deshacer { font-size: 15px; padding: 0 4px 0 14px; border-radius: 14px; } .deshacer button { font-size: 15px; } }
+/* solo si una pantalla no le guarda lugar */
+.deshacer.flotante { position: fixed; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 96px); z-index: 35; }
 .deshacer button { color: var(--rojo); font-weight: 700; font-size: 17px; min-height: 44px; padding: 0 8px; }
 body[data-pantalla='descanso'] .deshacer { background: var(--piedra); color: var(--cobalto); box-shadow: none; }
-/* en la sesión abajo están los controles (reps, Serie hecha, +15 s, las cifras del resumen) y las hojas: el aviso va arriba, debajo de la
-   cabecera (✕, Terminar aquí) y del Cerrar de las hojas completas, para que tocar esos nunca toque Deshacer */
-.sesion .deshacer { top: calc(var(--safe-top) + 60px); bottom: auto; }
 /* Pantallas cortas (iPhone SE instalado, 667): foto 16:9 compacta, menos aire */
 @media (max-height: 700px) {
   .sesion-foto .foto { aspect-ratio: 16 / 9; max-height: min(12dvh, 100%); }
