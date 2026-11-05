@@ -31,7 +31,8 @@ test('instalación nueva: "Pon al día tu semana" una sola vez, con el 7 oct com
   await page.getByRole('button', { name: 'Listo' }).click()
   // jueves a las 7 pm sin sesión: primero "¿Vas en la noche?"
   await page.getByRole('button', { name: 'Voy en la noche' }).click()
-  await expect(page.getByText('Hoy toca B · Frida fue torso el lunes · Semana: 2 de 3')).toBeVisible()
+  await expect(page.getByText('Frida fue torso el lunes · Semana: 2 de 3')).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^B: /)
   // una sola vez
   await page.goto('')
   await expect(page.getByText('Pon al día tu semana')).toHaveCount(0)
@@ -43,7 +44,8 @@ test('instalación nueva: "Pon al día tu semana" una sola vez, con el 7 oct com
   await page.getByRole('button', { name: 'Borrar sesión' }).click()
   await page.getByRole('button', { name: 'Hoy' }).click()
   await expect(page.locator('h1')).toContainText('A:')
-  await expect(page.getByText(/Hoy toca A · Frida fue torso el lunes · Semana: 1 de 3/)).toBeVisible()
+  await expect(page.getByText(/Frida fue torso el lunes · Semana: 1 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^A: /)
 })
 
 test('un martes sin registro hace que el jueves se pregunte por el martes, una sola vez; "No fui" deja seguir', async ({ page }) => {
@@ -90,7 +92,8 @@ test('contestar "A" registra la sesión ese día y entonces toca B; "Deshacer" l
   await page.goto('')
   await page.getByRole('button', { name: 'A', exact: true }).click()
   await expect(page.getByText('martes 6: A registrada.')).toBeVisible()
-  await expect(page.getByText('Hoy toca B · Frida fue torso el lunes · Semana: 2 de 3')).toBeVisible()
+  await expect(page.getByText('Frida fue torso el lunes · Semana: 2 de 3')).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^B: /)
   await page.getByRole('button', { name: 'Deshacer' }).click()
   await expect(page.getByText('¿Entrenaste el martes 6?')).toBeVisible()
 })
@@ -106,7 +109,8 @@ test('el día de Frida sin respuesta se pregunta antes de armar la sesión; "No 
   await expect(page.locator('h1')).toContainText('C: Espalda y hombro')
   // martes a las 7 pm sin sesión: "¿Vas en la noche?" con la C
   await page.getByRole('button', { name: 'Voy en la noche' }).click()
-  await expect(page.getByText(/Hoy toca C · la última fue B el domingo 13 · Semana: 0 de 3/)).toBeVisible()
+  await expect(page.getByText(/La última fue B el domingo 13 · Semana: 0 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^C: /)
   await expect(page.getByText('Esta semana sin Frida. Cambiar')).toBeVisible()
   // un martes de club sin registro en una semana sin Frida sugiere C
   await reloj(page, '2026-09-16T19:00:00')
@@ -132,7 +136,8 @@ test('una sesión con una sola serie cuenta como hecha aunque nunca se toque Ter
   await reloj(page, '2026-10-09T07:00:00')
   await page.goto('')
   await expect(page.getByText('Sesión a medias')).toHaveCount(0)
-  await expect(page.getByText('Hoy toca B · Frida fue torso el lunes · Semana: 2 de 3')).toBeVisible()
+  await expect(page.getByText('Frida fue torso el lunes · Semana: 2 de 3')).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^B: /)
   await page.getByRole('button', { name: 'Historial' }).click()
   await page.locator('.lista .fila').first().click()
   await expect(page.locator('.hoja-fondo.abierta .fila', { hasText: 'A parcial' })).toBeVisible()
@@ -157,7 +162,8 @@ test('registrar una sesión hecha sin la app: nunca en el futuro, una sesión de
   await hoja.getByRole('button', { name: 'Guardar' }).click()
   await expect(page.getByText('jueves 8: B registrada.')).toBeVisible()
   // una de club por día: hecha la de hoy, Hoy ya no ofrece otra
-  await expect(page.getByText(/Hoy: B hecha · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText('B hecha')
+  await expect(page.locator('.inicio-linea')).toHaveText('Semana: 2 de 3')
   // el mismo día otra vez: abre con la B y ofrece cambiarla en vez de duplicar
   await page.getByRole('button', { name: 'Registrar sesión' }).click()
   await expect(hoja.getByLabel('Qué hice')).toHaveValue('B')
@@ -165,15 +171,17 @@ test('registrar una sesión hecha sin la app: nunca en el futuro, una sesión de
   await hoja.getByRole('button', { name: 'Guardar' }).click()
   await expect(hoja.getByText('El jueves 8 ya tiene B. ¿La cambio a A?')).toBeVisible()
   await hoja.getByRole('button', { name: 'Cambiar a A' }).click()
-  await expect(page.getByText(/Hoy: A hecha · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText('A hecha')
   await page.getByRole('button', { name: 'Deshacer' }).click()
-  await expect(page.getByText(/Hoy: B hecha · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText('B hecha')
+  await expect(page.locator('.inicio-linea')).toHaveText('Semana: 2 de 3')
 })
 
 test('desde Historial también se registra y se puede cambiar qué hice', async ({ page }) => {
   await limpiar(page, 'hecha')
   await registrar(page, '2026-10-06', 'B')
-  await expect(page.getByText(/Hoy toca A · Frida fue torso el lunes · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.getByText(/Frida fue torso el lunes · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^A: /)
   await page.getByRole('button', { name: 'Historial' }).click()
   await page.locator('.lista .fila').first().click()
   await page.locator('.hoja-fondo.abierta .fila', { hasText: 'martes 6, B registrada' }).click()
@@ -182,5 +190,6 @@ test('desde Historial también se registra y se puede cambiar qué hice', async 
   await page.keyboard.press('Escape')
   await expect(page.locator('.hoja-fondo.abierta')).toHaveCount(0)
   await page.getByRole('button', { name: 'Hoy' }).click()
-  await expect(page.getByText(/Hoy toca B · Frida fue torso el lunes · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.getByText(/Frida fue torso el lunes · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^B: /)
 })

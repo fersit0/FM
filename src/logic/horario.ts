@@ -76,8 +76,8 @@ export function estadoTiempoEnMinutos(min: number, fecha: Date, settings: Horari
   const minutosParaTope = tope - min
   const version = versionAutomatica(min, duraciones, tope, franja)
   const lim = limites(duraciones, tope)
-  if (version === 'completa') return { version, franja, minutosParaTope, titulo: 'Alcanza la completa', detalle: `Completa hasta las ${formatoHora(lim.completa)}.` }
-  if (version === 'corta') return { version, franja, minutosParaTope, titulo: 'Alcanza la corta', detalle: `Tienes ${minutosParaTope} min hasta la última pesa. Corta hasta las ${formatoHora(lim.corta)}.` }
+  if (version === 'completa') return { version, franja, minutosParaTope, titulo: 'Alcanza la completa', detalle: `Completa si empiezas a las ${formatoHora(lim.completa)} o antes.` }
+  if (version === 'corta') return { version, franja, minutosParaTope, titulo: 'Alcanza la corta', detalle: `Tienes ${minutosParaTope} min hasta la última pesa. Corta si empiezas a las ${formatoHora(lim.corta)} o antes.` }
   if (version === 'noche') return { version, franja, minutosParaTope, titulo: 'Ya no alcanza en la mañana.', detalle: 'Queda la noche.' }
   return { version, franja, minutosParaTope, titulo: 'Hoy ya no alcanza ni la corta.', detalle: minutosParaTope > 0 ? 'Queda casa, 12 minutos, o la corta de todas formas.' : 'Ya pasó la hora de la última pesa.' }
 }

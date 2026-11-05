@@ -157,7 +157,7 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
   })
   await intenta('martes-pregunta-frida', async () => { await escena('2026-10-06T06:45:00', '&frida=ninguna'); await page.getByText(/¿Fuiste con Frida el/).waitFor(); await paso('hoy-pregunta-frida') })
   await intenta('martes-645', async () => {
-    await escena('2026-10-06T06:45:00', '&frida=torso'); await page.getByText(/Hoy toca A/).waitFor(); await paso('hoy-martes-645')
+    await escena('2026-10-06T06:45:00', '&frida=torso'); await page.locator('h1', { hasText: /^A: / }).waitFor(); await paso('hoy-martes-645')
     await page.locator('.inicio-texto button.inicio-nota').click(); await paso('hoy-lista'); await cerrarHoja()
     await page.getByRole('button', { name: 'Hoy prefiero…' }).click(); await paso('hoy-prefiero'); await cerrarHoja()
     await page.getByRole('button', { name: 'Registrar sesión' }).click(); await paso('registrar-hoy')
@@ -167,7 +167,7 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
     await page.locator('.tira button.tira-dia').first().click(); await paso('registrar-desde-tu-semana'); await cerrarHoja()
   })
   await intenta('martes-pierna-sesion', async () => {
-    await escena('2026-10-06T06:45:00', '&frida=pierna'); await page.getByText(/Hoy toca A sin pierna/).waitFor(); await paso('hoy-a-sin-pierna')
+    await escena('2026-10-06T06:45:00', '&frida=pierna'); await page.locator('h1', { hasText: 'A: Pecho y espalda' }).waitFor(); await paso('hoy-a-sin-pierna')
     await page.getByRole('button', { name: /^Empezar/ }).click(); await page.locator('h1', { hasText: 'Calentamiento' }).waitFor(); await paso('sesion-calentamiento')
     await page.getByRole('button', { name: 'Saltar' }).click(); await page.getByText(/Serie 1 de/).waitFor(); await paso('sesion-serie-1')
     await page.getByRole('button', { name: 'Serie hecha' }).click(); await page.locator('h1', { hasText: /^Descanso$/ }).waitFor(); await paso('sesion-descanso')
@@ -178,10 +178,10 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
     await page.getByRole('button', { name: 'Opciones de la sesión' }).click(); await page.waitForTimeout(350); await paso('sesion-menu')
     await hoja().getByText('Cambiar por alternativa', { exact: true }).click(); await page.waitForTimeout(400); await paso('sesion-alternativas')
     await hoja().getByRole('button', { name: /Remo a una mano/ }).first().click(); await page.locator('.sesion-titulo-fila h1', { hasText: 'Remo a una mano' }).waitFor(); await paso('sesion-alternativa-larga')
-    await page.getByRole('button', { name: 'Terminar aquí' }).first().click(); await page.waitForTimeout(800); await paso('sesion-final-manana')
+    await page.getByRole('button', { name: 'Opciones de la sesión' }).click(); await page.waitForTimeout(350); await hoja().getByText('Terminar aquí', { exact: true }).click(); await page.waitForTimeout(800); await paso('sesion-final-manana')
   })
   await intenta('martes-745', async () => {
-    await escena('2026-10-06T07:45:00', '&frida=torso'); await page.getByText(/Hoy toca A/).waitFor(); await paso('hoy-martes-745-corta')
+    await escena('2026-10-06T07:45:00', '&frida=torso'); await page.locator('h1', { hasText: /^A: / }).waitFor(); await paso('hoy-martes-745-corta')
     await page.getByRole('button', { name: /^Empezar/ }).click(); await page.getByRole('button', { name: 'Saltar' }).click(); await page.getByText(/Serie 1 de/).waitFor(); await paso('sesion-corta-sauna-y-bano')
   })
   await intenta('martes-830', async () => {
@@ -200,7 +200,7 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
     await escena('2026-10-06T20:20:00', '&frida=torso'); await page.getByText('No fuiste en la mañana').waitFor(); await paso('hoy-martes-2020-pregunta')
     await page.getByRole('button', { name: 'Voy en la noche' }).click(); await paso('hoy-martes-2020')
     await page.getByRole('button', { name: /^Empezar/ }).click(); await page.getByRole('button', { name: 'Saltar' }).click(); await page.getByText(/Serie 1 de/).waitFor(); await paso('sesion-noche')
-    await page.getByRole('button', { name: 'Terminar aquí' }).first().click(); await page.waitForTimeout(800); await paso('sesion-cierre-noche')
+    await page.getByRole('button', { name: 'Opciones de la sesión' }).click(); await page.waitForTimeout(350); await hoja().getByText('Terminar aquí', { exact: true }).click(); await page.waitForTimeout(800); await paso('sesion-cierre-noche')
   })
   await intenta('miercoles', async () => { await escena('2026-10-07T19:00:00', '&frida=torso&registro=2026-10-06:A'); await page.getByText(/Hoy descanso/).waitFor(); await paso('hoy-miercoles-descanso') })
   await intenta('preguntas-seguidas', async () => {
@@ -217,7 +217,7 @@ async function recorrido(tam, ancho, altoInstalada, top, bottom, altoSafari, mod
   await intenta('jueves-930', async () => { await escena('2026-10-08T21:30:00', '&frida=torso&registro=2026-10-06:A'); await page.getByText(/Prende tus alarmas de Pesas extra/).waitFor(); await paso('hoy-jueves-930-aviso') })
   await intenta('viernes-completa', async () => { await escena('2026-10-09T07:00:00', '&frida=torso&registro=2026-10-06:A,2026-10-08:B'); await page.getByText(/Semana completa/).first().waitFor(); await paso('hoy-viernes-completa') })
   await intenta('sabado', async () => { await escena('2026-10-10T11:00:00', '&frida=torso&registro=2026-10-06:A'); await page.getByText(/Sábado libre/).waitFor(); await paso('hoy-sabado') })
-  await intenta('domingo', async () => { await escena('2026-10-11T11:00:00', '&frida=pierna&registro=2026-10-06:A'); await page.getByText(/Hoy toca/).waitFor(); await paso('hoy-domingo-rescate') })
+  await intenta('domingo', async () => { await escena('2026-10-11T11:00:00', '&frida=pierna&registro=2026-10-06:A'); await page.locator('.inicio-texto h1').waitFor(); await paso('hoy-domingo-rescate') })
   await intenta('pon-al-dia', async () => { await escena('2026-10-08T07:00:00', '&fresco=1'); await page.getByText('Pon al día tu semana').waitFor(); await paso('pon-al-dia') })
   // Historial: registrar y cambiar el tipo de Frida
   await intenta('historial', async () => {

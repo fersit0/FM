@@ -11,6 +11,8 @@
 .inicio-arriba { display: flex; justify-content: space-between; align-items: center; z-index: 2; flex: none; }
 .inicio-texto { position: relative; margin-top: auto; display: flex; flex-direction: column; gap: 10px; z-index: 1; flex: none; }
 .inicio-pie { display: flex; flex-direction: column; gap: 14px; align-items: center; margin: 0 calc(-1 * var(--margen)); z-index: 1; flex: none; }
+/* "Ajustes" cuando cae sobre el círculo rojo: en tinta, que sí se lee (ACOMODO-FM.md, 17) */
+.inicio-arriba .secundario.sobre-rojo { color: var(--tinta); }
 .inicio-linea-roja { color: var(--rojo); font-size: 17px; min-height: 44px; }
 .inicio-semana { margin-left: 6px; }
 /* hasta dos renglones: "Semana: X de 3" va al final y no se puede perder */
@@ -19,7 +21,7 @@
 /* Tu semana (RUTINA-FINAL.md v7, 2): siete días que caben a 375; lo hecho relleno, lo planeado en contorno, hoy con anillo rojo */
 .tira { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin: 2px 0 4px; }
 .tira-dia { display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 44px; padding: 0; font: inherit; color: var(--texto); }
-.tira-letra { font-size: 12px; line-height: 1; color: var(--texto-3); font-weight: 600; }
+.tira-letra { font-size: 12px; line-height: 1; color: var(--texto-2); font-weight: 600; }
 .tira-dia.hoy .tira-letra { color: var(--texto); }
 .tira-marca { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
 .tira-marca small { font-size: 10px; font-weight: 700; margin-left: 1px; align-self: end; margin-bottom: 9px; }
@@ -91,10 +93,11 @@
 .vacio { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; padding-top: 24px; }
 .vacio img { width: 120px; height: 120px; }
 
-/* Sesión: columna flexible, nunca hace scroll. Arriba texto y foto, abajo controles, el círculo toma lo que sobra.
-   Prioridad cuando no cabe: primero cede la foto, luego el círculo (mínimo 88), nunca los botones. */
+/* Sesión: columna flexible, nunca hace scroll. Arriba texto, abajo controles; en medio el círculo (y en la serie, la foto).
+   En la serie el reparto lo calcula `repartir` (Sesion.tsx): la foto siempre entera, el círculo de 140 o más, y nada
+   cambia de tamaño a media serie (ACOMODO-FM.md). Nunca ceden los botones. */
 .sesion { display: flex; flex-direction: column; height: 100dvh; min-height: 100dvh; overflow: hidden; padding: calc(var(--safe-top) + 8px) var(--margen) calc(var(--safe-bottom) + 20px); gap: 0; max-width: none; }
-.sesion-cabecera { display: flex; justify-content: space-between; align-items: center; height: 36px; flex: none; margin-left: -10px; position: relative; z-index: 3; }
+.sesion-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 8px; height: 36px; flex: none; margin-left: -10px; position: relative; z-index: 3; }
 .panel { display: flex; flex-direction: column; flex: 1; min-height: 0; z-index: 1; animation: panel-entra 380ms var(--curva) both; }
 .sesion-arriba { display: flex; flex-direction: column; gap: 4px; flex: 0 1 auto; min-height: 0; padding-top: 8px; }
 .sesion-arriba > * { flex: none; }
@@ -102,26 +105,23 @@
 .sesion-titulo-fila h1 { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .sesion-aviso { padding-top: 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
 /* botones dentro de un renglón de texto: 44 de alto sin mover el renglón */
-.sesion-aviso button, .sesion-alternativa button, .sesion-zona button { color: inherit; text-decoration: underline; text-underline-offset: 3px; font: inherit; padding: 13px 4px; margin: -13px -4px; }
-.sesion-ruta { text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sesion-aviso button, .sesion-alternativa button, .sesion-ocupado button { color: inherit; text-decoration: underline; text-underline-offset: 3px; font: inherit; padding: 13px 4px; margin: -13px -4px; }
+.sesion-ruta { flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .sesion-ruta .actual { color: var(--texto); font-weight: 600; }
+.sesion-cuenta { flex: none; min-width: 44px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .sesion-linea { display: block; width: 100%; text-align: left; white-space: normal; font: inherit; font-size: 15px; line-height: 1.3; }
-button.sesion-linea { min-height: 44px; padding: 4px 0; }
-.sesion-linea .subrayado { color: var(--texto); text-decoration: underline; text-underline-offset: 3px; }
-.sesion-zona { padding-top: 0; }
-.sesion-foto { margin-top: 10px; flex: 0 1 auto; min-height: 0; overflow: hidden; }
-.sesion-foto:empty { display: none; }
-/* sin el margen negativo de la ficha: en la sesión la foto va centrada y llena el ancho, con la etiqueta adentro */
-.sesion-foto .foto { width: 100%; margin: 0; aspect-ratio: 4 / 3; max-height: min(26dvh, 100%); }
-/* mientras está el aviso de Deshacer, la foto le cede su lugar (vuelve cuando se va el aviso); en pantallas bajas (iPhone SE)
-   también la línea de la hora: así nada se encima ni se corta */
-.sesion[data-con-aviso] .sesion-foto { display: none; }
-@media (max-height: 700px) { .sesion[data-con-aviso] .sesion-linea { display: none; } }
+.sesion-ocupado { padding-top: 2px; }
+.serie-cuerpo { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 8px 0; }
+.serie-peso { flex: none; display: flex; align-items: center; justify-content: center; gap: 12px; }
+/* la foto de la serie: entera, en su proporción; el tamaño lo pone `repartir` */
+.sesion-foto { flex: none; }
+.sesion-foto .foto { width: 100%; height: 100%; margin: 0; aspect-ratio: auto; }
+.sesion-foto .foto img { object-fit: contain; }
+.sesion-foto.sin-etiqueta .foto-etiqueta { display: none; }
 .sesion-medio { flex: 1 1 0; min-height: 96px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 0; }
 .sesion-abajo { display: flex; flex-direction: column; gap: 14px; flex: none; padding-top: 8px; }
 .circulo-sitio { position: relative; flex: none; }
 .circulo-contenido { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.circulo-equivalencia { opacity: 0.7; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .resumen-cifras { display: flex; justify-content: space-between; }
 .resumen-cifra { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 /* el aviso de Deshacer ocupa su propio lugar (en la pantalla o en la hoja abierta) y nunca tapa nada */
@@ -136,22 +136,26 @@ button.sesion-linea { min-height: 44px; padding: 4px 0; }
 .deshacer.flotante { position: fixed; left: var(--margen); right: var(--margen); bottom: calc(var(--safe-bottom) + 96px); z-index: 35; }
 .deshacer button { color: var(--rojo); font-weight: 700; font-size: 17px; min-height: 44px; padding: 0 8px; }
 body[data-pantalla='descanso'] .deshacer { background: var(--piedra); color: var(--cobalto); box-shadow: none; }
-/* Pantallas cortas (iPhone SE instalado, 667): foto 16:9 compacta, menos aire */
+/* el rojo sobre piedra no se lee (2.8): en el descanso, Deshacer va en cobalto */
+body[data-pantalla='descanso'] .deshacer button { color: var(--cobalto); }
+/* Pantallas cortas (iPhone SE instalado, 667): menos aire */
 @media (max-height: 700px) {
-  .sesion-foto .foto { aspect-ratio: 16 / 9; max-height: min(12dvh, 100%); }
-  .sesion-foto .foto-etiqueta { display: none; }
   .sesion-medio { min-height: 92px; padding: 4px 0; }
   .sesion-arriba { gap: 2px; padding-top: 4px; }
   .sesion-abajo { gap: 10px; }
 }
-/* Muy cortas (iPhone SE dentro de Safari, ~553): sin foto, título fijo chico, controles compactos */
+/* iPhone SE (375 × 667 o menos): reps un poco más compactas para que el círculo del peso no baje de 140 (ACOMODO-FM.md, 3) */
+@media (max-height: 667px) and (max-width: 380px) {
+  .stepper-boton { width: 52px; height: 52px; }
+  .stepper .t-cifra { font-size: 44px; }
+  .sesion-abajo { gap: 8px; }
+}
+/* Muy cortas (iPhone SE dentro de Safari, ~553): título fijo chico, controles compactos */
 @media (max-height: 600px) {
   .sesion { padding-bottom: calc(var(--safe-bottom) + 12px); }
-  .sesion-foto { display: none; }
   .sesion-aviso { -webkit-line-clamp: 1; }
-  /* la zona ya va en la cabecera; el caso de la alternativa se lee en la ficha */
-  .sesion-zona, .sesion-alternativa .caso { display: none; }
-  button.sesion-linea { min-height: 0; padding: 0; }
+  /* el caso de la alternativa se lee en la ficha */
+  .sesion-alternativa .caso { display: none; }
   .sesion-arriba .t-sub { font-size: 20px; }
   .sesion-medio { min-height: 88px; }
   .sesion-abajo { gap: 8px; padding-top: 4px; }

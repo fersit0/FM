@@ -1,6 +1,6 @@
 // Pruebas de punta a punta de los flujos que no pueden trabarse. Corren contra el servidor de desarrollo.
 import { test, expect } from '@playwright/test'
-import { limpiar, empezarSesion, menu, pausa, reloj, registrar, contestarNo } from './comun.mjs'
+import { limpiar, empezarSesion, menu, pausa, reloj, registrar, contestarNo, terminarAqui } from './comun.mjs'
 
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (d) => d.accept())
@@ -116,7 +116,7 @@ test('tras un error no se retoma sola', async ({ page }) => {
 
 test('terminar aquí con 0 series: ofrece el cierre de 5 min y cuenta', async ({ page }) => {
   await page.getByRole('button', { name: /^Empezar/ }).click()
-  await page.getByRole('button', { name: 'Terminar aquí' }).click()
+  await terminarAqui(page)
   await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
   await expect(page.getByText(/5 min a elección/)).toBeVisible()
   await page.getByRole('button', { name: 'Saltar' }).click()
@@ -195,7 +195,7 @@ test('actualizar versión sin perder datos', async ({ page }) => {
   await registrar(page, null, 'A')
   await page.evaluate(() => { window.fmActualizar = async () => { location.reload() }; window.dispatchEvent(new Event('fm:version-nueva')) })
   await page.getByText('Hay versión nueva. Toca para actualizar.').click()
-  await expect(page.getByText(/Hoy: A hecha/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText('A hecha')
   await page.getByRole('button', { name: 'Historial' }).click()
   await expect(page.locator('.punto.hecho')).toHaveCount(2)
 })

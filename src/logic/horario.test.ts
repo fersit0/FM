@@ -138,9 +138,9 @@ describe('versión automática en la noche y en fin de semana (RUTINA-FINAL.md v
     expect(estadoTiempo(en('19:30', MAR), { ...S, ultimaPesaNoche: '20:00' }, DUR_A).version).toBe('corta')
   })
   it('textos de Hoy', () => {
-    expect(estadoTiempo(en('06:30', MAR), S, DUR_B).detalle).toBe('Completa hasta las 7:24 am.')
-    expect(estadoTiempo(en('19:30', MAR), S, DUR_B).detalle).toBe('Completa hasta las 8:24 pm.')
-    expect(estadoTiempo(en('20:40', MAR), S, DUR_B).detalle).toBe('Tienes 35 min hasta la última pesa. Corta hasta las 8:49 pm.')
+    expect(estadoTiempo(en('06:30', MAR), S, DUR_B).detalle).toBe('Completa si empiezas a las 7:24 am o antes.')
+    expect(estadoTiempo(en('19:30', MAR), S, DUR_B).detalle).toBe('Completa si empiezas a las 8:24 pm o antes.')
+    expect(estadoTiempo(en('20:40', MAR), S, DUR_B).detalle).toBe('Tienes 35 min hasta la última pesa. Corta si empiezas a las 8:49 pm o antes.')
     expect(estadoTiempo(en('21:00', MAR), S, DUR_B).titulo).toBe('Hoy ya no alcanza ni la corta.')
   })
 })

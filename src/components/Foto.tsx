@@ -12,7 +12,7 @@ function urlsDe(clave: string, propia?: FotoEjercicio): { a: string; b?: string;
  * `modo`: 'gif' alterna inicio y final sola cada segundo, como gif (sesión; las dos imágenes ya están cargadas, así que no brinca);
  * 'par' muestra las dos lado a lado con etiqueta (ficha); 'chica' miniatura. Si una imagen no carga, no se muestra nada roto.
  */
-export function Foto({ clave, ejercicioId, propias, nombre, modo = 'gif', onClick }: { clave: string; ejercicioId: string; propias: FotoEjercicio[]; nombre: string; modo?: 'gif' | 'par' | 'chica'; onClick?: () => void }) {
+export function Foto({ clave, ejercicioId, propias, nombre, modo = 'gif', onClick, onProporcion }: { clave: string; ejercicioId: string; propias: FotoEjercicio[]; nombre: string; modo?: 'gif' | 'par' | 'chica'; onClick?: () => void; onProporcion?: (ancho_entre_alto: number) => void }) {
   const propia = propias.find((f) => f.ejercicioId === ejercicioId)
   const [urls, setUrls] = useState<ReturnType<typeof urlsDe>>(null)
   const [cual, setCual] = useState<0 | 1>(0)
@@ -32,7 +32,9 @@ export function Foto({ clave, ejercicioId, propias, nombre, modo = 'gif', onClic
   }, [modo, dos, urls])
   if (!urls || fallo) return null
   const pos = ENCUADRE[clave] ?? '50% 35%'
-  const img = (src: string, alt: string, lazy = true, extra?: React.CSSProperties) => <img src={src} alt={alt} width={720} height={540} loading={lazy ? 'lazy' : 'eager'} decoding="async" onError={() => setFallo(true)} style={{ objectPosition: pos, ...extra }} />
+  // la proporción real de la foto (casi todas son 3:2), para que la sesión la muestre entera
+  const medir = (e: React.SyntheticEvent<HTMLImageElement>) => { const i = e.currentTarget; if (i.naturalWidth && i.naturalHeight) onProporcion?.(i.naturalWidth / i.naturalHeight) }
+  const img = (src: string, alt: string, lazy = true, extra?: React.CSSProperties, alCargar?: typeof medir) => <img src={src} alt={alt} width={720} height={540} loading={lazy ? 'lazy' : 'eager'} decoding="async" onError={() => setFallo(true)} onLoad={alCargar} style={{ objectPosition: pos, ...extra }} />
   const ref = urls.referencia && <span className="foto-etiqueta">Referencia</span>
   if (modo === 'chica') {
     if (!onClick) return <span className="foto foto-chica" role="img" aria-label={nombre}>{img(urls.a, `${nombre}, inicio`)}</span>
@@ -49,7 +51,7 @@ export function Foto({ clave, ejercicioId, propias, nombre, modo = 'gif', onClic
   const Tag = onClick ? 'button' : 'div'
   return (
     <Tag className="foto ficha-foto" onClick={onClick} role={onClick ? undefined : 'img'} aria-label={onClick ? `${nombre}: ver técnica` : `${nombre}, inicio y final`}>
-      {img(urls.a, `${nombre}, inicio`, false, dos && cual === 1 ? { visibility: 'hidden' } : undefined)}
+      {img(urls.a, `${nombre}, inicio`, false, dos && cual === 1 ? { visibility: 'hidden' } : undefined, medir)}
       {dos && <span className="foto-b" aria-hidden={cual !== 1}>{img(urls.b!, `${nombre}, final`, false, cual === 0 ? { visibility: 'hidden' } : undefined)}</span>}
       {dos && <span className="foto-etiqueta">{cual === 0 ? 'Inicio' : 'Final'}</span>}
       {ref}

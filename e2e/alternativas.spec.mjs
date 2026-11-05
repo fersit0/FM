@@ -2,7 +2,7 @@
 // al elegirla, tarjeta y ficha son de la alternativa (nombre, fotos, series y reps, unidad) y no queda texto ni foto
 // del original; un toque regresa. Y la serie hecha en una alternativa cuenta para el ejercicio.
 import { test, expect } from '@playwright/test'
-import { limpiar, menu, pausa, reloj, registrar, contestarNo } from './comun.mjs'
+import { limpiar, menu, pausa, reloj, registrar, contestarNo, terminarAqui } from './comun.mjs'
 
 const normal = (t) => t.replace(/\s+/g, ' ').trim()
 
@@ -167,16 +167,18 @@ test('"Ocupado: después" manda el ejercicio al final de su zona y, si sigue ocu
   await page.getByRole('button', { name: 'Saltar' }).click()
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Jalón al pecho, agarre ancho')
   // el botón está en la tarjeta
-  await page.locator('.sesion-zona').getByRole('button', { name: 'Ocupado: después' }).click()
+  await page.locator('.sesion-ocupado').getByRole('button', { name: 'Ocupado: después' }).click()
   await expect(page.getByText('Después, al final de poleas.')).toBeVisible()
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Remo sentado en máquina')
-  await expect(page.locator('.sesion-zona')).toContainText('Poleas · 1 de 6')
+  await expect(page.locator('.sesion-ruta .actual')).toHaveText('Poleas')
+  await expect(page.locator('.sesion-cuenta')).toHaveText('1 de 6')
   await menu(page, 'Saltar ejercicio')
   // el jalón vuelve a tocar al final de poleas, antes de pasar a bancos
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Jalón al pecho, agarre ancho')
-  await expect(page.locator('.sesion-zona')).toContainText('Poleas · 2 de 6')
+  await expect(page.locator('.sesion-ruta .actual')).toHaveText('Poleas')
+  await expect(page.locator('.sesion-cuenta')).toHaveText('2 de 6')
   // sigue ocupado: ahora ofrece la alternativa
-  await page.locator('.sesion-zona').getByRole('button', { name: 'Sigue ocupado: alternativa' }).click()
+  await page.locator('.sesion-ocupado').getByRole('button', { name: 'Sigue ocupado: alternativa' }).click()
   const hoja = page.locator('.hoja-fondo.abierta')
   await expect(hoja.getByText('Ya se pospuso una vez. Si sigue ocupado, cambia por la alternativa.')).toBeVisible()
   await hoja.getByRole('button', { name: 'Remo a una mano con mancuerna, jalando hacia la cadera', exact: true }).click()
@@ -186,7 +188,7 @@ test('"Ocupado: después" manda el ejercicio al final de su zona y, si sigue ocu
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Press militar sentado con mancuernas')
   await menu(page, 'Saltar ejercicio')
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Elevaciones laterales')
-  await page.locator('.sesion-zona').getByRole('button', { name: 'Ocupado: después' }).click()
+  await page.locator('.sesion-ocupado').getByRole('button', { name: 'Ocupado: después' }).click()
   await expect(page.getByText('Después, al final de la sesión.')).toBeVisible()
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Curl martillo')
   // recargar conserva el orden
@@ -201,7 +203,7 @@ test('recorte en el camino: con la proyección pasada de la última pesa quita a
   await limpiar(page, 'hecha')
   await reloj(page, '2026-10-08T20:10:00')
   await page.goto('')
-  await expect(page.getByText(/unos \d+ min · completa/)).toBeVisible()
+  await expect(page.getByText(/unos \d+ min(\. Completa si empiezas| · completa)/)).toBeVisible()
   await page.getByRole('button', { name: /^Empezar/ }).click()
   await page.getByRole('button', { name: 'Saltar' }).click()
   await reloj(page, '2026-10-08T20:50:00')
@@ -212,10 +214,10 @@ test('recorte en el camino: con la proyección pasada de la última pesa quita a
   expect(texto).toContain('tríceps con mancuerna sobre la cabeza')
   expect(texto).toContain('puente de glúteo')
   expect(texto).not.toMatch(/press inclinado|laterales|goblet/)
-  await page.getByRole('button', { name: 'Saltar' }).click()
-  // y la línea de arriba lo dice
+  // y la línea de la hora del descanso lo dice
   await expect(page.locator('.sesion-linea')).toContainText('se quitó crunch')
-  await page.getByRole('button', { name: 'Terminar aquí' }).click()
+  await page.getByRole('button', { name: 'Saltar' }).click()
+  await terminarAqui(page)
   await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
   await page.getByRole('button', { name: 'Saltar' }).click()
   await expect(page.getByText('Listo.')).toBeVisible()

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Sesion, Version, Letra, Club, FridaTipo } from '../data/tipos'
 import { usePantalla, useMedidas } from '../design/pantallaActiva'
@@ -12,7 +12,7 @@ import { unidadDe, incrementoDe, pesoDeSet, formatoPeso } from '../logic/unidade
 import { listaDe, itemDeRutina, nombreSesion, ZONA_NOMBRE, rutaDe } from '../data/ejercicios'
 import { claveFecha, DIAS_NOMBRE, formatoHora, minutosDe, minutosAhora, fechaCorta, desdeClave, sumarDias } from '../logic/fechas'
 import { tocaRespaldo } from '../logic/respaldo'
-import { Circulo, BotonPrincipal, BotonTexto, Hoja, Grupo, Fila, Pez, Deshacer } from '../components/fm'
+import { Circulo, BotonPrincipal, BotonTexto, Hoja, Grupo, Fila, Pez, Deshacer, LineaPiezas } from '../components/fm'
 import { BotonesDia, RegistrarHoja, textoDia, type Respuesta } from '../components/Registrar'
 import { TuSemana } from '../components/TuSemana'
 
@@ -196,8 +196,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     onEmpezar(toca, v, sinPierna)
   }
 
-  // "Semana: 2 de 3" nunca se parte entre renglones
-  const textoSemana = <span className="sin-partir">Semana: {semana.hechas} de {semana.meta}</span>
+  const textoSemana = `Semana: ${semana.hechas} de ${semana.meta}`
   const queToca = textoEleccion(eleccion)
   let linea: string
   if (conSalida) linea = `Sales a las ${formatoHora(minutosDe(settings.horaSalida!))}: ${conSalida.version === 'casa' ? 'ya no alcanza ni la corta' : `alcanza la ${conSalida.version === 'corta' ? 'corta' : 'completa'}`}.`
@@ -223,13 +222,15 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
       : `${textoEleccion(eleccionManana)}${eleccionManana.extra ? ', extra' : ''}${fridaManana ? ' y Frida' : ''}`
   // el jueves, el aviso sin repetir lo de mañana; el viernes, el rescate del domingo
   const notaDespues = dow === 4 ? (semana.hechas >= semana.meta ? 'Semana completa.' : `Vas en ${semana.hechas} de ${semana.meta}. Prende tus alarmas de Pesas extra.`) : dow === 5 ? aviso ?? '' : ''
-  const lineaArriba: ReactNode = modo === 'cardio'
-    ? <>Hoy: cardio tranqui 25 min y sauna{frida.hoyEsFrida ? ' · en la noche, Frida' : ''}</>
-    : modo === 'completa' ? <>Semana completa · hoy sauna</>
-      : modo === 'club' ? <>Hoy toca {queToca}{eleccion.extra ? `, extra${domingo ? ' y opcional' : ''}` : ''} · {fridaSemana ? textoFrida(fridaSemana, DIAS_NOMBRE) : textoUltima(ultima, DIAS_NOMBRE)} · {textoSemana}</>
-        : modo === 'hecha' ? <>Hoy: {letraHoy} hecha · {textoSemana}</>
-          : modo === 'despues' ? <>{clubDeHoy ? `Hoy: ${letraHoy} hecha` : 'Ya pasó la última pesa'} · {textoSemana}</>
-          : <>{modo === 'descanso' ? 'Hoy descanso' : modo === 'libre' ? 'Sábado libre' : modo === 'hoyno' ? 'Hoy no vas' : 'El club abre los lunes de 7 a 11'} · {textoSemana}</>
+  // la línea de arriba, en piezas que no se parten (RUTINA-FINAL.md v7, 2.6): lo que ya dice el título no se repite
+  // ("Hoy toca A" arriba de "A: Pecho y pierna", ACOMODO-FM.md, 18)
+  const piezasArriba: string[] = modo === 'cardio'
+    ? ['Hoy: cardio tranqui 25 min y sauna', ...(frida.hoyEsFrida ? ['en la noche, Frida'] : [])]
+    : modo === 'completa' ? ['Semana completa', 'hoy sauna']
+      : modo === 'club' ? [...(eleccion.extra ? [`extra${domingo ? ' y opcional' : ''}`] : []), fridaSemana ? textoFrida(fridaSemana, DIAS_NOMBRE) : textoUltima(ultima, DIAS_NOMBRE), textoSemana]
+        : modo === 'hecha' ? [textoSemana]
+          : modo === 'despues' ? [clubDeHoy ? `Hoy: ${letraHoy} hecha` : 'Ya pasó la última pesa', textoSemana]
+          : [modo === 'descanso' ? 'Hoy descanso' : modo === 'libre' ? 'Sábado libre' : modo === 'hoyno' ? 'Hoy no vas' : 'El club abre los lunes de 7 a 11', textoSemana]
   const tituloSesion = sesionEnCurso
     ? (sesionEnCurso.tipo === 'CASA' ? 'Casa' : sesionEnCurso.tipo === 'FRIDA' ? 'Frida' : `${sesionEnCurso.tipo}: ${nombreSesion(sesionEnCurso.tipo, sesionEnCurso.sinPierna)}`)
     : `${toca}: ${nombreSesion(toca, sinPierna)}`
@@ -271,17 +272,27 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   const textoNoche = siSaleHoy && siSaleHoy.llegadaMin > minHoy
     ? `Si sales a las ${formatoHora(minutosDe(settings.horaSalida!))}, llegas ${formatoHora(siSaleHoy.llegadaMin)}: ${queAlcanza(siSaleHoy.version)}.`
     : minHoy >= MEDIODIA
-      ? `Si empiezas ya, ${queAlcanza(tiempo.version)}: la completa hasta las ${formatoHora(limNoche.completa)} y la corta hasta las ${formatoHora(limNoche.corta)}.`
-      : `En la noche alcanza la completa si empiezas a las ${formatoHora(limNoche.completa)} o antes, y la corta hasta las ${formatoHora(limNoche.corta)}.`
+      ? `Si empiezas ya, ${queAlcanza(tiempo.version)}. Completa hasta las ${formatoHora(limNoche.completa)}; corta hasta las ${formatoHora(limNoche.corta)}.`
+      : `Completa si empiezas a las ${formatoHora(limNoche.completa)} o antes; corta hasta las ${formatoHora(limNoche.corta)}.`
+  // "Ajustes" en tinta cuando cae sobre el círculo rojo; en piedra si el círculo se movió y ya no queda debajo
+  const arribaRef = useRef<HTMLDivElement>(null)
+  const [ajustesSobreRojo, setAjustesSobreRojo] = useState(true)
+  useLayoutEffect(() => {
+    const b = arribaRef.current?.querySelector('button')?.getBoundingClientRect()
+    const c = arribaRef.current?.parentElement?.querySelector(':scope > .circulo')?.getBoundingClientRect()
+    if (!b || !c) return
+    const dentro = Math.hypot((b.left + b.right) / 2 - (c.left + c.right) / 2, (b.top + b.bottom) / 2 - (c.top + c.bottom) / 2) < c.width / 2 - 4
+    if (dentro !== ajustesSobreRojo) setAjustesSobreRojo(dentro)
+  })
 
   if (alDia && !sesionEnCurso) return <PonAlDia datos={datos} ahora={ahora} />
 
   return (
     <div className="pantalla inicio">
       <Circulo d={2 * circulo.r} style={{ position: 'absolute', left: 0.83 * W, top: circulo.cy, transform: 'translate(-50%, -50%)' }} />
-      <div className="inicio-arriba">
+      <div className="inicio-arriba" ref={arribaRef}>
         <span />
-        <BotonTexto onClick={onAjustes}>Ajustes</BotonTexto>
+        <BotonTexto onClick={onAjustes} className={ajustesSobreRojo ? 'sobre-rojo' : ''}>Ajustes</BotonTexto>
       </div>
 
       <div className="inicio-texto" ref={textoRef}>
@@ -314,7 +325,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
           </>
         ) : (
           <>
-            <p className={`t-nota tenue inicio-linea${lugarPez ? ' con-pez' : ''}`}>{sesionEnCurso ? <>Sesión a medias · {textoSemana}</> : lineaArriba}</p>
+            <LineaPiezas className={`t-nota tenue inicio-linea${lugarPez ? ' con-pez' : ''}`} piezas={sesionEnCurso ? ['Sesión a medias', textoSemana] : piezasArriba} />
             {conPez && <Pez expresion="picaro" tamano={72} style={{ right: 0, top: -30 }} />}
             <TuSemana dias={dias} onDia={abrirRegistrar} />
             <h1 className="t-inicio">{sesionEnCurso || modo === 'club' ? tituloSesion : tituloModo[modo].titulo}</h1>
@@ -322,7 +333,8 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
             <div style={{ position: 'relative' }}>
               {sesionEnCurso || modo === 'club' ? (
                 <button className="t-unidad tenue inicio-nota" onClick={() => setHojaLista(true)}>
-                  {sesionEnCurso ? `Empezaste hace ${Math.max(1, Math.round((ahora.getTime() - sesionEnCurso.inicio) / 60000))} min.` : `${lista.length} ejercicios, unos ${minutos} min · ${nombreVersion}${linea ? `. ${linea}` : ''}${aviso ? ` ${aviso}` : ''}`}
+                  {/* con la línea de la hora, la versión ya va en ella: "7 ejercicios, unos 49 min. Completa si empiezas a las 7:25 am o antes." */}
+                  {sesionEnCurso ? `Empezaste hace ${Math.max(1, Math.round((ahora.getTime() - sesionEnCurso.inicio) / 60000))} min.` : `${lista.length} ejercicios, unos ${minutos} min${linea ? `. ${linea}` : ` · ${nombreVersion}`}${aviso ? ` ${aviso}` : ''}`}
                 </button>
               ) : (
                 <p className="t-unidad tenue inicio-nota">{tituloModo[modo].nota}{aviso && modo !== 'despues' ? ` ${aviso}` : ''}</p>

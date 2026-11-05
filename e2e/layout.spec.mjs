@@ -2,7 +2,7 @@
 // en cuatro iPhones, en Safari (viewport recortado por sus barras) y como app instalada (pantalla completa con
 // áreas seguras arriba y abajo), con el nombre más largo, una alternativa elegida y la foto grande.
 import { test, expect } from '@playwright/test'
-import { reloj } from './comun.mjs'
+import { reloj, terminarAqui } from './comun.mjs'
 
 const DISPOSITIVOS = [
   { nombre: 'iPhone SE', w: 375, h: 667, top: 20, bottom: 0, safari: 553 },
@@ -10,7 +10,7 @@ const DISPOSITIVOS = [
   { nombre: 'iPhone 15 y 16', w: 393, h: 852, top: 59, bottom: 34, safari: 672 },
   { nombre: 'iPhone 16 Pro Max', w: 430, h: 932, top: 59, bottom: 34, safari: 752 },
 ]
-const SELECTORES = ['.sesion-cabecera', '.sesion-linea', '.sesion-titulo-fila h1', '.sesion-foto', '.sesion-arriba .t-sub', '.sesion-zona', '.sesion-aviso', '.sesion-alternativa', '.sesion .circulo', '.sesion-medio > button', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo', '.inicio-arriba', '.inicio-texto', '.inicio-pie .boton', '.inicio-pie .secundario', '.inicio-pie .dia-botones', '.dia-fila', '.barra', '.deshacer']
+const SELECTORES = ['.sesion-cabecera', '.sesion-linea', '.sesion-titulo-fila h1', '.sesion-foto', '.sesion-arriba .t-sub', '.sesion-ocupado', '.sesion-cuenta', '.sesion-aviso', '.sesion-alternativa', '.sesion .circulo', '.sesion-medio > button', '.serie-peso > button', '.stepper', '.sesion-abajo .boton', '.botones-fila', '.sesion-abajo .t-sub', '.sesion-abajo .secundario', '.sesion-abajo .t-nota', '.resumen-cifras', '.t-descanso', '.t-listo', '.t-titulo', '.inicio-arriba', '.inicio-texto', '.inicio-pie .boton', '.inicio-pie .secundario', '.inicio-pie .dia-botones', '.dia-fila', '.barra', '.deshacer']
 
 async function revisar(page, nombre) {
   const r = await page.evaluate((sels) => {
@@ -61,7 +61,61 @@ async function revisar(page, nombre) {
     // la línea de hora tiene que verse completa, con su botón
     const linea = document.querySelector('.sesion-linea')
     if (linea && linea.scrollHeight > linea.clientHeight + 1) problemas.push('línea de hora cortada')
-    return problemas
+    // ACOMODO-FM.md, 23. 1) La foto de la serie siempre entera: su caja tiene la proporción de la imagen (nada recortado)
+    for (const img of document.querySelectorAll('.sesion-foto img')) {
+      if (getComputedStyle(img).visibility === 'hidden' || !img.naturalWidth) continue
+      const b = img.getBoundingClientRect()
+      const real = img.naturalWidth / img.naturalHeight, caja = b.width / b.height
+      if (Math.abs(caja - real) / real > 0.03) problemas.push(`foto recortada: caja ${Math.round(b.width)}×${Math.round(b.height)}, foto ${img.naturalWidth}×${img.naturalHeight}`)
+    }
+    // 2) El círculo de la serie de 140 o más (en pantallas de 640 de alto o más)
+    const circ = document.querySelector('.serie-peso .circulo')
+    if (circ && innerHeight >= 640 && circ.getBoundingClientRect().width < 139.5) problemas.push(`círculo de la serie de ${Math.round(circ.getBoundingClientRect().width)} (mínimo 140)`)
+    // 3) Todo texto con contraste de 4.5 o más contra lo que tiene detrás (3 si es grande: 24 px, o 18.7 en negritas)
+    const color = (t) => {
+      let m = t.match(/^rgba?\(([^)]+)\)/)
+      if (m) { const v = m[1].split(/[\s,\/]+/).filter(Boolean).map(Number); return [v[0], v[1], v[2], v[3] ?? 1] }
+      m = t.match(/^color\(srgb ([^)]+)\)/)
+      if (m) { const v = m[1].split(/[\s\/]+/).filter(Boolean).map(Number); return [v[0] * 255, v[1] * 255, v[2] * 255, v[3] ?? 1] }
+      return null
+    }
+    const sobre = (a, b) => [0, 1, 2].map((i) => a[i] * a[3] + b[i] * (1 - a[3])).concat(1)
+    const lum = (c) => { const f = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4 }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]) }
+    const contraste = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05) }
+    const hojas = document.querySelectorAll('.hoja-fondo.abierta')
+    const hoja = hojas[hojas.length - 1]
+    // el círculo no recibe toques (pointer-events: none) y elementsFromPoint no lo vería: mientras se mide, sí
+    const medir = document.createElement('style')
+    medir.textContent = '.circulo { pointer-events: auto !important }'
+    document.head.appendChild(medir)
+    for (const el of document.querySelectorAll('.pantalla *, .hoja-fondo.abierta *, .barra *')) {
+      if (!el.childNodes.length || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue
+      if (el.closest('.foto, .pez, svg, .hoja-fondo:not(.abierta)') || (hoja && !hoja.contains(el))) continue
+      const st = getComputedStyle(el)
+      if (st.visibility === 'hidden' || st.display === 'none') continue
+      const rg = document.createRange(); rg.selectNodeContents(el)
+      const r = [...rg.getClientRects()].find((x) => x.width > 0 && x.height > 0)
+      if (!r || r.bottom < 0 || r.top > innerHeight) continue
+      let fg = color(st.color); if (!fg) continue
+      let op = 1; for (let p = el; p; p = p.parentElement) op *= parseFloat(getComputedStyle(p).opacity)
+      fg = [fg[0], fg[1], fg[2], fg[3] * op]
+      // el fondo: lo que hay debajo del centro del texto, sin contar el texto mismo
+      const capas = []
+      for (const debajo of document.elementsFromPoint((r.left + r.right) / 2, (r.top + r.bottom) / 2)) {
+        // el fondo del propio elemento cuenta (un botón con su color); lo que tiene adentro no
+        if (debajo !== el && el.contains(debajo)) continue
+        const c = color(getComputedStyle(debajo).backgroundColor)
+        if (c && c[3] > 0) { capas.push(c); if (c[3] >= 0.99) break }
+      }
+      let fondo = [255, 255, 255, 1]
+      for (const c of capas.reverse()) fondo = sobre(c, fondo)
+      const tam = parseFloat(st.fontSize), negrita = parseInt(st.fontWeight, 10) >= 700
+      const minimo = tam >= 24 || (negrita && tam >= 18.7) ? 3 : 4.5
+      const cr = contraste(sobre(fg, fondo), fondo)
+      if (cr < minimo) problemas.push(`texto con poco contraste (${cr.toFixed(2)}, mínimo ${minimo}): "${el.textContent.trim().slice(0, 40)}"`)
+    }
+    medir.remove()
+    return [...new Set(problemas)]
   }, SELECTORES)
   expect(r, `${nombre}: ${r.join('; ')}`).toEqual([])
 }
@@ -120,10 +174,11 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await revisar(page, 'calentamiento corriendo')
     await page.getByRole('button', { name: 'Ya terminé' }).click()
     await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Jalón al pecho, agarre ancho')
-    // el jalón es el primer ejercicio: aviso de peso y de aproximación, los dos
-    await expect(page.locator('.sesion-aviso')).toHaveCount(2)
+    // el jalón es el primer ejercicio: lleva la aproximación (y ya no "Primera vez…", ACOMODO-FM.md, 10)
+    await expect(page.locator('.sesion-aviso').last()).toContainText('Antes:')
     await expect(page.locator('.sesion-aviso').first()).toBeVisible()
-    await expect(page.locator('.sesion-linea')).toContainText('Cambiar a corta')
+    // la línea de la hora ya no va en la serie (ACOMODO-FM.md, 5)
+    await expect(page.locator('.sesion-linea')).toHaveCount(0)
     await page.waitForTimeout(700)
     if (instalada && d.h >= 800) expect(await page.locator('.sesion-foto img').first().boundingBox().then((b) => b?.height ?? 0)).toBeGreaterThan(100)
     await revisar(page, 'serie 1')
@@ -157,7 +212,7 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await page.waitForTimeout(700)
     await revisar(page, 'ejercicio completo con Siguiente ejercicio')
     await page.getByRole('button', { name: 'Siguiente ejercicio' }).click()
-    await page.getByRole('button', { name: 'Terminar aquí', exact: true }).click()
+    await terminarAqui(page)
     await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
     await page.waitForTimeout(700)
     await revisar(page, 'cierre')

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Sesion as SesionTipo, Ejercicio, Alternativa, SetLog, Version, Modo, Zona } from '../data/tipos'
 import type { SesionActiva } from '../hooks/useSesionActiva'
@@ -7,6 +7,7 @@ import { seriesPara, estadoSemana } from '../logic/semana'
 import { minutosCalentamiento, minutosCierre } from '../logic/duracion'
 import { listaDeSesion, posponer, recortar, segundosRestantes, hechosDe, terminarAqui as cerrarAqui } from '../logic/sesion'
 import { comoQuedo } from '../logic/registro'
+import { repartir, conservar, type Acomodo } from '../logic/acomodo'
 import { sugerirPeso, subioDePeso, porSesion } from '../logic/progresion'
 import { claveFecha, minutosAhora } from '../logic/fechas'
 import { franjaDeSesion, topeDe, lineaSesion, type Franja } from '../logic/horario'
@@ -18,7 +19,7 @@ import { haptico } from '../lib/haptics'
 import { prepararAudio, sonarClic, sonarFinDescanso } from '../lib/sonido'
 import { abrirAtajo } from '../lib/atajos'
 import { useCuentaRegresiva, mmss } from '../hooks/useCuentaRegresiva'
-import { Circulo, Stepper, BotonPrincipal, BotonContorno, BotonTexto, Hoja, Grupo, Fila, Pez, TituloAjustable, Deshacer } from '../components/fm'
+import { Circulo, Stepper, BotonPrincipal, BotonContorno, BotonTexto, Hoja, Grupo, Fila, Pez, TituloAjustable, Deshacer, LineaPiezas } from '../components/fm'
 import { FichaHoja } from '../components/Ficha'
 import { Foto } from '../components/Foto'
 
@@ -171,7 +172,6 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
     return lineaSesion(minutosAhora(new Date(sesion.inicio)), minutosAhora(fin), version === 'corta' ? 'corta' : 'completa', franja, settings) + quitados
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [casa, paso, ej, lista, hechos.length, ligera, descansando, version, sesion.inicio, minCal, sesion.recortados, franja, settings])
-  const otraVersion: Version = version === 'corta' ? 'completa' : 'corta'
   const zonaActual: Zona | undefined = ej?.base.zona
   const sig = ej && indice + 1 < pasos.length ? pasos[indice + 1] : null
   const siguienteEj = sig && sig.tipo === 'ejercicio' ? sig : null
@@ -183,17 +183,18 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
           <button className="icono-boton" onClick={() => setMenu(true)} aria-label="Opciones de la sesión">
             <svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" /></svg>
           </button>
-          {casa ? <span className="t-nota tenue">{ej ? `${ej.indice + 1} de ${lista.length}` : ''}</span> : (
+          {casa ? <span className="sesion-ruta" /> : (
             <span className="t-nota tenue sesion-ruta" aria-label="Recorrido por zonas">{ruta.map((z, i) => <span key={z}>{i > 0 && ' → '}<span className={z === zonaActual ? 'actual' : ''}>{ZONA_NOMBRE[z]}</span></span>)}</span>
           )}
-          {paso.tipo !== 'cierre' && <BotonTexto onClick={terminar}>Terminar aquí</BotonTexto>}
+          {/* "Terminar aquí" vive en el ✕ (ACOMODO-FM.md, 7); la esquina dice en qué ejercicio vas, como en el diseño */}
+          <span className="t-nota tenue sesion-cuenta">{ej ? `${ej.indice + 1} de ${lista.length}` : ''}</span>
         </header>
       )}
       {/* el aviso de Deshacer, debajo de la cabecera: el círculo se hace chico mientras está, nada queda tapado */}
       <div className="aviso-lugar de-pantalla" />
       {paso.tipo === 'calentamiento' && <PasoTiempo key="cal" titulo="Calentamiento" detalle={`Elíptica o caminadora ${minCal} min, ritmo en el que puedes platicar.`} nota={CALENTAMIENTO.siOcupada} minutos={minCal} linea={linea} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
       {ej && !descansando && (
-        <PasoSerie key={`${ej.base.id}-${ej.item.id}`} datos={datos} sesion={sesion} ej={ej} lista={lista} hechos={hechos} sets={sets} activa={activa} setActiva={setActiva} linea={linea} onCambiarVersion={casa ? undefined : () => cambiarVersion(otraVersion, ligera)} otraVersion={otraVersion} onTecnica={() => setTecnica(true)} onSiguiente={() => ir(indice + 1)} onSeries={() => setSeriesHoy(true)} onVolverOriginal={() => elegirAlternativa(null)} onOcupado={casa ? undefined : ocupado} pospuesto={pospuesto}
+        <PasoSerie key={`${ej.base.id}-${ej.item.id}`} datos={datos} sesion={sesion} ej={ej} lista={lista} hechos={hechos} sets={sets} activa={activa} setActiva={setActiva} onTecnica={() => setTecnica(true)} onSiguiente={() => ir(indice + 1)} onSeries={() => setSeriesHoy(true)} onVolverOriginal={() => elegirAlternativa(null)} onOcupado={casa ? undefined : ocupado} pospuesto={pospuesto}
           onGuardado={(id) => setAccion((a) => (a && a.texto.startsWith('Para terminar') ? a : { texto: 'Serie guardada.', deshacer: async () => { await datos.borrarSet(id); setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined }) } }))} />
       )}
       {ej && descansando && activa.descansoFin !== undefined && (
@@ -288,11 +289,13 @@ export function SerieEditable({ set, datos, onBorrada }: { set: SetLog; datos: D
   )
 }
 
-/** Línea de arriba: "Empezaste 8:22 · va la corta · terminas pesas 8:50 · Cambiar a completa"; toda la línea es el botón */
-function Linea({ texto, otraVersion, onCambiar }: { texto: string | null; otraVersion?: Version; onCambiar?: () => void }) {
+/**
+ * Línea de arriba: "Empezaste 8:22 · va la corta · terminas pesas 8:50". Sale en el calentamiento y en el descanso, donde
+ * hay tiempo de leerla; en la serie no (ACOMODO-FM.md, 5). Cambiar de versión está en el ✕.
+ */
+function Linea({ texto }: { texto: string | null }) {
   if (!texto) return null
-  if (!onCambiar || !otraVersion) return <p className="t-nota tenue sesion-linea">{texto}</p>
-  return <button className="t-nota tenue sesion-linea" onClick={onCambiar} aria-label={`${texto}. Cambiar a ${otraVersion}`}>{texto}{' · '}<span className="subrayado">Cambiar a {otraVersion}</span></button>
+  return <LineaPiezas className="t-nota tenue sesion-linea" piezas={texto.split(' · ')} />
 }
 
 // ---------- 7.1 Calentamiento y cierre ----------
@@ -348,10 +351,10 @@ function textoSerie(h: SetLog, modo: Modo, unidad: Unidad, paso: number): string
   return `${p ?? 0} × ${h.reps}`
 }
 
-function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, linea, otraVersion, onCambiarVersion, onTecnica, onSiguiente, onGuardado, onSeries, onVolverOriginal, onOcupado, pospuesto }: { datos: Datos; sesion: SesionTipo; ej: PasoEjercicio; lista: Ejercicio[]; hechos: SetLog[]; sets: SetLog[]; activa: SesionActiva; setActiva: (a: SesionActiva) => void; linea: string | null; otraVersion: Version; onCambiarVersion?: () => void; onTecnica: () => void; onSiguiente: () => void; onGuardado: (id: number) => void; onSeries: () => void; onVolverOriginal: () => void; onOcupado?: () => void; pospuesto?: boolean }) {
+function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, onTecnica, onSiguiente, onGuardado, onSeries, onVolverOriginal, onOcupado, pospuesto }: { datos: Datos; sesion: SesionTipo; ej: PasoEjercicio; lista: Ejercicio[]; hechos: SetLog[]; sets: SetLog[]; activa: SesionActiva; setActiva: (a: SesionActiva) => void; onTecnica: () => void; onSiguiente: () => void; onGuardado: (id: number) => void; onSeries: () => void; onVolverOriginal: () => void; onOcupado?: () => void; pospuesto?: boolean }) {
   usePantalla('serie')
   const { W } = useMedidas()
-  const [medio, alto, ancho] = useAlto<HTMLDivElement>()
+  const [cuerpo, alto, ancho] = useAlto<HTMLDivElement>()
   const { base, item, series } = ej
   const { settings } = datos
   const unidad = unidadDe(item, settings.unidades)
@@ -366,7 +369,6 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
   const completo = hechos.length >= series
   // último set de este mismo ejercicio (no de la alternativa), para arrancar con su peso y reps
   const ultimo = [...hechos].reverse().find((s) => s.exerciseId === item.id)
-  const primeraVez = sugerencia.tipo === 'inicial' && !ultimo
   const pesoBase = (() => {
     if (!ultimaVez) return null
     const pesos = ultimaVez.map((s) => pesoDeSet(s, unidad, incremento)).filter((x): x is number => x !== null)
@@ -388,16 +390,6 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
   const [error, setError] = useState(false)
   const [editando, setEditando] = useState(false)
   const [texto, setTexto] = useState('')
-  // en pantallas cortas, con la línea de la mañana larga y los dos avisos, la foto puede quedar en una tira que no sirve:
-  // entonces no sale en ese ejercicio
-  const fotoRef = useRef<HTMLDivElement>(null)
-  const [fotoChica, setFotoChica] = useState<string | null>(null)
-  useLayoutEffect(() => {
-    const el = fotoRef.current
-    if (!el || fotoChica === item.id) return
-    const h = el.getBoundingClientRect().height
-    if (h > 0 && h < 56) setFotoChica(item.id)
-  })
   const guardarBorrador = (p: number, r: number, u: Unidad) => setActiva({ ...activa, borrador: { itemId: item.id, peso: p, reps: r, unidad: u } })
   const setPeso = (v: number) => { setPesoState(v); guardarBorrador(v, reps, unidad) }
   const setReps = (v: number) => { setRepsState(v); guardarBorrador(peso, v, unidad) }
@@ -405,7 +397,23 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
   const serieActual = Math.min(siguienteNum, series)
   const dSpec = series <= 1 ? 0.66 * W : 0.48 * W + (0.36 * W * (serieActual - 1)) / (series - 1)
   const anchoLibre = conPeso ? ancho - 2 * (64 + 12) : ancho
-  const d = acotar(dSpec, alto, anchoLibre)
+  // la foto sale en la primera serie de cada ejercicio; después le deja su lugar al círculo, que crece con cada serie
+  const conFoto = hechos.length === 0 && !completo
+  const [proporcion, setProporcion] = useState(1.5)
+  const calculo = repartir(alto, ancho, Math.min(dSpec, anchoLibre - 8), conFoto ? proporcion : null)
+  // Sin brincos: el acomodo se fija al llegar a cada serie (con 700 ms para que todo se acomode) y ya no crece hasta la
+  // siguiente, aunque se vaya el aviso de Deshacer. Solo se achica si ya no cabe.
+  const clave = `${item.id}-${serieActual}-${completo}-${conFoto}-${proporcion}`
+  const [asentado, setAsentado] = useState<string | null>(null)
+  useEffect(() => {
+    const t = setTimeout(() => setAsentado(clave), 700)
+    return () => clearTimeout(t)
+  }, [clave])
+  const fijo = useRef<(Acomodo & { clave: string }) | null>(null)
+  const f = fijo.current
+  const acomodo: Acomodo = asentado === clave && f && f.clave === clave ? conservar(f, calculo, alto, Math.max(anchoLibre, 88)) : calculo
+  if (alto > 0 && acomodo === calculo) fijo.current = { ...calculo, clave }
+  const d = acomodo.d
   const largo = String(peso).length
   const cifra = Math.round(d * 0.42 * (largo <= 2 ? 1 : largo === 3 ? 0.88 : largo === 4 ? 0.76 : 0.64))
 
@@ -458,28 +466,30 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
       const menos = pesoBase - signo * incremento
       aviso = `Quédate en ${formatoPeso(pesoBase, unidad)}${menos > 0 ? ` o baja a ${formatoPeso(menos, unidad)}` : ''}: no llegaste a ${item.repsMin}. ${vez}`
     } else if (vez) aviso = conPeso && p ? `Repite ${p}. ${vez}` : vez
-    else if (primeraVez && conPeso) aviso = 'Primera vez: empieza con este y ajusta.'
   }
   // la de aproximación va además del aviso de peso, nunca en su lugar
-  const avisoAprox = hechos.length === 0 && !error && aproximacion ? `Antes, una de aproximación con ${formatoPeso(redondearAPaso(peso / 2, incremento) || incremento, unidad)}, 10 reps. No se registra.` : null
-  const zona = base.zona ? `${ZONA_NOMBRE[base.zona]} · ` : ''
+  const avisoAprox = hechos.length === 0 && !error && aproximacion ? `Antes: ${formatoPeso(redondearAPaso(peso / 2, incremento) || incremento, unidad)} × 10, no se registra.` : null
 
   return (
     <div className="panel">
       <div className="sesion-arriba">
-        <Linea texto={linea} otraVersion={otraVersion} onCambiar={onCambiarVersion} />
         <div className="sesion-titulo-fila"><TituloAjustable texto={item.nombre} /></div>
         <div className="sesion-titulo-fila">
           <p className="t-sub">{completo ? `${series} series hechas` : `Serie ${serieActual} de ${series}`}</p>
           <BotonTexto subrayado onClick={onTecnica}>Técnica</BotonTexto>
         </div>
-        <p className="t-nota tenue sesion-zona">{zona}{ej.indice + 1} de {lista.length}{onOcupado && hechos.length === 0 && <> · <button className="subrayado" onClick={onOcupado}>{pospuesto ? 'Sigue ocupado: alternativa' : 'Ocupado: después'}</button></>}</p>
+        {onOcupado && hechos.length === 0 && <p className="t-nota tenue sesion-ocupado"><button onClick={onOcupado}>{pospuesto ? 'Sigue ocupado: alternativa' : 'Ocupado: después'}</button></p>}
         {esAlternativa && <p className="t-nota tenue sesion-alternativa">{'caso' in item && <span className="caso">{item.caso}. </span>}<button onClick={onVolverOriginal}>Volver al original</button></p>}
         {aviso && <p className="t-cuerpo tenue sesion-aviso">{aviso}</p>}
         {avisoAprox && <p className="t-cuerpo tenue sesion-aviso">{avisoAprox}</p>}
-        {fotoChica !== item.id && <div className="sesion-foto" ref={fotoRef}><Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="gif" /></div>}
       </div>
-      <div className="sesion-medio" ref={medio}>
+      <div className="serie-cuerpo" ref={cuerpo}>
+        {acomodo.foto && (
+          <div className={`sesion-foto${acomodo.foto.h < 120 ? ' sin-etiqueta' : ''}`} style={{ width: acomodo.foto.w, height: acomodo.foto.h }}>
+            <Foto clave={item.ilustracion} ejercicioId={item.id} propias={datos.fotosEjercicio} nombre={item.nombre} modo="gif" onProporcion={setProporcion} />
+          </div>
+        )}
+        <div className="serie-peso" style={{ height: d }}>
         {conPeso && <button className="mas-menos" aria-label={`Menos ${incremento} ${unidad}`} onClick={() => mover(-1)}><svg viewBox="0 0 28 28"><path d="M6 14h16" /></svg></button>}
         <Circulo d={d}>
           {conPeso ? (
@@ -492,13 +502,13 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
                   <button className="kg" style={{ fontSize: Math.max(20, Math.round(cifra * 0.3)) }} onClick={cambiarUnidad} aria-label={`Cambiar a ${otra}`}>{unidad}</button>
                 </span>
               )}
-              <span className="circulo-equivalencia" style={{ fontSize: Math.max(15, Math.round(cifra * 0.22)) }}>{formatoPeso(convertir(peso, unidad, otra, incrementoDe(item, otra)), otra)}</span>
             </div>
           ) : (
             <span className="circulo-cifra" style={{ fontSize: cifra }}>{reps}<span className="kg" style={{ fontSize: Math.max(20, Math.round(cifra * 0.3)) }}>{item.modo === 'tiempo' ? 's' : ''}</span></span>
           )}
         </Circulo>
         {conPeso && <button className="mas-menos" aria-label={`Más ${incremento} ${unidad}`} onClick={() => mover(1)}><svg viewBox="0 0 28 28"><path d="M6 14h16M14 6v16" /></svg></button>}
+        </div>
       </div>
       <div className="sesion-abajo">
         <Stepper valor={reps} onChange={setReps} unidad={item.modo === 'tiempo' ? 'segundos' : 'reps'} min={item.modo === 'tiempo' ? 5 : 1} max={item.modo === 'tiempo' ? 300 : 99} />
@@ -526,7 +536,14 @@ function PasoDescanso({ ej, hechos, siguiente, conCierre, fin, total, avisado, u
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [termino])
   const progreso = Math.max(0, Math.min(1, restante / (total * 1000)))
-  const dMax = acotar(0.96 * W, alto, ancho), dMin = Math.min(0.56 * W, dMax)
+  // el tamaño de arranque se fija al llegar (700 ms para acomodarse) y ya no crece aunque se vaya el aviso de Deshacer;
+  // solo se achica si ya no cabe (ACOMODO-FM.md, 2). El encogimiento del sol sigue igual.
+  const dCalc = acotar(0.96 * W, alto, ancho)
+  const [asentado, setAsentado] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setAsentado(true), 700); return () => clearTimeout(t) }, [])
+  const dFijo = useRef(0)
+  if (!asentado || dCalc < dFijo.current || dFijo.current === 0) { if (alto > 0) dFijo.current = dCalc }
+  const dMax = alto > 0 ? dFijo.current : dCalc, dMin = Math.min(0.56 * W, dMax)
   const d = dMin + (dMax - dMin) * progreso
   const pesoUlt = ultimo ? pesoDeSet(ultimo, unidad, incrementoDe(item, unidad)) : null
   // al terminar la última serie de una zona, la app dice a cuál sigue

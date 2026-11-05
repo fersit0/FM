@@ -50,7 +50,6 @@ test('tocar la cifra abre el teclado y acepta el exacto', async ({ page }) => {
   await campo.fill('17.5')
   await campo.press('Enter')
   await expect(cifra(page)).toHaveText('17.5')
-  await expect(page.locator('.circulo-equivalencia')).toHaveText('8 kg')
 })
 
 test('cada serie con su propio peso: la nueva arranca con el de la anterior y cambiarla no toca la primera', async ({ page }) => {

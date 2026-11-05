@@ -34,13 +34,16 @@ body[data-pantalla='inicio'], body[data-pantalla='tinta'], body[data-pantalla='r
   --fondo: var(--tinta); --texto: var(--piedra); --circulo: var(--rojo); --circulo-texto: var(--piedra); --boton-fondo: var(--rojo); --boton-texto: var(--tinta);
 }
 body[data-pantalla='calentamiento'] {
+  --texto-2-pct: 70%;
   --fondo: var(--piedra); --texto: var(--tinta); --circulo: var(--rojo); --circulo-texto: var(--tinta); --boton-fondo: var(--tinta); --boton-texto: var(--piedra);
 }
+/* texto secundario al 90% sobre rojo y cobalto: así pasa de 4.5 de contraste (ACOMODO-FM.md, 22) */
 body[data-pantalla='serie'] {
-  --texto-2-pct: 80%;
+  --texto-2-pct: 90%;
   --fondo: var(--rojo); --texto: var(--tinta); --circulo: var(--tinta); --circulo-texto: var(--piedra); --boton-fondo: var(--tinta); --boton-texto: var(--piedra);
 }
 body[data-pantalla='descanso'] {
+  --texto-2-pct: 90%;
   --fondo: var(--cobalto); --texto: var(--piedra); --circulo: var(--piedra); --circulo-texto: var(--cobalto); --boton-fondo: var(--piedra); --boton-texto: var(--cobalto);
 }
 
@@ -123,7 +126,7 @@ button.kg { padding: 10px 6px; margin: -10px -6px -10px 0; min-width: 44px; min-
 
 /* Barra de navegación: solo texto */
 .barra { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px var(--margen) calc(var(--safe-bottom) + 14px); display: flex; gap: 24px; background: var(--tinta); z-index: 10; }
-.barra button { font-size: 15px; font-weight: 600; color: color-mix(in srgb, var(--piedra) 40%, transparent); min-height: 44px; padding: 0 10px; margin: -6px -10px; }
+.barra button { font-size: 15px; font-weight: 600; color: color-mix(in srgb, var(--piedra) 60%, transparent); min-height: 44px; padding: 0 10px; margin: -6px -10px; }
 .barra button[aria-current='page'] { color: var(--piedra); }
 
 /* Listas planas con separadores */

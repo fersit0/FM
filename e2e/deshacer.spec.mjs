@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { limpiar, empezarSesion } from './comun.mjs'
+import { limpiar, empezarSesion, terminarAqui } from './comun.mjs'
 
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (d) => d.accept())
@@ -60,7 +60,7 @@ test('descartar pide confirmación; "Terminar aquí" no, pero se deshace', async
   await page.getByText('Descartar sesión', { exact: true }).click()
   await expect(page.getByText(/Serie 1 de/)).toBeVisible()
   await page.keyboard.press('Escape')
-  await page.getByRole('button', { name: 'Terminar aquí' }).click()
+  await terminarAqui(page)
   await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
   await page.getByText('Terminaste aquí. Cuenta para la semana.').waitFor()
   await page.getByRole('button', { name: 'Deshacer' }).click()
@@ -69,7 +69,7 @@ test('descartar pide confirmación; "Terminar aquí" no, pero se deshace', async
 
 test('editar y borrar una sesión pasada desde Historial', async ({ page }) => {
   await page.getByRole('button', { name: 'Serie hecha' }).click()
-  await page.getByRole('button', { name: 'Terminar aquí', exact: true }).click()
+  await terminarAqui(page)
   await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
   await page.getByRole('button', { name: 'Saltar' }).click()
   await page.getByRole('button', { name: 'Cerrar' }).click()

@@ -2,7 +2,7 @@
 // con una B registrada el domingo 13 para que las preguntas de días sin registro empiecen el lunes. En la v7 el lunes en
 // la mañana es cardio y Frida es en la noche; el martes en la mañana son pesas; el miércoles, descanso.
 import { test, expect } from '@playwright/test'
-import { limpiar, reloj, contestarNo, registrar } from './comun.mjs'
+import { limpiar, reloj, contestarNo, registrar, terminarAqui } from './comun.mjs'
 
 const LUNES = '2026-09-14'
 const hora = (fecha, h = '10:00:00') => `${fecha}T${h}`
@@ -24,8 +24,9 @@ test('el lunes en la noche Hoy muestra "Hoy vas con Frida"; "Fui con Frida" la r
   await reloj(page, hora('2026-09-15', '06:45:00'))
   await page.goto('')
   await expect(page.locator('h1')).toContainText('A: Pecho y pierna')
-  await expect(page.getByText(/Hoy toca A · Frida fue torso el lunes · Semana: 1 de 3/)).toBeVisible()
-  await expect(page.getByText(/7 ejercicios, unos \d+ min · completa/)).toBeVisible()
+  await expect(page.getByText(/Frida fue torso el lunes · Semana: 1 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^A: /)
+  await expect(page.getByText(/7 ejercicios, unos \d+ min(\. Completa si empiezas| · completa)/)).toBeVisible()
 })
 
 test('movida al miércoles: el martes toca A porque Frida es mañana, y el miércoles Hoy muestra Frida', async ({ page }) => {
@@ -54,15 +55,16 @@ test('"No hubo": la semana es C, A y B; C va por Poleas → Bancos → Terraza y
   await reloj(page, hora('2026-09-15', '06:30:00'))
   await page.goto('')
   await expect(page.locator('h1')).toContainText('C: Espalda y hombro')
-  await expect(page.getByText(/6 ejercicios, unos \d+ min · completa/)).toBeVisible()
+  await expect(page.getByText(/6 ejercicios, unos \d+ min(\. Completa si empiezas| · completa)/)).toBeVisible()
   await page.getByRole('button', { name: /^Empezar/ }).click()
   await page.getByRole('button', { name: 'Saltar' }).click()
   await expect(page.locator('.sesion-ruta')).toHaveText('Poleas → Bancos → Terraza')
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Jalón al pecho, agarre ancho')
-  await expect(page.locator('.sesion-zona')).toContainText('Poleas · 1 de 6')
+  await expect(page.locator('.sesion-ruta .actual')).toHaveText('Poleas')
+  await expect(page.locator('.sesion-cuenta')).toHaveText('1 de 6')
   await page.getByRole('button', { name: 'Serie hecha' }).click()
   await page.getByRole('button', { name: 'Saltar' }).click()
-  await page.getByRole('button', { name: 'Terminar aquí' }).click()
+  await terminarAqui(page)
   // en la mañana no hay cierre: directo al resumen
   await expect(page.locator('h1', { hasText: 'Cierre' })).toHaveCount(0)
   await expect(page.getByText('Listo.')).toBeVisible()
@@ -77,7 +79,8 @@ test('"No hubo": la semana es C, A y B; C va por Poleas → Bancos → Terraza y
   await registrar(page, '2026-09-16', 'A')
   await reloj(page, hora('2026-09-17', '06:30:00'))
   await page.goto('')
-  await expect(page.getByText(/Hoy toca B · la última fue A el miércoles 16 · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.getByText(/La última fue A el miércoles 16 · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^B: /)
 })
 
 test('pregunta pendiente: Pierna o Torso registra ese día y luego sigue con el martes', async ({ page }) => {
@@ -106,7 +109,8 @@ test('registrar Frida otro día la vuelve el día de Frida de esa semana', async
   await expect(page.getByText('Hoy vas con Frida')).toBeVisible()
   await page.getByRole('button', { name: 'Fui con Frida' }).click()
   await page.locator('.hoja-fondo.abierta').getByRole('button', { name: 'Torso', exact: true }).click()
-  await expect(page.getByText(/Hoy toca A · Frida fue torso el martes · Semana: 1 de 3/)).toBeVisible()
+  await expect(page.getByText(/Frida fue torso el martes · Semana: 1 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^A: /)
   await expect(page.locator('.tira-dia').nth(1).locator('.tira-marca')).toHaveClass(/hecho/)
 })
 
@@ -118,23 +122,25 @@ test('la corta de C: jalón ancho, press militar y laterales a 3 series', async 
   await reloj(page, hora('2026-09-15', '20:20:00'))
   await page.goto('')
   await page.getByRole('button', { name: 'Voy en la noche' }).click()
-  await expect(page.getByText(/6 ejercicios, unos \d+ min · completa/)).toBeVisible()
+  await expect(page.getByText(/6 ejercicios, unos \d+ min(\. Completa si empiezas| · completa)/)).toBeVisible()
   await reloj(page, hora('2026-09-15', '20:40:00'))
   await page.goto('')
-  await expect(page.getByText(/3 ejercicios, unos \d+ min · corta/)).toBeVisible()
+  await expect(page.getByText(/3 ejercicios, unos \d+ min(\. Tienes \d+ min hasta la última pesa\. Corta si empiezas| · corta)/)).toBeVisible()
   await page.getByRole('button', { name: /^Empezar/ }).click()
+  await expect(page.locator('.sesion-linea')).toContainText('va la corta')
   await page.getByRole('button', { name: 'Saltar' }).click()
   await expect(page.locator('.sesion-ruta')).toHaveText('Poleas → Bancos')
-  await expect(page.locator('.sesion-zona')).toContainText('Poleas · 1 de 3')
+  await expect(page.locator('.sesion-ruta .actual')).toHaveText('Poleas')
+  await expect(page.locator('.sesion-cuenta')).toHaveText('1 de 3')
   await expect(page.getByText(/Serie 1 de 3/)).toBeVisible()
-  await expect(page.locator('.sesion-linea')).toContainText('va la corta')
   await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
   await page.getByText('Saltar ejercicio', { exact: true }).click()
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Press militar sentado con mancuernas')
   await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
   await page.getByText('Saltar ejercicio', { exact: true }).click()
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Elevaciones laterales')
-  await expect(page.locator('.sesion-zona')).toContainText('Bancos · 3 de 3')
+  await expect(page.locator('.sesion-ruta .actual')).toHaveText('Bancos')
+  await expect(page.locator('.sesion-cuenta')).toHaveText('3 de 3')
 })
 
 test('"Hoy prefiero": cambia la sesión de hoy con un toque y se deshace', async ({ page }) => {
@@ -146,7 +152,7 @@ test('"Hoy prefiero": cambia la sesión de hoy con un toque y se deshace', async
   await page.locator('.hoja-fondo.abierta').getByRole('button', { name: /^B:/ }).click()
   await expect(page.getByText('Hoy B.')).toBeVisible()
   await expect(page.locator('h1')).toContainText('B: Torso completo')
-  await expect(page.getByText(/Hoy toca B · /)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^B: /)
   await page.getByRole('button', { name: 'Deshacer' }).click()
   await expect(page.locator('h1')).toContainText('A:')
 })
@@ -161,8 +167,10 @@ test('jueves en la noche avisa del viernes; el domingo, el rescate hasta las 7 p
   await reloj(page, '2026-10-11T10:00:00')
   await page.goto('')
   await contestarNo(page)
-  await expect(page.getByText(/Hoy toca B · Frida fue torso el lunes · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.getByText(/Frida fue torso el lunes · Semana: 2 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^B: /)
   await expect(page.getByText(/Vas en 2 de 3; hoy antes de las 7 pm te toca B\./)).toBeVisible()
   await registrar(page, '2026-10-08', 'B')
-  await expect(page.getByText(/Hoy toca A, extra y opcional · Frida fue torso el lunes · Semana: 3 de 3/)).toBeVisible()
+  await expect(page.getByText(/Extra y opcional · Frida fue torso el lunes · Semana: 3 de 3/)).toBeVisible()
+  await expect(page.locator('.inicio-texto h1')).toHaveText(/^A: /)
 })

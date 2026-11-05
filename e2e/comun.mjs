@@ -64,3 +64,8 @@ export async function contestarNo(page) {
     await page.getByRole('button', { name: 'No fui' }).click()
   }
 }
+/** "Terminar aquí" vive en el ✕ de la sesión (ACOMODO-FM.md, 7) */
+export async function terminarAqui(page) {
+  await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
+  await page.locator('.hoja-fondo.abierta').getByText('Terminar aquí', { exact: true }).click()
+}

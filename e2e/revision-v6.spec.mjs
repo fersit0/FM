@@ -10,7 +10,7 @@ test('en Hoy el pez no queda encima de la línea de arriba ni del título', asyn
   await limpiar(page, 'no')
   await reloj(page, '2026-10-08T20:45:00')
   await page.goto('')
-  await expect(page.getByText(/· corta/)).toBeVisible()
+  await expect(page.getByText(/Corta si empiezas|· corta/)).toBeVisible()
   await expect(page.locator('.inicio-texto .pez')).toBeVisible()
   await page.waitForTimeout(500)
   const r = await page.evaluate(() => {
@@ -24,20 +24,26 @@ test('en Hoy el pez no queda encima de la línea de arriba ni del título', asyn
   expect(r.texto.filter((t) => cruza(t, r.pez))).toEqual([])
 })
 
-test('la foto de la sesión llena el ancho, con la etiqueta completa, y la primera vez salen los dos avisos', async ({ page }) => {
+test('la foto de la sesión sale entera, con la etiqueta adentro, y la primera vez sale la aproximación', async ({ page }) => {
+  // ACOMODO-FM.md, 1: la foto ya no llena el ancho a fuerza (eso la recortaba); va entera, en su proporción
   await limpiar(page, 'hecha')
   await empezarSesion(page)
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Press inclinado con mancuernas')
-  // primera vez con el press y primer ejercicio: los dos avisos
-  await expect(page.getByText('Primera vez: empieza con este y ajusta.')).toBeVisible()
-  await expect(page.getByText(/Antes, una de aproximación con .*, 10 reps\. No se registra\./)).toBeVisible()
-  await page.waitForTimeout(500)
+  await expect(page.getByText(/^Antes: .* × 10, no se registra\.$/)).toBeVisible()
+  await expect(page.getByText('Primera vez: empieza con este y ajusta.')).toHaveCount(0)
+  await page.waitForTimeout(900)
   const r = await page.evaluate(() => {
-    const caja = (s) => { const b = document.querySelector(s).getBoundingClientRect(); return { left: b.left, right: b.right } }
-    return { marco: caja('.sesion-foto'), foto: caja('.sesion-foto .foto'), etiqueta: caja('.sesion-foto .foto-etiqueta') }
+    const caja = (s) => { const b = document.querySelector(s).getBoundingClientRect(); return { left: b.left, right: b.right, top: b.top, bottom: b.bottom, w: b.width, h: b.height } }
+    const img = document.querySelector('.sesion-foto img')
+    return { foto: caja('.sesion-foto .foto'), etiqueta: caja('.sesion-foto .foto-etiqueta'), real: img.naturalWidth / img.naturalHeight }
   })
-  expect(Math.abs(r.foto.left - r.marco.left)).toBeLessThanOrEqual(1)
-  expect(Math.abs(r.foto.right - r.marco.right)).toBeLessThanOrEqual(1)
+  expect(Math.abs(r.foto.w / r.foto.h - r.real) / r.real).toBeLessThan(0.03)
   expect(r.etiqueta.left - r.foto.left).toBeGreaterThanOrEqual(8)
   expect(r.etiqueta.right).toBeLessThanOrEqual(r.foto.right - 8)
+  expect(r.etiqueta.bottom).toBeLessThanOrEqual(r.foto.bottom)
+  // en la serie 2 la foto le deja su lugar al círculo
+  await page.getByRole('button', { name: 'Serie hecha' }).click()
+  await page.getByRole('button', { name: 'Saltar' }).click()
+  await expect(page.getByText(/Serie 2 de/)).toBeVisible()
+  await expect(page.locator('.sesion-foto')).toHaveCount(0)
 })
