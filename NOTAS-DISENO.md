@@ -319,3 +319,13 @@ Ya estaba todo del 1 de octubre (layout con áreas seguras y prueba del botón, 
 - La tarjeta siempre muestra "La vez pasada: 30 lb × 10, 10, 9." con el peso de hoy (sube, repite, quédate o baja).
 - Toques de 44: select sin apariencia nativa con flecha propia, interruptor, barra (relleno con margen negativo para no mover los textos), botones dentro de renglones con relleno de 13 px y margen negativo.
 - `color-scheme: dark` en tinta y en las hojas, `light` en piedra y rojo, para que los selectores nativos de iOS combinen aunque el teléfono esté en modo claro.
+
+# Acomodo (ACOMODO-FM.md, 4 nov)
+
+- La foto de la serie se recortaba: la caja era de ancho completo con alto máximo y `object-fit: cover`. Ahora `repartir` (`src/logic/acomodo.ts`, con pruebas) calcula foto y círculo: la foto en su proporción real (casi todas 3:2; la lee al cargar), entera, hasta la mitad del alto libre; el círculo de 140 o más; si la foto quedaría de menos de 80 de alto, no sale. Solo en la serie 1 de cada ejercicio.
+- Sin brincos: el acomodo de cada serie se fija a los 700 ms de llegar y ya no crece hasta la serie siguiente (si se va el aviso de Deshacer, sobra aire); solo se achica si ya no cabe. Igual el círculo de arranque del descanso. Ya no se esconde la foto ni la línea de la hora cuando sale el aviso.
+- Serie: sin la línea de la hora (queda en calentamiento y descanso), sin "Bancos · 1 de 6" (la zona está en el recorrido y "1 de 6" en la esquina), sin "Terminar aquí" arriba (está en el ✕), sin "Primera vez…" y sin "14 kg" dentro del círculo (tocar la unidad sigue cambiando). Aproximación en un renglón: "Antes: 15 lb × 10, no se registra."
+- Contraste mínimo de 4.5 (3 en texto grande): texto secundario al 90% sobre rojo y cobalto, barra apagada al 60%, letras de Tu semana al 60%, "Ajustes" en tinta cuando cae sobre el círculo rojo (se mide en cada render), "Deshacer" en cobalto sobre el aviso piedra del descanso.
+- Hoy: la línea de arriba sin "Hoy toca A" (lo dice el título) y en piezas que no se parten; el "·" que quedaría al final de un renglón se esconde. Subtítulo sin repetir la versión: "7 ejercicios, unos 49 min. Completa si empiezas a las 7:25 am o antes."
+- `e2e/layout.spec.mjs` ahora también falla si una foto sale recortada, si un texto tiene contraste menor al mínimo o si el círculo de la serie mide menos de 140 (en pantallas de 640 de alto o más).
+

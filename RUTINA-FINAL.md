@@ -73,7 +73,7 @@ Ejemplos que deben salir así (van todos como pruebas):
 3. Nunca se pregunta por un día que no se ha acabado: hasta las 21:30 de ese día todavía puede ir en la noche.
 4. **¿Vas en la noche?** De martes a sábado, de las 8:15 a las 21:00, si es día de gym y no hay sesión ese día, Hoy pone arriba "No fuiste en la mañana" con la sesión que toca, la versión que alcanza según la hora a la que salga (usa `estadoSiSalgo`) y tres botones: "Voy en la noche" (se queda como plan del día), "Ya fui" (abre registrar) y "Hoy no" (se guarda en `noFui` y la semana se recalcula).
 5. Registrar sesión, en Hoy y en Historial: fecha, mañana o noche, y qué fue: A, B, C, Frida pierna o Frida torso. Una de club por día, como en la v6.
-6. Línea de arriba de Hoy: "Hoy toca A sin pierna · Frida fue pierna el lunes · Semana: 1 de 3".
+6. Línea de arriba de Hoy: "Frida fue pierna el lunes · Semana: 1 de 3". Lo que toca ya lo dice el título ("A: Pecho y espalda"), así que no se repite; ningún dato se parte entre renglones (ACOMODO-FM.md, 4 nov).
 
 **Tu semana en Hoy** (nuevo):
 - Debajo de la línea de arriba, una tira de siete días (L M M J V S D) que cabe completa a 375 px.
@@ -100,11 +100,11 @@ Cada ejercicio lleva su zona. La sesión se recorre por zonas en orden y cada zo
 - **Series seguidas, serie de aproximación y esfuerzo:** como en la v6.
 - **Duración:** con el cálculo que ya tiene la app y sin cierre, unos 47 min de pesas en A, 49 en B y 43 en C, más el calentamiento. Code calcula la de A sin pierna y la reporta.
 - **Entre semana en la mañana** (lunes a viernes, empezando antes de las 12:00): la última pesa ideal es a las 7:40 y el tope a las 8:15. Al tocar Empezar: completa si inicio + calentamiento + pesas termina a las 8:15 o antes; si no, corta si cabe; si tampoco, Hoy dice "Ya no alcanza en la mañana" y abre "¿Vas en la noche?". En la mañana no se ofrece `CASA`. Con las duraciones de arriba, la completa alcanza hasta las 7:20 más o menos y la corta hasta las 7:50; Code lo verifica y lo reporta.
-- **Línea de la mañana:** "Empezaste 6:47 · completa · terminas pesas 7:36 · sauna hasta 8:40". Si la última pesa pasa de las 7:40: "terminas pesas 7:52 · te quedan 48 min de sauna y baño".
+- **Línea de la mañana:** "Empezaste 6:47 · completa · terminas pesas 7:36 · sauna hasta 8:40". Si la última pesa pasa de las 7:40: "terminas pesas 7:52 · te quedan 48 min de sauna y baño". Sale en el calentamiento y en el descanso, no en la serie; cambiar a la corta o a la completa está en el ✕ (ACOMODO-FM.md, 4 nov).
 - **Recorte en la mañana:** solo si la última pesa proyectada pasa de las 8:15, en el orden de la v6. Pasar de las 7:40 no recorta nada: lo que se acorta es el sauna.
 - **En la noche y en fin de semana:** la última pesa es 15 min antes de que cierre el club: 21:15 de martes a sábado y 18:45 el domingo. El lunes en la tarde el club no abre: no se ofrece sesión de club. Completa, corta o `CASA` y el recorte, como en la v6 pero con estos topes.
 - **Ajustes:** "Salida del club en la mañana" (8:40), "Minutos de baño" (25) y "Última pesa en la noche" (21:15). Se quita la de 21:10. El domingo sale solo de la hora de cierre.
-- **"Terminar aquí" y "Ocupado: después":** como en la v6.
+- **"Terminar aquí" y "Ocupado: después":** como en la v6, salvo que "Terminar aquí" ya no está siempre a la vista: vive en el ✕ de la sesión, y esa esquina dice en qué ejercicio vas ("3 de 6") (ACOMODO-FM.md, 4 nov).
 
 ## 4. Sesión A: pecho y pierna · Bancos → Terraza
 

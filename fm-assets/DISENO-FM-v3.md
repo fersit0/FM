@@ -42,7 +42,7 @@ Solo estos cuatro. Cero degradados, cero sombras, cero transparencias decorativa
 | Resumen | tinta | piedra | rojo | rojo, texto tinta |
 | Historial, Ejercicios, Ajustes, Técnica | tinta | piedra | rojo si aparece | rojo, texto tinta |
 
-Texto secundario: el mismo color del texto al 60% de opacidad. Separadores: 1 px del color del texto al 12%. Nunca blanco puro ni negro puro. La barra de estado de iOS se adapta: clara sobre tinta y cobalto, oscura sobre rojo y piedra (`theme-color` y `apple-mobile-web-app-status-bar-style` se actualizan por pantalla).
+Texto secundario: el mismo color del texto al 60% de opacidad; sobre rojo y cobalto, al 90%, para que todo texto tenga contraste de 4.5 o más (ACOMODO-FM.md, 4 nov). Separadores: 1 px del color del texto al 12%. Nunca blanco puro ni negro puro. La barra de estado de iOS se adapta: clara sobre tinta y cobalto, oscura sobre rojo y piedra (`theme-color` y `apple-mobile-web-app-status-bar-style` se actualizan por pantalla).
 
 ## 3. Tipografía
 
@@ -94,7 +94,7 @@ Animación del tamaño: 500 ms, `cubic-bezier(0.32, 0.72, 0, 1)`, sin rebote. En
 
 **Botones secundarios.** Cápsula de contorno de 2 pt del color del texto, alto 64 pt, como "+15 s" y "Saltar" en Descanso. O solo texto de 17 pt al 60% si es una acción menor.
 
-**Barra de navegación.** Solo en Inicio, Historial y Ejercicios. Tres textos, sin íconos: "Hoy", "Historial", "Ejercicios", 15 pt, 600, activo en piedra, inactivos al 40%, sobre tinta, alineados a la izquierda con 24 pt de separación, pegada abajo respetando el safe area. Se oculta en sesión.
+**Barra de navegación.** Solo en Inicio, Historial y Ejercicios. Tres textos, sin íconos: "Hoy", "Historial", "Ejercicios", 15 pt, 600, activo en piedra, inactivos al 60% (era 40%: no se leía; ACOMODO-FM.md, 4 nov), sobre tinta, alineados a la izquierda con 24 pt de separación, pegada abajo respetando el safe area. Se oculta en sesión.
 
 ## 6. Pantallas con mockup
 
@@ -113,7 +113,7 @@ Igual al mockup: nombre del ejercicio, "Serie 2 de 3", círculo con peso, dial, 
 - A la derecha del subtítulo "Serie 2 de 3", un texto "Técnica" 17 pt subrayado al 60% que abre la ficha (7.2).
 - Si toca subir de peso, una línea 17 pt bajo el subtítulo: "La vez pasada hiciste 12 en todas. Sube a 20." y el dial ya arranca en 20.
 - Si hay serie de aproximación: "Antes, una de aproximación con 8 kg, 10 reps. No se registra."
-- Sin foto en esta pantalla. El círculo es el protagonista. Sin pez.
+- Foto (cambio del 4 nov, ACOMODO-FM.md): solo en la serie 1 de cada ejercicio, siempre entera y en su proporción, nunca recortada, y nunca más de la mitad del espacio; de la serie 2 en adelante el círculo toma su lugar. El círculo mide 140 pt o más y nada cambia de tamaño a media serie. El círculo es el protagonista. Sin pez.
 - Todo cabe sin scroll en 390×844; si no cabe, reduce el círculo máximo, nunca el dial ni el botón.
 
 ### 6.3 Descanso (`pantallas-descanso.png`)
