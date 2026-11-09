@@ -222,3 +222,24 @@ test('recorte en el camino: con la proyección pasada de la última pesa quita a
   await page.getByRole('button', { name: 'Saltar' }).click()
   await expect(page.getByText('Listo.')).toBeVisible()
 })
+
+test('Deshacer el recorte regresa lo quitado sin borrar la alternativa que se eligió mientras estaba el aviso', async ({ page }) => {
+  await limpiar(page, 'hecha')
+  await reloj(page, '2026-10-08T20:10:00')
+  await page.goto('')
+  await page.getByRole('button', { name: /^Empezar/ }).click()
+  await page.getByRole('button', { name: 'Saltar' }).click()
+  await reloj(page, '2026-10-08T20:50:00')
+  await page.getByRole('button', { name: 'Serie hecha' }).click()
+  await expect(page.locator('.deshacer')).toContainText('Para terminar a tiempo se quitó')
+  // con el aviso todavía a la vista, el ejercicio se cambia por su alternativa
+  await menu(page, 'Cambiar por alternativa')
+  const hoja = page.locator('.hoja-fondo.abierta')
+  const alternativa = (await hoja.locator('button').first().innerText()).split('\n')[0]
+  await hoja.locator('button').first().click()
+  await expect(hoja).toHaveCount(0)
+  await page.locator('.deshacer').getByRole('button', { name: 'Deshacer' }).click()
+  await expect(page.locator('.sesion-linea')).not.toContainText('se quitó')
+  await page.getByRole('button', { name: 'Saltar' }).click()
+  await expect(page.locator('.sesion-titulo-fila h1')).toHaveText(alternativa)
+})

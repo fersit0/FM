@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { limpiar, empezarSesion, terminarAqui } from './comun.mjs'
+import { limpiar, empezarSesion, terminarAqui, menu } from './comun.mjs'
 
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (d) => d.accept())
@@ -37,6 +37,35 @@ test('deshacer saltar ejercicio', async ({ page }) => {
   await expect(page.locator('.sesion-titulo-fila h1')).not.toHaveText(titulo)
   await page.getByRole('button', { name: 'Deshacer' }).click()
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText(titulo)
+})
+
+test('Deshacer "Ocupado: después" no borra la alternativa que se eligió mientras estaba el aviso', async ({ page }) => {
+  const titulo = page.locator('.sesion-titulo-fila h1')
+  const original = await titulo.innerText()
+  await page.locator('.sesion-ocupado').getByRole('button', { name: 'Ocupado: después' }).click()
+  await expect(titulo).not.toHaveText(original)
+  // con el aviso todavía a la vista, el que quedó se cambia por su alternativa
+  await menu(page, 'Cambiar por alternativa')
+  const hoja = page.locator('.hoja-fondo.abierta')
+  const alternativa = (await hoja.locator('button').first().innerText()).split('\n')[0]
+  await hoja.locator('button').first().click()
+  await expect(titulo).toHaveText(alternativa)
+  await page.getByRole('button', { name: 'Deshacer' }).click()
+  // regresa el original y, después de él, sigue la alternativa elegida
+  await expect(titulo).toHaveText(original)
+  await menu(page, 'Saltar ejercicio')
+  await expect(titulo).toHaveText(alternativa)
+})
+
+test('un doble toque en "Serie hecha" guarda una sola serie', async ({ page }) => {
+  const caja = await page.getByRole('button', { name: 'Serie hecha' }).boundingBox()
+  const x = caja.x + caja.width / 2, y = caja.y + caja.height / 2
+  // los dos toques juntos, sin esperar a que se guarde el primero
+  await Promise.all([page.mouse.click(x, y), page.mouse.click(x, y)])
+  await expect(page.getByText('Serie guardada.')).toBeVisible()
+  await page.waitForTimeout(500)
+  await page.getByRole('button', { name: 'Opciones de la sesión' }).click()
+  await expect(page.getByText('1 registrada,', { exact: false })).toBeVisible()
 })
 
 test('editar y borrar series de hoy', async ({ page }) => {

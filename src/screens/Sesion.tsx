@@ -78,19 +78,25 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
     return new Date(sesion.fecha + 'T00:00:00').getTime() + m * 60000
   }, [sesion.fecha, sesion.inicio, settings, franja])
 
+  // la sesión como está ahorita: Deshacer regresa solo lo suyo sobre ella, no una copia vieja de toda la sesión (si en
+  // esos 5 segundos se eligió una alternativa, se queda)
+  const sesionAhora = useRef(sesion)
+  sesionAhora.current = sesion
   // Recorte en el camino (RUTINA-FINAL.md, 3): si lo que falta ya no cabe antes de la última pesa, quita abdomen, brazos, press militar o aperturas
   const hechosAntes = useRef(hechos.length)
+  // si se deshace un recorte, en esta sesión ya no se vuelve a recortar solo ("Terminar aquí" sigue a la mano)
+  const sinRecorte = useRef(false)
   useEffect(() => {
     // borrar una serie no es avanzar: no recorta ni tapa el Deshacer del borrado
     const borro = hechos.length < hechosAntes.current
     hechosAntes.current = hechos.length
-    if (casa || !ej || borro) return
+    if (casa || !ej || borro || sinRecorte.current) return
     const disponibles = (topeMs - Date.now()) / 1000
     const quitar = recortar(lista, ej.indice, hechos.length, disponibles, ligera)
     if (quitar.length === 0) return
     const antes = sesion.recortados
     datos.guardarSesion({ ...sesion, recortados: [...(antes ?? []), ...quitar] })
-    setAccion({ texto: `Para terminar a tiempo se quitó ${quitar.map((id) => nombreDe(id).toLowerCase()).join(' y ')}.`, deshacer: () => datos.guardarSesion({ ...sesion, recortados: antes }) })
+    setAccion({ texto: `Para terminar a tiempo se quitó ${quitar.map((id) => nombreDe(id).toLowerCase()).join(' y ')}.`, deshacer: () => { sinRecorte.current = true; return datos.guardarSesion({ ...sesionAhora.current, recortados: antes }) } })
     // solo al cambiar de paso o de serie
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [indice, hechos.length, lista.length])
@@ -147,7 +153,7 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
     const quedaEnZona = orden.indexOf(ej.base.id) < lista.length - 1 && lista.slice(ej.indice + 1).some((e) => e.zona === ej.base.zona)
     await datos.guardarSesion({ ...sesion, orden, pospuestos: [...(sesion.pospuestos ?? []), ej.base.id] })
     setActiva({ ...activa, descansoFin: undefined, descansoSeg: undefined, avisado: undefined, borrador: undefined })
-    setAccion({ texto: quedaEnZona && ej.base.zona ? `Después, al final de ${ZONA_NOMBRE[ej.base.zona].toLowerCase()}.` : 'Después, al final de la sesión.', deshacer: () => datos.guardarSesion({ ...sesion, ...antes }) })
+    setAccion({ texto: quedaEnZona && ej.base.zona ? `Después, al final de ${ZONA_NOMBRE[ej.base.zona].toLowerCase()}.` : 'Después, al final de la sesión.', deshacer: () => datos.guardarSesion({ ...sesionAhora.current, ...antes }) })
   }
   async function elegirAlternativa(alt: Alternativa | null) {
     if (!ej) return
@@ -428,14 +434,19 @@ function PasoSerie({ datos, sesion, ej, lista, hechos, sets, activa, setActiva, 
     haptico.marcaDial()
     setPeso(v)
   }
+  // un doble toque guarda una sola serie: mientras se guarda, el segundo toque no hace nada; se suelta cuando la serie
+  // nueva ya está en la lista (o cuando no se pudo guardar)
+  const guardando = useRef(false)
+  useEffect(() => { guardando.current = false }, [hechos.length])
   async function serieHecha() {
     prepararAudio()
-    if (reps <= 0) return
+    if (reps <= 0 || guardando.current) return
+    guardando.current = true
     const ahora = Date.now()
     let id: number
     try {
       id = await datos.guardarSet({ sessionId: sesion.id, exerciseId: item.id, ejercicioBaseId: base.id, numSerie: siguienteNum, pesoKg: conPeso ? aKg(peso, unidad) : null, peso: conPeso ? peso : undefined, unidad: conPeso ? unidad : undefined, reps, fecha: claveFecha(new Date(ahora)), hora: ahora })
-    } catch { setError(true); return }
+    } catch { guardando.current = false; setError(true); return }
     setError(false)
     sonarClic()
     if (siguienteNum >= series) haptico.finEjercicio(); else haptico.serieHecha()
