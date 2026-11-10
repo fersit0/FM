@@ -55,6 +55,8 @@ body { min-height: 100dvh; background: var(--fondo); color: var(--texto); transi
 #root { min-height: 100dvh; display: flex; flex-direction: column; }
 button, input, select { font: inherit; color: inherit; letter-spacing: inherit; }
 button { border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none; color: inherit; }
+/* dejar el dedo sobre una foto no abre el menú de iOS de guardar o compartir la imagen */
+img { -webkit-touch-callout: none; }
 /* 16 px mínimo: con menos, Safari hace zoom al tocar el campo */
 input, select { border: 0; background: transparent; color: var(--texto); padding: 0; outline: none; font-variant-numeric: tabular-nums; font-size: max(16px, 1em); min-height: 44px; }
 /* el select nativo de Safari ignora la altura: sin apariencia propia, con una flecha chica del color del texto */
