@@ -127,6 +127,8 @@
 /* el aviso de Deshacer ocupa su propio lugar (en la pantalla o en la hoja abierta) y nunca tapa nada */
 .aviso-lugar { flex: none; }
 .aviso-lugar:empty { display: none; }
+/* el lugar de un aviso que ya se fue sigue apartado hasta el siguiente paso (Deshacer.tsx): vacío, pero con su alto */
+.aviso-lugar.de-pantalla[data-apartado] { display: block; }
 .inicio-pie > .aviso-lugar { align-self: stretch; margin: 0 var(--margen); }
 .sesion > .aviso-lugar { margin-top: 8px; }
 .deshacer { background: var(--tinta); color: var(--piedra); padding: 6px 8px 6px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 17px; box-shadow: inset 0 0 0 2px var(--piedra); }

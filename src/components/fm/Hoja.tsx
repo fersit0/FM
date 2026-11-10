@@ -14,6 +14,24 @@ export function Hoja({ abierta, titulo, altura = 'media', onCerrar, children, pi
     return () => window.removeEventListener('keydown', onKey)
   }, [abierta, onCerrar])
 
+  // La de pantalla completa es tinta de arriba abajo, y detrás del reloj también: en la app instalada iOS pinta esa franja
+  // con el color de la página de atrás (roja en la serie, azul en el descanso), no con el de la hoja. Ya que la hoja tapa
+  // todo (420 ms después de abrirse), la página de atrás se pone tinta; al cerrarse regresa a su color mientras baja.
+  useEffect(() => {
+    if (!abierta || altura !== 'completa') return
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+    const antes = { color: meta?.content, pantalla: document.body.dataset.pantalla }
+    const t = setTimeout(() => {
+      if (meta) meta.content = '#121318'
+      document.body.dataset.pantalla = 'tinta'
+    }, 420)
+    return () => {
+      clearTimeout(t)
+      if (meta && antes.color) meta.content = antes.color
+      if (antes.pantalla) document.body.dataset.pantalla = antes.pantalla
+    }
+  }, [abierta, altura])
+
   // La que tiene asa se cierra deslizándola hacia abajo, como en iOS: desde cualquier parte si lo de adentro está hasta
   // arriba. Si se suelta antes de un cuarto de su alto y sin aventarla, regresa a su lugar.
   useEffect(() => {

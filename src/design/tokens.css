@@ -146,7 +146,9 @@ button.kg { padding: 10px 6px; margin: -10px -6px -10px 0; min-width: 44px; min-
 .hoja-fondo { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.5); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 420ms var(--curva), visibility 0s linear 420ms; display: flex; align-items: flex-end; justify-content: center; }
 .hoja-fondo.abierta { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
 .hoja { width: 100%; max-width: 520px; background: var(--tinta); color: var(--piedra); --texto: var(--piedra); --fondo: var(--tinta); padding: 8px var(--margen) calc(var(--safe-bottom) + 24px); display: flex; flex-direction: column; gap: 16px; transform: translateY(100%); transition: transform 420ms var(--curva); overflow: hidden; }
-.hoja.media { max-height: 60dvh; }
+/* crece con lo que tiene adentro hasta dejar libre la barra de estado y 64 pt: en el iPhone 16 instalada, el menú del ✕
+   enseña de "Ver técnica" a "Descartar sesión" sin recorrerlo (con 60dvh "Terminar aquí" quedaba escondido) */
+.hoja.media { max-height: calc(100% - var(--safe-top) - 64px); }
 .hoja.completa { height: 100dvh; max-height: 100dvh; padding-top: calc(var(--safe-top) + 8px); }
 .hoja-fondo.abierta .hoja { transform: translateY(0); }
 .hoja-asa { width: 36px; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--piedra) 32%, transparent); margin: 0 auto 4px; flex: none; }

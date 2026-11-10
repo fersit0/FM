@@ -190,7 +190,8 @@ Elimina todas las ilustraciones SVG de personas.
 Una sola curva: `cubic-bezier(0.32, 0.72, 0, 1)`.
 - Cambio de pantalla entre estados (serie a descanso, descanso a serie): el color de fondo cambia con un fundido de 350 ms y el círculo anima su tamaño y posición en 500 ms. Es el momento más satisfactorio de la app; que se sienta como cambiar de estación.
 - Cambio de ejercicio: el contenido sale a la izquierda y entra el siguiente en 380 ms.
-- Hojas: suben en 420 ms. Las medianas (las de asa) se cierran deslizándolas hacia abajo, desde cualquier parte si lo de adentro está hasta arriba; si se sueltan antes de un cuarto de su alto y sin aventarlas, regresan. Las de pantalla completa se cierran con "Cerrar".
+- Hojas: suben en 420 ms. Las medianas (las de asa) se cierran deslizándolas hacia abajo, desde cualquier parte si lo de adentro está hasta arriba; si se sueltan antes de un cuarto de su alto y sin aventarlas, regresan. Las de pantalla completa se cierran con "Cerrar". Las medianas crecen con lo que tienen adentro hasta dejar libre la barra de estado y 64 pt (en el iPhone 16 el menú del ✕ enseña de "Ver técnica" a "Descartar sesión" sin recorrerlo). Con una de pantalla completa abierta, la página de atrás se pone tinta para que detrás del reloj no se vea su color.
+- Aviso de Deshacer: cuando se va, su lugar se queda apartado (vacío, con su alto) hasta el siguiente paso, serie o descanso, o hasta salir de Hoy o Historial: nada se mueve a media serie.
 - Sin rebotes, confeti ni entradas escalonadas. `prefers-reduced-motion`: solo fundidos.
 
 ## 11. Checklist final

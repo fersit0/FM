@@ -33,6 +33,15 @@ export function Deshacer({ texto, onDeshacer, onCerrar, ms = 5000, clave }: { te
   }, [destino])
   // que se vea: en Hoy la pantalla baja hasta el fondo (el aviso va arriba de los botones); en lo demás, lo justo
   const ref = useRef<HTMLDivElement>(null)
+  // Cuando el aviso se va, su lugar se queda apartado con el mismo alto: nada brinca a media serie ni en Hoy (en el
+  // iPhone el nombre, "Técnica", − y + subían hasta 63 pt y el toque caía donde ya no estaba el botón). La sesión lo
+  // suelta al cambiar de paso, de serie o de descanso (le cambia la `key` al lugar); Hoy, al salir de la pantalla.
+  // En una hoja no hace falta: ahí el aviso va abajo de todo y no empuja nada.
+  useLayoutEffect(() => {
+    if (!destino || destino.closest('.hoja') || !ref.current || !(destino instanceof HTMLElement)) return
+    destino.style.minHeight = `${ref.current.offsetHeight}px`
+    destino.setAttribute('data-apartado', '')
+  })
   useLayoutEffect(() => {
     if (!ref.current || !destino) return
     const pantalla = destino.hasAttribute('data-al-fondo') ? destino.closest('.pantalla') : null

@@ -196,8 +196,9 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
           <span className="t-nota tenue sesion-cuenta">{ej ? `${ej.indice + 1} de ${lista.length}` : ''}</span>
         </header>
       )}
-      {/* el aviso de Deshacer, debajo de la cabecera: el círculo se hace chico mientras está, nada queda tapado */}
-      <div className="aviso-lugar de-pantalla" />
+      {/* el aviso de Deshacer, debajo de la cabecera: nada queda tapado. Cuando se va, su lugar se queda apartado hasta
+          que cambia el paso, la serie o el descanso (la `key`), para que nada brinque a media serie */}
+      <div className="aviso-lugar de-pantalla" key={ej ? `${descansando ? 'd' : 's'}-${ej.base.id}-${ej.item.id}-${hechos.length}` : `${paso.tipo}-${indice}`} />
       {paso.tipo === 'calentamiento' && <PasoTiempo key="cal" titulo="Calentamiento" detalle={`Elíptica o caminadora ${minCal} min, ritmo en el que puedes platicar.`} nota={CALENTAMIENTO.siOcupada} minutos={minCal} linea={linea} activa={activa} setActiva={setActiva} onListo={() => ir(indice + 1)} />}
       {ej && !descansando && (
         <PasoSerie key={`${ej.base.id}-${ej.item.id}`} datos={datos} sesion={sesion} ej={ej} lista={lista} hechos={hechos} sets={sets} activa={activa} setActiva={setActiva} onTecnica={() => setTecnica(true)} onSiguiente={() => ir(indice + 1)} onSeries={() => setSeriesHoy(true)} onVolverOriginal={() => elegirAlternativa(null)} onOcupado={casa ? undefined : ocupado} pospuesto={pospuesto}
