@@ -1,6 +1,7 @@
-// Biblioteca de ejercicios: RUTINA-FINAL.md versión 7 (secciones 3 a 7). Ids estables por movimiento; un id compartido
-// entre ejercicio y alternativa (o entre sesiones) comparte historial. Sin pares: cada ejercicio termina sus series y
-// luego el siguiente. Tres sesiones de club: A pecho y pierna, B torso completo, C espalda y hombro (semanas sin Frida).
+// Biblioteca de ejercicios: RUTINA-FINAL.md versión 7 con MANANAS-30.md (versión 8) encima. Ids estables por movimiento;
+// un id compartido entre ejercicio y alternativa (o entre sesiones) comparte historial. Sin pares: cada ejercicio termina
+// sus series y luego el siguiente. Dos sesiones de club que se alternan, de unos 30 min: A empuje y B jalón. La C
+// (espalda y hombro) ya no se ofrece: se queda aquí para que su historial se siga viendo.
 import type { Ejercicio, Alternativa, Letra, Zona } from './tipos'
 
 const alt = (a: Omit<Alternativa, 'modo' | 'tecnica' | 'errores'> & Partial<Pick<Alternativa, 'modo' | 'tecnica' | 'errores'>>): Alternativa => ({ modo: 'peso', tecnica: [], errores: [], ...a })
@@ -13,14 +14,16 @@ export const ZONA_DETALLE: Record<Zona, string> = {
 }
 
 export const CALENTAMIENTO = {
-  nombre: 'Calentamiento', minCompleta: 5, minCorta: 4,
-  texto: 'Elíptica o caminadora 5 min, ritmo en el que puedes platicar. Corta: 4 min.',
+  nombre: 'Calentamiento', minCompleta: 3, minCorta: 1,
+  texto: 'Elíptica o caminadora 3 min, ritmo en el que puedes platicar. En la corta, solo la serie de aproximación.',
+  /** la corta no lleva cardio: una serie de aproximación del primer ejercicio (MANANAS-30.md, 2) */
+  textoCorta: 'Serie de aproximación: 10 repeticiones con la mitad del peso del primer ejercicio.',
   siOcupada: 'Si las dos están ocupadas: bici fija.',
 }
-/** En la mañana no hay cierre; en la noche y en fin de semana se ofrece al terminar y se puede saltar (RUTINA-FINAL.md v7, 3) */
+/** Ya no hay cierre de cardio (MANANAS-30.md, 2): de las pesas a la regadera. Se queda la definición por las sesiones viejas. */
 export const CIERRE = {
   nombre: 'Cierre', minCompleta: 10, minCorta: 5, minTerminarAqui: 5,
-  texto: 'En la noche y en fin de semana, diez minutos a elección: saco en la terraza (1 min fuerte y 1 min suave, cinco veces) o elíptica. Corta o "Terminar aquí": 5 min. En la mañana no hay cierre.',
+  texto: 'Sin cierre de cardio: de las pesas a la regadera.',
   /** con 10 min son cinco vueltas; con 5 (corta o "Terminar aquí"), hasta que se acabe */
   saco: (min: number) => `Saco: 1 min fuerte y 1 min suave, ${min >= 10 ? 'cinco veces' : `hasta los ${min}`}.`,
 }
@@ -29,15 +32,15 @@ export const REGLAS_GLOBALES: { titulo: string; texto: string }[] = [
   { titulo: 'Ajuste dentro de la sesión', texto: 'Si la primera serie pasó del número alto con 3 o más en reserva, sube un escalón para la siguiente; si no llegó al número bajo, baja uno. Un escalón: 5 lb por mano en mancuernas (1 kg en las laterales de casa) o una placa en máquina.' },
   { titulo: 'Serie de aproximación', texto: 'En el primer ejercicio de la sesión y en el primer press si no es el primero, 10 repeticiones con la mitad del peso. No se registra.' },
   { titulo: 'Series seguidas', texto: 'Cada ejercicio se termina completo antes de pasar al siguiente. El descanso corre al tocar la serie.' },
-  { titulo: 'Zonas', texto: 'La sesión recorre bancos, poleas y terraza en orden y visita cada zona una sola vez. Si algo está ocupado, "Ocupado: después" lo manda al final de su zona.' },
-  { titulo: 'Qué sesión toca', texto: 'Cada semana tiene tres sesiones base: Frida (o C si esa semana no hay), A y B. Si faltan varias, C, luego A, luego B. Después de Frida torso o de C no va B ni C mientras falte A; Frida pierna no bloquea nada. Con las tres hechas, la extra es C si Frida fue pierna (nunca dos C en la semana); si no, A o B, la contraria de la última. Una de club por día, más Frida si cae el mismo día.' },
-  { titulo: 'Frida', texto: 'Con Frida, a su ritmo y con su app: unas semanas pierna y otras torso (espalda, hombro y bíceps). En FM solo se registra: "Fui con Frida" y luego Pierna o Torso. Cuenta para la meta. Si fue pierna, la A de esa semana sale sin pierna: pecho y espalda.' },
-  { titulo: 'Versión automática', texto: 'Al tocar Empezar, la app ve la hora real. Entre semana antes de las 12: completa si las pesas terminan a las 8:15 o antes; si no, corta; si tampoco, ya no alcanza en la mañana y queda la noche. En la noche y en fin de semana la última pesa es a las 21:15, el domingo a las 18:45: completa, corta o casa. El lunes en la tarde el club no abre. Si a media sesión no alcanza, quita abdomen, luego brazos, luego aperturas o puente, y avisa.' },
-  { titulo: 'Terminar aquí', texto: 'Siempre a la mano durante la sesión: cierra con lo hecho y cuenta para la meta. En la noche y en fin de semana ofrece el cierre de cardio de 5 min.' },
+  { titulo: 'Zonas', texto: 'La A se hace toda en bancos. La B empieza en poleas y termina en la terraza. Si algo está ocupado, "Ocupado: después" lo manda al final de su zona.' },
+  { titulo: 'Qué sesión toca', texto: 'Entre semana te bañas en el club: cualquier mañana de lunes a viernes es de club y las pesas son lo que quepa. A (empuje) y B (jalón) se alternan sin reiniciar por semana: toca la contraria de la última. Una de club por día. Si llegas tarde, solo regadera: llegar cuenta. La meta es llegar 5 veces y hacer pesas 3 o 4.' },
+  { titulo: 'Frida', texto: 'Con Frida, a su ritmo y con su app. Es extra: se registra cuando pasa, con Pierna o Torso, y cuenta como pesas. Torso cuenta como B (después toca A); pierna no mueve la rotación.' },
+  { titulo: 'Versión automática', texto: 'Al tocar Empezar, la app ve la hora real. Entre semana antes de las 12 la última pesa sale de tus ajustes (salida del club menos minutos de baño): completa si caben al menos los dos primeros ejercicios; si no, corta; si tampoco, solo regadera. En la noche y en fin de semana la última pesa es a las 21:15, el domingo a las 18:45: completa, corta o casa. El lunes en la tarde el club no abre. Si a media sesión no alcanza, al llegar al segundo ejercicio la app empieza a quitar series del último, luego ese ejercicio y luego lo mismo con el tercero. Los dos primeros no se tocan.' },
+  { titulo: 'Terminar aquí', texto: 'Siempre a la mano durante la sesión: cierra con lo hecho y cuenta como pesas.' },
   { titulo: 'Dolor', texto: 'Molestia muscular es normal; dolor agudo en una articulación (hombro, codo, rodilla, espalda baja) no. Si aparece, cambiar a la alternativa ese día. No se aguanta.' },
   { titulo: 'Semana pesada', texto: 'Si dos semanas seguidas se llega muerto, la siguiente se hacen 2 series por ejercicio con el mismo peso y se retoma. La app lo ofrece, no lo impone.' },
 ]
-export const VERSION_CORTA_TEXTO = 'Unos 25 min: calentamiento 4 min y tres ejercicios a 3 series (A: press inclinado, laterales y goblet; A sin pierna: press inclinado, remo con pecho apoyado y laterales; B: press plano, laterales y jalón cerrado; C: jalón ancho, press militar y laterales). En la noche y en fin de semana, cierre de 5 min. Cuenta como sesión. La app la elige sola por la hora.'
+export const VERSION_CORTA_TEXTO = 'Unos 14 min: la serie de aproximación y los dos primeros ejercicios a 3 series (A: press inclinado y laterales; B: jalón y remo). Cuenta como sesión de pesas. La app la elige sola por la hora.'
 export const REGLA_ALTERNATIVA = 'Primero "Ocupado: después". Si sigue ocupado, la alternativa: solo mancuernas, banco, colchoneta o el cuerpo, en la misma zona o en la terraza. Se oculta si su id ya está en la sesión.'
 
 // ---- alternativas compartidas (mismo id = mismo historial) ----
@@ -45,14 +48,12 @@ const remoMancuerna = (caso: string): Alternativa => alt({ id: 'remo-mancuerna',
 const pressPiso = (caso: string, nombre = 'Press en el piso con mancuernas', series = 3): Alternativa => alt({ id: 'press-piso', nombre, caso, series, repsMin: 8, repsMax: 10, descansoSeg: 90, tecnica: ['Acostado en la colchoneta, mismas reps.', 'La amplitud es menor y es más seguro para el hombro.'], ilustracion: 'press-piso' })
 const lagartijas = (caso: string, series = 3): Alternativa => alt({ id: 'lagartijas', nombre: 'Lagartijas', caso, series, repsMin: 0, repsMax: 0, descansoSeg: 90, modo: 'corporal', tecnica: ['Al tope dejando 2 en reserva.'], ilustracion: 'lagartijas' })
 const tricepsPatada = (caso: string, nombre: string, series = 2): Alternativa => alt({ id: 'triceps-patada', nombre, caso, series, repsMin: 10, repsMax: 12, descansoSeg: 60, porLado: true, colocacion: 'Una mano y una rodilla en el banco, espalda plana; el codo pegado al cuerpo y doblado a 90°.', tecnica: ['Estira el brazo hacia atrás hasta que quede recto.', 'Regresa a 90° en 2 a 3 segundos.'], ilustracion: 'triceps-patada' })
-const tricepsCabezaAlt = (caso: string): Alternativa => alt({ id: 'triceps-cabeza', nombre: 'Tríceps con mancuerna sobre la cabeza', caso, series: 3, repsMin: 10, repsMax: 12, descansoSeg: 60, colocacion: 'Sentado en banco con respaldo, una mancuerna a dos manos.', tecnica: ['Bajar detrás de la cabeza doblando codos.', 'Estirar arriba sin abrir codos.'], ilustracion: 'triceps-cabeza' })
 const curlAlternadoAlt = (caso: string, series: number): Alternativa => alt({ id: 'curl-alternado', nombre: 'Curl con mancuernas', caso, series, repsMin: 10, repsMax: 12, descansoSeg: 60, tecnica: ['Codos pegados a las costillas.', 'Sube sin mover el codo, baja en 2 a 3 segundos.'], ilustracion: 'curl-alternado' })
-const curlMartilloAlt = (caso: string, series: number): Alternativa => alt({ id: 'curl-martillo', nombre: 'Curl martillo, mismas mancuernas', caso, series, repsMin: 10, repsMax: 12, descansoSeg: 60, tecnica: ['Palmas mirándose todo el recorrido, codos pegados.'], ilustracion: 'curl-martillo' })
 const crunchAlt = (caso: string, series = 3): Alternativa => alt({ id: 'crunch', nombre: 'Crunch en colchoneta', caso, series, repsMin: 15, repsMax: 20, descansoSeg: 45, modo: 'corporal', tecnica: ['Despega los hombros del piso subiendo las costillas hacia la cadera.', 'Baja lento sin descansar la cabeza.'], ilustracion: 'crunch' })
 const elevacionPiernasAlt = (caso: string, series = 2): Alternativa => alt({ id: 'elevacion-piernas', nombre: 'Elevación de piernas en colchoneta', caso, series, repsMin: 12, repsMax: 12, descansoSeg: 45, modo: 'corporal', tecnica: ['Espalda baja pegada, piernas casi estiradas hasta la vertical.', 'Baja controlado.'], ilustracion: 'elevacion-piernas' })
 const lateralesLiga: Alternativa = alt({ id: 'laterales-liga', nombre: 'Laterales con liga', caso: 'Sin mancuernas', series: 3, repsMin: 15, repsMax: 20, descansoSeg: 60, modo: 'corporal', tecnica: ['Pisa la liga con los dos pies y sube a los lados hasta la altura de los hombros.'], ilustracion: 'laterales-liga' })
 
-/** Laterales: en A, B y C, en la zona de bancos (mancuernas ligeras); en A van 4 series (PULIDO-FM.md, 4) */
+/** Laterales: en A (4 series) y en la C vieja, en la zona de bancos (mancuernas ligeras) */
 const LATERALES = (sesion: Letra, orden: number, series = 3): Ejercicio => ({
   id: 'laterales', nombre: 'Elevaciones laterales', sesion, orden, zona: 'bancos', series, repsMin: 12, repsMax: 20, descansoSeg: 60, modo: 'peso', incrementoKg: 1,
   ubicar: 'Mancuernas ligeras (empezar con las que parezcan poca cosa).',
@@ -61,7 +62,23 @@ const LATERALES = (sesion: Letra, orden: number, series = 3): Ejercicio => ({
   ilustracion: 'laterales',
   alternativas: [alt({ id: 'laterales-sentado', nombre: 'Laterales sentado en la orilla de un banco', caso: 'Si te balanceas', series, repsMin: 12, repsMax: 20, descansoSeg: 60, tecnica: ['Sentado en la orilla del banco, mismo movimiento.'], ilustracion: 'laterales-sentado' })],
 })
-/** Remo sentado en máquina: en B y en C */
+/** Jalón al pecho ancho: abre la B; también era el primero de la C */
+const JALON = (sesion: Letra, orden: number): Ejercicio => ({
+  id: 'jalon', nombre: 'Jalón al pecho, agarre ancho', sesion, orden, zona: 'poleas', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 75, modo: 'peso',
+  ubicar: 'La máquina de jalón al pecho: asiento, cojines para trabar las rodillas y una barra ancha colgando arriba.',
+  colocacion: 'Rodillas trabadas bajo el cojín, agarre un poco más ancho que los hombros, palmas al frente. Pecho arriba.',
+  tecnica: ['Jalar la barra hasta la parte alta del pecho llevando los codos abajo y atrás.', 'Pausa corta.', 'Soltar controlado hasta estirar del todo.'], errores: ['Jalar detrás de la nuca.', 'Columpiarse.', 'Jalar con los brazos en vez de con los codos.'], ilustracion: 'jalon',
+  alternativas: [
+    alt({
+      id: 'jalon-cerrado', nombre: 'Jalón al pecho, manos al ancho de los hombros', caso: 'Otra opción en la misma máquina', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 75, modo: 'peso',
+      ubicar: 'La misma máquina y la misma barra del jalón ancho; solo cambian las manos.',
+      colocacion: 'Manos al ancho de los hombros, palmas al frente, rodillas trabadas, pecho arriba.',
+      tecnica: ['Jala a la parte alta del pecho con los codos pegados al cuerpo.', 'Pausa corta y sube en 2 a 3 segundos hasta estirar del todo.'], errores: ['Echarte atrás para mover más peso.', 'Quedarte corto arriba.'], ilustracion: 'jalon-cerrado',
+    }),
+    remoMancuerna('Solo si la máquina sigue ocupada al final'),
+  ],
+})
+/** Remo sentado en máquina: en B y en la C vieja */
 const REMO_POLEA = (sesion: Letra, orden: number): Ejercicio => ({
   id: 'remo-polea', nombre: 'Remo sentado en máquina', sesion, orden, zona: 'poleas', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 75, modo: 'peso',
   ubicar: 'La máquina de remo sentado, con el agarre que tenga puesto.',
@@ -69,7 +86,7 @@ const REMO_POLEA = (sesion: Letra, orden: number): Ejercicio => ({
   tecnica: ['Jalar hacia el abdomen con los codos pegados al cuerpo y apretar los omóplatos un segundo.', 'Regresar en 2 a 3 segundos hasta estirar sin redondear la espalda.'], errores: ['Echarte para atrás para jalar.', 'Encoger hombros.'], ilustracion: 'remo-polea',
   alternativas: [alt({ id: 'remo-pecho-apoyado', nombre: 'Remo con pecho apoyado en banco reclinable', caso: 'Máquina ocupada', series: 3, repsMin: 12, repsMax: 15, descansoSeg: 60, tecnica: ['Boca abajo en el banco a 30 o 45°, mancuernas colgando.', 'Jala los codos atrás hasta pasar la línea de la espalda.'], ilustracion: 'remo-pecho-apoyado' })],
 })
-/** Crunch en colchoneta: en A y en C */
+/** Crunch en colchoneta: en la C vieja */
 const CRUNCH = (sesion: Letra, orden: number): Ejercicio => ({
   id: 'crunch', nombre: 'Crunch en colchoneta', sesion, orden, zona: 'terraza', series: 2, repsMin: 15, repsMax: 20, descansoSeg: 45, modo: 'corporal',
   colocacion: 'Acostado en colchoneta, rodillas dobladas, pies en el piso, manos tocando las sienes o cruzadas en el pecho.',
@@ -78,7 +95,7 @@ const CRUNCH = (sesion: Letra, orden: number): Ejercicio => ({
 })
 
 export const EJERCICIOS: Ejercicio[] = [
-  // ---------------- A: pecho y pierna · Bancos → Terraza ----------------
+  // ---------------- A: empuje (pecho, hombro y tríceps) · Bancos ----------------
   {
     id: 'press-inclinado', nombre: 'Press inclinado con mancuernas', sesion: 'A', orden: 1, zona: 'bancos', series: 4, repsMin: 8, repsMax: 10, descansoSeg: 90, modo: 'peso',
     ubicar: 'Banco reclinable a 30° (uno o dos clics arriba de plano). Más de 45° ya es hombro. Del 1 al 4 es el mismo banco.',
@@ -89,8 +106,9 @@ export const EJERCICIOS: Ejercicio[] = [
       pressPiso('Bancos ocupados o molestia de hombro', 'Press en el piso con mancuernas, en colchoneta', 4),
     ],
   },
+  LATERALES('A', 2, 4),
   {
-    id: 'aperturas-inclinadas', nombre: 'Aperturas inclinadas con mancuernas', sesion: 'A', orden: 2, zona: 'bancos', series: 2, repsMin: 12, repsMax: 15, descansoSeg: 60, modo: 'peso',
+    id: 'aperturas-inclinadas', nombre: 'Aperturas inclinadas con mancuernas', sesion: 'A', orden: 3, zona: 'bancos', series: 2, repsMin: 12, repsMax: 15, descansoSeg: 60, modo: 'peso',
     ubicar: 'El mismo banco del press inclinado, a 30°.',
     colocacion: 'Mancuernas arriba del pecho, palmas viéndose, codos apenas doblados y fijos.',
     tecnica: ['Abre en arco en 2 a 3 segundos hasta que las mancuernas queden a la altura del pecho, no más abajo.', 'Sube por el mismo arco hasta juntarlas.'], errores: ['Doblar los codos y hacerlo press.', 'Bajar de más.'], ilustracion: 'aperturas-inclinadas',
@@ -99,73 +117,47 @@ export const EJERCICIOS: Ejercicio[] = [
       lagartijas('Bancos ocupados o molestia de hombro al abrir', 2),
     ],
   },
-  LATERALES('A', 3, 4),
   {
     id: 'triceps-cabeza', nombre: 'Tríceps con mancuerna sobre la cabeza, sentado', sesion: 'A', orden: 4, zona: 'bancos', series: 2, repsMin: 10, repsMax: 12, descansoSeg: 60, modo: 'peso',
     ubicar: 'El mismo banco reclinable, casi derecho.',
     colocacion: 'Espalda pegada al respaldo, una mancuerna con las dos manos por el disco de arriba, brazos estirados sobre la cabeza.',
     tecnica: ['Baja detrás de la cabeza en 2 a 3 segundos doblando solo los codos.', 'Sube hasta estirar.'], errores: ['Abrir los codos.', 'Arquear la espalda baja.'], ilustracion: 'triceps-cabeza',
-    alternativas: [tricepsPatada('Molestia de codo u hombro con el brazo arriba', 'Patada de tríceps, apoyado en el banco')],
+    alternativas: [
+      alt({
+        id: 'triceps-polea', nombre: 'Tríceps con cuerda en la polea de pie', caso: 'Si prefieres la polea de pie', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 60, modo: 'peso',
+        ubicar: 'La polea de pie que ya tiene la cuerda, una punta en cada mano.',
+        colocacion: 'Un paso atrás, parado derecho, codos pegados a los costados, antebrazos paralelos al piso.',
+        tecnica: ['Empuja hasta estirar, abriendo las manos abajo.', 'Regresa en 2 a 3 segundos solo hasta 90°.'], errores: ['Echarte encima y empujar con hombro y pecho.', 'Dejar subir las manos a la cara.'], ilustracion: 'triceps-polea',
+      }),
+      tricepsPatada('Molestia de codo u hombro con el brazo arriba', 'Patada de tríceps, apoyado en el banco'),
+    ],
   },
+
+  // ---------------- B: jalón (espalda, pierna y abdomen) · Poleas → Terraza ----------------
+  JALON('B', 1),
+  REMO_POLEA('B', 2),
   {
-    id: 'goblet', nombre: 'Sentadilla goblet', sesion: 'A', orden: 5, zona: 'terraza', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 90, modo: 'peso',
+    id: 'goblet', nombre: 'Sentadilla goblet', sesion: 'B', orden: 3, zona: 'terraza', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 90, modo: 'peso',
     ubicar: 'Una mancuerna; hacerla frente a un espejo si se puede.', colocacion: 'Pies un poco más abiertos que los hombros, puntas un poco hacia afuera. Una mancuerna parada, sostenida con las dos manos pegada al pecho.',
     tecnica: ['Baja en 2 a 3 segundos como si te sentaras en una silla baja, con el pecho arriba.', 'Hasta que los codos rocen las rodillas o lo más bajo sin redondear la espalda.', 'Sube empujando el piso.'], errores: ['Rodillas que se juntan.', 'Talones que se despegan.'], ilustracion: 'goblet',
-    alternativas: [alt({ id: 'sentadilla-mancuernas', nombre: 'Sentadilla con dos mancuernas', caso: 'La mancuerna pesada está ocupada o ya no alcanza', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 90, tecnica: ['Mancuernas colgando a los costados, misma técnica que la goblet.'], ilustracion: 'sentadilla-mancuernas' })],
+    alternativas: [
+      alt({ id: 'sentadilla-mancuernas', nombre: 'Sentadilla con dos mancuernas', caso: 'La mancuerna pesada está ocupada o ya no alcanza', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 90, tecnica: ['Mancuernas colgando a los costados, misma técnica que la goblet.'], ilustracion: 'sentadilla-mancuernas' }),
+      alt({
+        id: 'puente-gluteo', nombre: 'Puente de glúteo con mancuerna, en colchoneta', caso: 'Molestia de rodilla', series: 2, repsMin: 12, repsMax: 15, descansoSeg: 60, modo: 'peso',
+        colocacion: 'Acostado en colchoneta, rodillas dobladas y pies firmes al ancho de la cadera; una mancuerna acostada sobre la cadera, sostenida con las dos manos.',
+        tecnica: ['Empuja con los talones y sube la cadera hasta que rodillas, cadera y hombros queden en línea.', 'Aprieta el glúteo un segundo arriba y baja en 2 a 3 segundos.'], errores: ['Arquear la espalda baja para subir más.', 'Empujar con las puntas.'], ilustracion: 'puente-gluteo',
+      }),
+    ],
   },
   {
-    id: 'puente-gluteo', nombre: 'Puente de glúteo con mancuerna, en colchoneta', sesion: 'A', orden: 6, zona: 'terraza', series: 2, repsMin: 12, repsMax: 15, descansoSeg: 60, modo: 'peso',
-    colocacion: 'Acostado en colchoneta, rodillas dobladas y pies firmes al ancho de la cadera; una mancuerna acostada sobre la cadera, sostenida con las dos manos.',
-    tecnica: ['Empuja con los talones y sube la cadera hasta que rodillas, cadera y hombros queden en línea.', 'Aprieta el glúteo un segundo arriba y baja en 2 a 3 segundos.'], errores: ['Arquear la espalda baja para subir más.', 'Empujar con las puntas.'], ilustracion: 'puente-gluteo',
-    alternativas: [alt({ id: 'puente-sin-peso', nombre: 'Puente de glúteo sin mancuerna', caso: 'Sin mancuerna libre', series: 2, repsMin: 20, repsMax: 20, descansoSeg: 60, modo: 'corporal', tecnica: ['El mismo movimiento sin peso, 20 repeticiones.'], ilustracion: 'puente-sin-peso' })],
-  },
-  CRUNCH('A', 7),
-
-  // ---------------- B: torso completo · Bancos → Poleas → Terraza ----------------
-  {
-    id: 'press-plano', nombre: 'Press plano con mancuernas', sesion: 'B', orden: 1, zona: 'bancos', series: 3, repsMin: 8, repsMax: 10, descansoSeg: 90, modo: 'peso',
-    ubicar: 'Un banco plano.',
-    colocacion: 'Sentado en la orilla con las mancuernas sobre los muslos, impulsar una a la vez con la rodilla al acostarse. Pies firmes, espalda alta pegada, omóplatos juntos y abajo.',
-    tecnica: ['Bajar en 2 segundos hasta que los codos queden a la altura del pecho.', 'Empujar hasta arriba sin chocar las mancuernas.', 'Codos a unos 45° del cuerpo.'], errores: ['Rebotar abajo.', 'Arquear la espalda baja de más.', 'Abrir codos a 90°.'], ilustracion: 'press-plano',
-    alternativas: [pressPiso('Bancos ocupados'), lagartijas('Sin mancuernas libres')],
-  },
-  LATERALES('B', 2),
-  {
-    id: 'jalon-cerrado', nombre: 'Jalón al pecho, manos al ancho de los hombros', sesion: 'B', orden: 3, zona: 'poleas', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 75, modo: 'peso',
-    ubicar: 'La misma máquina y la misma barra del jalón ancho; solo cambian las manos.',
-    colocacion: 'Manos al ancho de los hombros, palmas al frente, rodillas trabadas, pecho arriba.',
-    tecnica: ['Jala a la parte alta del pecho con los codos pegados al cuerpo.', 'Pausa corta y sube en 2 a 3 segundos hasta estirar del todo.'], errores: ['Echarte atrás para mover más peso.', 'Quedarte corto arriba.'], ilustracion: 'jalon-cerrado',
-    alternativas: [remoMancuerna('Solo si la máquina sigue ocupada al final')],
-  },
-  REMO_POLEA('B', 4),
-  {
-    id: 'triceps-polea', nombre: 'Tríceps con cuerda en la polea de pie', sesion: 'B', orden: 5, zona: 'poleas', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 60, modo: 'peso',
-    ubicar: 'La polea de pie que ya tiene la cuerda, una punta en cada mano.',
-    colocacion: 'Un paso atrás, parado derecho, codos pegados a los costados, antebrazos paralelos al piso.',
-    tecnica: ['Empuja hasta estirar, abriendo las manos abajo.', 'Regresa en 2 a 3 segundos solo hasta 90°.'], errores: ['Echarte encima y empujar con hombro y pecho.', 'Dejar subir las manos a la cara.'], ilustracion: 'triceps-polea',
-    alternativas: [tricepsCabezaAlt('Polea ocupada'), tricepsPatada('Te molesta el codo con el brazo arriba', 'Patada de tríceps', 3)],
-  },
-  {
-    id: 'curl-alternado', nombre: 'Curl con mancuernas', sesion: 'B', orden: 6, zona: 'terraza', series: 2, repsMin: 10, repsMax: 12, descansoSeg: 60, modo: 'peso',
-    colocacion: 'De pie, una mancuerna en cada mano, palmas al frente, codos pegados a las costillas.',
-    tecnica: ['Sube una a la vez, o las dos, sin mover el codo, hasta que la mancuerna llegue al hombro.', 'Baja en 2 a 3 segundos hasta estirar.'], errores: ['Mecer el cuerpo.', 'Codos que se van al frente.'], ilustracion: 'curl-alternado',
-    alternativas: [curlMartilloAlt('Otra opción con las mismas mancuernas', 2)],
-  },
-  {
-    id: 'elevacion-piernas', nombre: 'Elevación de piernas en colchoneta', sesion: 'B', orden: 7, zona: 'terraza', series: 3, repsMin: 12, repsMax: 12, descansoSeg: 45, modo: 'corporal',
+    id: 'elevacion-piernas', nombre: 'Elevación de piernas en colchoneta', sesion: 'B', orden: 4, zona: 'terraza', series: 2, repsMin: 12, repsMax: 12, descansoSeg: 45, modo: 'corporal',
     colocacion: 'Acostado boca arriba en la colchoneta, manos bajo los glúteos, espalda baja pegada.',
     tecnica: ['Subir las piernas casi estiradas hasta la vertical.', 'Bajar controlado sin que la espalda baja se despegue.'], errores: ['Arquear la espalda.', 'Bajar con impulso.'], ilustracion: 'elevacion-piernas',
     alternativas: [crunchAlt('Te jala la espalda baja')],
   },
 
-  // ---------------- C: espalda y hombro · Poleas → Bancos → Terraza (solo semanas sin Frida) ----------------
-  {
-    id: 'jalon', nombre: 'Jalón al pecho, agarre ancho', sesion: 'C', orden: 1, zona: 'poleas', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 75, modo: 'peso',
-    ubicar: 'La máquina de jalón al pecho: asiento, cojines para trabar las rodillas y una barra ancha colgando arriba.',
-    colocacion: 'Rodillas trabadas bajo el cojín, agarre un poco más ancho que los hombros, palmas al frente. Pecho arriba.',
-    tecnica: ['Jalar la barra hasta la parte alta del pecho llevando los codos abajo y atrás.', 'Pausa corta.', 'Soltar controlado hasta estirar del todo.'], errores: ['Jalar detrás de la nuca.', 'Columpiarse.', 'Jalar con los brazos en vez de con los codos.'], ilustracion: 'jalon',
-    alternativas: [remoMancuerna('Solo si la máquina sigue ocupada al final')],
-  },
+  // ---------------- C: espalda y hombro · Poleas → Bancos → Terraza (v7; ya no se ofrece, queda por el historial) ----------------
+  JALON('C', 1),
   REMO_POLEA('C', 2),
   {
     id: 'press-militar', nombre: 'Press militar sentado con mancuernas', sesion: 'C', orden: 3, zona: 'bancos', series: 3, repsMin: 8, repsMax: 10, descansoSeg: 90, modo: 'peso',
@@ -215,7 +207,7 @@ export const NOMBRES_RETIRADOS: Record<string, string> = {
   'aperturas-maquina': 'Aperturas en máquina', 'cruce-poleas': 'Cruce de poleas de pie', 'press-pecho-maquina': 'Press de pecho en máquina', 'press-inclinado-maquina': 'Press inclinado en máquina',
   'press-hombro-maquina': 'Press de hombro en máquina', 'press-militar-neutro': 'Press con agarre neutro', 'remo-pecho-maquina': 'Remo en máquina con pecho apoyado', 'remo-alto-maquina': 'Remo alto en máquina',
   'laterales-polea': 'Lateral en polea', 'curl-polea': 'Curl en polea', 'curl-cuerda': 'Curl martillo en polea con cuerda', 'dominadas-asistidas': 'Dominadas asistidas', 'fondos-banco': 'Fondos en banco',
-  'remo-polea-una-mano': 'Remo sentado a una mano en polea', 'sentadilla-banco': 'Sentadilla a un banco', 'elevacion-rodillas': 'Elevación de rodillas dobladas',
+  'remo-polea-una-mano': 'Remo sentado a una mano en polea', 'sentadilla-banco': 'Sentadilla a un banco', 'elevacion-rodillas': 'Elevación de rodillas dobladas', 'puente-sin-peso': 'Puente de glúteo sin mancuerna',
 }
 /** Nombre para mostrar de cualquier id, aunque ya no esté en la rutina */
 export function nombreDe(id: string): string {
@@ -246,50 +238,29 @@ export function buscarCualquiera(id: string): { item: Ejercicio | Alternativa; b
 }
 /** Sin regla de 4 semanas (RUTINA-FINAL.md, 10) */
 export const CON_SERIE_EXTRA: string[] = []
-export const NOMBRE_SESION: Record<Letra, string> = { A: 'Pecho y pierna', B: 'Torso completo', C: 'Espalda y hombro', CASA: 'Casa, 12 minutos' }
-/** La A en semanas con Frida pierna (RUTINA-FINAL.md v7, 4b) */
-export const NOMBRE_A_SIN_PIERNA = 'Pecho y espalda'
-export const nombreSesion = (tipo: Letra, sinPierna = false) => (tipo === 'A' && sinPierna ? NOMBRE_A_SIN_PIERNA : NOMBRE_SESION[tipo])
+export const NOMBRE_SESION: Record<Letra, string> = { A: 'Empuje', B: 'Jalón', C: 'Espalda y hombro', CASA: 'Casa, 12 minutos' }
+export const nombreSesion = (tipo: Letra) => NOMBRE_SESION[tipo]
 
 /** Orden de las zonas en cada sesión (RUTINA-FINAL.md, 4, 5 y 5c) */
-export const RUTA: Record<Letra, Zona[]> = { A: ['bancos', 'terraza'], B: ['bancos', 'poleas', 'terraza'], C: ['poleas', 'bancos', 'terraza'], CASA: [] }
-/** La corta: tres ejercicios a 3 series (RUTINA-FINAL.md, 3) */
-const CORTA: Record<'A' | 'B' | 'C', string[]> = { A: ['press-inclinado', 'laterales', 'goblet'], B: ['press-plano', 'laterales', 'jalon-cerrado'], C: ['jalon', 'press-militar', 'laterales'] }
-const CORTA_A_SIN_PIERNA = ['press-inclinado', 'remo-pecho-apoyado', 'laterales']
+export const RUTA: Record<Letra, Zona[]> = { A: ['bancos'], B: ['poleas', 'terraza'], C: ['poleas', 'bancos', 'terraza'], CASA: [] }
+/** La corta: los dos primeros ejercicios a 3 series (MANANAS-30.md, 2). La de la C es la de la v7, por el historial. */
+const CORTA: Record<'A' | 'B' | 'C', string[]> = { A: ['press-inclinado', 'laterales'], B: ['jalon', 'remo-polea'], C: ['jalon', 'press-militar', 'laterales'] }
 
-/**
- * A sin pierna (RUTINA-FINAL.md v7, 4b): la A con la goblet y el puente cambiados por el remo con pecho apoyado y una
- * serie más de aperturas. Bancos → Terraza; comparte historial por id con todo lo demás.
- */
-const deA = (id: string): Ejercicio => EJERCICIOS.find((e) => e.sesion === 'A' && e.id === id)!
-export const A_SIN_PIERNA: Ejercicio[] = [
-  { ...deA('press-inclinado'), orden: 1 },
-  { ...deA('aperturas-inclinadas'), orden: 2, series: 3 },
-  {
-    id: 'remo-pecho-apoyado', nombre: 'Remo con pecho apoyado en banco reclinable', sesion: 'A', orden: 3, zona: 'bancos', series: 3, repsMin: 10, repsMax: 12, descansoSeg: 75, modo: 'peso',
-    ubicar: 'El mismo banco reclinable del press, a 30°. Vas boca abajo con el pecho apoyado.',
-    colocacion: 'Boca abajo en el banco, pecho apoyado y pies firmes en el piso; una mancuerna en cada mano, brazos colgando.',
-    tecnica: ['Jala los codos hacia atrás, pegados al cuerpo, hasta pasar la línea de la espalda.', 'Aprieta los omóplatos un segundo y baja en 2 a 3 segundos.'],
-    errores: ['Despegar el pecho del banco para jalar.', 'Encoger hombros.'], ilustracion: 'remo-pecho-apoyado',
-    alternativas: [remoMancuerna('Banco reclinable ocupado')],
-  },
-  { ...deA('laterales'), orden: 4 },
-  { ...deA('triceps-cabeza'), orden: 5 },
-  { ...deA('crunch'), orden: 6 },
-]
-
-/** Lista de ejercicios de una sesión según versión, ya en el orden del recorrido por zonas. `sinPierna`: la A sin pierna. */
-export function listaDe(sesion: Letra, version: 'completa' | 'corta' = 'completa', sinPierna = false): Ejercicio[] {
-  const aSinPierna = sesion === 'A' && sinPierna
-  const todos = aSinPierna ? A_SIN_PIERNA : ejerciciosDe(sesion)
+/** Lista de ejercicios de una sesión según versión, ya en el orden del recorrido por zonas */
+export function listaDe(sesion: Letra, version: 'completa' | 'corta' = 'completa'): Ejercicio[] {
+  const todos = ejerciciosDe(sesion)
   if (sesion === 'CASA') return todos
   if (version === 'corta') {
     // tres series también si se cambia por una alternativa (las de A van a 4 en la completa)
-    const lista = todos.filter((e) => (aSinPierna ? CORTA_A_SIN_PIERNA : CORTA[sesion]).includes(e.id)).map((e) => ({ ...e, series: 3, alternativas: e.alternativas.map((a) => ({ ...a, series: Math.min(a.series, 3) })) }))
+    const lista = todos.filter((e) => CORTA[sesion].includes(e.id)).map((e) => ({ ...e, series: 3, alternativas: e.alternativas.map((a) => ({ ...a, series: Math.min(a.series, 3) })) }))
     const ruta = RUTA[sesion]
     return lista.sort((a, b) => ruta.indexOf(a.zona!) - ruta.indexOf(b.zona!) || a.orden - b.orden)
   }
   return todos
+}
+/** Los que el recorte en el camino nunca toca: los dos primeros de la sesión, que son también la corta (MANANAS-30.md, 4) */
+export function protegidosDe(sesion: Letra): string[] {
+  return sesion === 'CASA' ? ejerciciosDe(sesion).map((e) => e.id) : ejerciciosDe(sesion).slice(0, 2).map((e) => e.id)
 }
 /** Zonas que se visitan, en orden, según la lista */
 export function rutaDe(lista: Ejercicio[]): Zona[] {
@@ -311,6 +282,3 @@ export function alternativasDisponibles(base: Ejercicio, lista: Ejercicio[], cam
   const otros = idsEnSesion(lista.filter((e) => e.id !== base.id), cambios.filter((c) => c.ejercicioId !== base.id), reemplazos)
   return base.alternativas.filter((a) => !otros.has(a.id))
 }
-
-/** Orden del recorte en el camino (RUTINA-FINAL.md, 3): abdomen, luego brazos, luego aperturas o puente. Nunca el resto. */
-export const RECORTE_ORDEN: string[][] = [['crunch', 'elevacion-piernas'], ['curl-alternado', 'curl-martillo', 'triceps-cabeza', 'triceps-polea'], ['aperturas-inclinadas', 'puente-gluteo']]

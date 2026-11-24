@@ -1,8 +1,11 @@
 // Modelo de datos (sección 12 del brief)
 
-/** Sesiones de club (RUTINA-FINAL.md, 2): A pecho y pierna, B torso completo, C espalda y hombro (semanas sin Frida) */
+/** Sesiones de club. Desde la v8 (MANANAS-30.md) solo se ofrecen A (empuje) y B (jalón); la C queda en el historial */
 export type Club = 'A' | 'B' | 'C'
-export type SesionTipo = Club | 'FRIDA' | 'CASA'
+/** Las dos que se alternan (MANANAS-30.md, 3) */
+export type Rota = 'A' | 'B'
+/** VISITA: llegó al club y solo se bañó, sin ejercicios (MANANAS-30.md, 4) */
+export type SesionTipo = Club | 'FRIDA' | 'CASA' | 'VISITA'
 export type Version = 'completa' | 'corta'
 export type Letra = Club | 'CASA'
 /** Zonas del Club Britania (RUTINA-FINAL.md, 3) */
@@ -82,11 +85,13 @@ export interface Sesion {
   pospuestos?: string[]
   /** ids quitados por el recorte en el camino (RUTINA-FINAL.md, 3) */
   recortados?: string[]
+  /** series quitadas por el recorte en el camino, por id de ejercicio (MANANAS-30.md, 4) */
+  seriesMenos?: Record<string, number>
   /** FRIDA: qué hicieron (RUTINA-FINAL.md v7, 2). Las viejas sin tipo cuentan como torso. */
   fridaTipo?: FridaTipo
   /** antes de las 12 es mañana; las viejas no lo tienen (RUTINA-FINAL.md v7, 2) */
   momento?: Momento
-  /** A sin pierna: la A de una semana en que Frida ya fue pierna (RUTINA-FINAL.md v7, 4b) */
+  /** A sin pierna de la v7: ya no se ofrece; queda en las sesiones viejas para el historial */
   sinPierna?: boolean
 }
 export type FridaTipo = 'pierna' | 'torso'
@@ -131,7 +136,7 @@ export interface FotoEjercicio {
 }
 
 export interface Settings {
-  /** salida del club en la mañana (HH:MM, 08:40): con los minutos de baño da el tope de la última pesa (8:15) */
+  /** salida del club en la mañana (HH:MM, 08:45): con los minutos de baño (35) da el tope de la última pesa (8:10) */
   salidaManana: string
   minBano: number
   /** última pesa en la noche de martes a sábado (HH:MM, 21:15); el domingo sale de la hora de cierre (18:45) */
@@ -166,6 +171,8 @@ export interface Settings {
   sesionElegida?: { fecha: string; tipo: Club }
   /** "Voy en la noche": el día (YYYY-MM-DD) que se quedó con plan de ir en la noche (RUTINA-FINAL.md v7, 2.4) */
   vaEnLaNoche?: string
+  /** día en que arrancó la v8 (YYYY-MM-DD): la rotación empieza en A y solo se pregunta por días desde entonces (MANANAS-30.md, 3) */
+  v8Desde?: string
 }
 
 export interface Cintura {
@@ -174,8 +181,8 @@ export interface Cintura {
 }
 
 export const SETTINGS_DEFAULT: Settings = {
-  salidaManana: '08:40',
-  minBano: 25,
+  salidaManana: '08:45',
+  minBano: 35,
   ultimaPesaNoche: '21:15',
   minCarretera: 60,
   minCasaClub: 30,

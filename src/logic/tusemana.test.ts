@@ -1,96 +1,62 @@
 import { describe, it, expect } from 'vitest'
+import type { Sesion, SesionTipo, Settings } from '../data/tipos'
 import { tuSemana } from './tusemana'
-import type { Sesion } from '../data/tipos'
+import { desdeClave } from './fechas'
 
-function sesion(fecha: string, tipo: Sesion['tipo']): Sesion {
-  const d = new Date(fecha + 'T20:00:00')
-  return { id: fecha + tipo, fecha, tipo, version: 'completa', inicio: d.getTime(), fin: d.getTime() + 3600e3, terminada: true }
-}
+// semana del lunes 23 al domingo 29 de noviembre de 2026
+const L = '2026-11-23', M = '2026-11-24', X = '2026-11-25', S = '2026-11-28'
+const s = (fecha: string, tipo: SesionTipo, extra: Partial<Sesion> = {}): Sesion => ({ id: `${fecha}-${tipo}`, fecha, tipo, version: 'completa', inicio: new Date(`${fecha}T07:40:00`).getTime(), terminada: true, ...extra })
+const dia = (f: string, h = 7, m = 0) => { const d = desdeClave(f); d.setHours(h, m); return d }
+const AJ: Pick<Settings, 'salidaManana' | 'v8Desde'> = { salidaManana: '08:45', v8Desde: L }
+const plan = (sesiones: Sesion[], ahora: Date, ajustes: Partial<Settings> = {}) => tuSemana(sesiones, [], { ...AJ, ...ajustes }, ahora).map((d) => d.plan)
+const hecho = (sesiones: Sesion[], ahora: Date) => tuSemana(sesiones, [], AJ, ahora).map((d) => d.hecho.map((h) => (h.tipo === 'FRIDA' ? `F${h.fridaTipo === 'pierna' ? 'P' : 'T'}` : h.tipo)).join('+'))
 
-// semana del lunes 5 al domingo 11 de octubre de 2026
-const LUN = '2026-10-05', MAR = '2026-10-06', MIE = '2026-10-07', JUE = '2026-10-08', VIE = '2026-10-09', SAB = '2026-10-10', DOM = '2026-10-11'
-const SEMANA = [LUN, MAR, MIE, JUE, VIE, SAB, DOM]
-const en = (f: string, h = '07:00') => new Date(`${f}T${h}:00`)
-const planDe = (s: Sesion[], settings: Parameters<typeof tuSemana>[2], ahora: Date) => Object.fromEntries(tuSemana(s, [], settings, ahora).filter((d) => d.plan).map((d) => [d.fecha, d.plan]))
-
-describe('Tu semana (RUTINA-FINAL.md v7, 2)', () => {
-  it('siete días, de lunes a domingo, con hoy marcado y los pasados', () => {
-    const dias = tuSemana([], [], {}, en(MIE))
-    expect(dias.map((d) => d.letra).join('')).toBe('LMMJVSD')
-    expect(dias.filter((d) => d.hoy).map((d) => d.fecha)).toEqual([MIE])
-    expect(dias.filter((d) => d.pasado).map((d) => d.fecha)).toEqual([LUN, MAR])
+describe('Tu semana (MANANAS-30.md, 5)', () => {
+  it('lunes sin nada: de lunes a viernes va A, B, A, B, A; sábado y domingo sin plan', () => {
+    expect(plan([], dia(L))).toEqual(['A', 'B', 'A', 'B', 'A', null, null])
   })
-  it('sin Frida, el lunes: C el martes, A el jueves y B el viernes', () => {
-    expect(planDe([], { fridaPlan: { [LUN]: null } }, en(LUN))).toEqual({ [MAR]: 'C', [JUE]: 'A', [VIE]: 'B' })
+  it('lo hecho va con su letra y lo que falta sigue la rotación', () => {
+    const d = tuSemana([s(L, 'A')], [], AJ, dia(M))
+    expect(d.map((x) => x.plan)).toEqual([null, 'B', 'A', 'B', 'A', null, null])
+    expect(d[0].hecho).toEqual([{ tipo: 'A', noche: false }])
+    expect(d.map((x) => x.letra).join('')).toBe('LMMJVSD')
+    expect(d.map((x) => x.hoy)).toEqual([false, true, false, false, false, false, false])
+    expect(d.map((x) => x.pasado)).toEqual([true, false, false, false, false, false, false])
   })
-  it('con Frida el lunes: hoy F, el martes A y el jueves B; registrada pierna, igual (la A sale sin pierna en la sesión)', () => {
-    expect(planDe([], {}, en(LUN))).toEqual({ [LUN]: 'F', [MAR]: 'A', [JUE]: 'B' })
-    expect(planDe([{ ...sesion(LUN, 'FRIDA'), fridaTipo: 'pierna' }], {}, en(LUN, '21:00'))).toEqual({ [MAR]: 'A', [JUE]: 'B' })
+  it('la visita es un punto lleno, no mueve la rotación y ese día ya no lleva plan', () => {
+    const todo = [s(L, 'A'), s(M, 'VISITA')]
+    expect(hecho(todo, dia(M, 9))).toEqual(['A', 'VISITA', '', '', '', '', ''])
+    expect(plan(todo, dia(M, 8))).toEqual([null, null, 'B', 'A', 'B', null, null])
   })
-  it('Frida el miércoles: A el martes, F el miércoles y B el jueves, respetando la espalda', () => {
-    expect(planDe([], { fridaPlan: { [LUN]: MIE } }, en(LUN))).toEqual({ [MAR]: 'A', [MIE]: 'F', [JUE]: 'B' })
+  it('con pesas y visita el mismo día, se ve solo la de pesas', () => {
+    expect(hecho([s(L, 'VISITA'), s(L, 'A')], dia(M))[0]).toBe('A')
   })
-  it('"Hoy no" el martes: lo de hoy se pasa al jueves y al viernes', () => {
-    const s = [sesion(LUN, 'FRIDA')]
-    expect(planDe(s, {}, en(MAR, '09:00'))).toEqual({ [MAR]: 'A', [JUE]: 'B' })
-    expect(planDe(s, { noFui: [MAR] }, en(MAR, '09:00'))).toEqual({ [JUE]: 'A', [VIE]: 'B' })
+  it('Frida sale con su tipo; pierna no mueve la rotación y torso sí', () => {
+    const pierna = s(L, 'FRIDA', { fridaTipo: 'pierna', momento: 'noche' })
+    expect(hecho([pierna], dia(M))[0]).toBe('FP')
+    expect(tuSemana([pierna], [], AJ, dia(M))[0].hecho[0].noche).toBe(true)
+    expect(plan([pierna], dia(M))).toEqual([null, 'A', 'B', 'A', 'B', null, null])
+    expect(plan([s(L, 'A'), s(L, 'FRIDA', { fridaTipo: 'torso', inicio: new Date(`${L}T20:00:00`).getTime() })], dia(M))).toEqual([null, 'A', 'B', 'A', 'B', null, null])
   })
-  it('el miércoles es descanso: sin plan hoy, B el jueves', () => {
-    expect(planDe([sesion(LUN, 'FRIDA'), sesion(MAR, 'A')], {}, en(MIE))).toEqual({ [JUE]: 'B' })
+  it('pasada la salida de la mañana sin club, hoy ya no lleva letra y la rotación pasa a mañana', () => {
+    expect(plan([s(L, 'A')], dia(M, 8, 44))).toEqual([null, 'B', 'A', 'B', 'A', null, null])
+    expect(plan([s(L, 'A')], dia(M, 8, 45))).toEqual([null, null, 'B', 'A', 'B', null, null])
   })
-  it('lo hecho: la letra, o F con pierna o torso; con su noche', () => {
-    const s: Sesion[] = [{ ...sesion(LUN, 'FRIDA'), fridaTipo: 'pierna', momento: 'noche' }, { ...sesion(MAR, 'A'), momento: 'manana' }]
-    const dias = tuSemana(s, [], {}, en(MIE))
-    expect(dias[0].hecho).toEqual([{ tipo: 'FRIDA', fridaTipo: 'pierna', noche: true }])
-    expect(dias[1].hecho).toEqual([{ tipo: 'A', noche: false }])
+  it('"Voy en la noche" deja la letra de hoy hasta las 21:00; el lunes no, porque en la tarde el club no abre', () => {
+    expect(plan([s(L, 'A')], dia(M, 10), { vaEnLaNoche: M })).toEqual([null, 'B', 'A', 'B', 'A', null, null])
+    expect(plan([s(L, 'A')], dia(M, 21), { vaEnLaNoche: M })).toEqual([null, null, 'B', 'A', 'B', null, null])
+    expect(plan([], dia(L, 13), { vaEnLaNoche: L })).toEqual([null, 'A', 'B', 'A', 'B', null, null])
+    // con visita en la mañana y plan de ir en la noche, mañana ya cuenta la de hoy
+    expect(plan([s(L, 'A'), s(M, 'VISITA')], dia(M, 10), { vaEnLaNoche: M })).toEqual([null, 'B', 'A', 'B', 'A', null, null])
   })
-  it('se recalcula con lo registrado: con las tres base hechas ya no hay plan', () => {
-    expect(planDe([sesion(LUN, 'FRIDA'), sesion(MAR, 'A'), sesion(JUE, 'B')], {}, en(JUE, '10:00'))).toEqual({})
+  it('"Hoy prefiero B" cambia la de hoy y lo demás sigue desde ahí', () => {
+    expect(plan([], dia(L), { sesionElegida: { fecha: L, tipo: 'B' } })).toEqual(['B', 'A', 'B', 'A', 'B', null, null])
   })
-  it('cuando el día ya no da para una de club (21:00, el domingo 19:00), lo que falta pasa a los días que siguen', () => {
-    // Frida torso, faltó el jueves: el jueves a las 9:30 pm la B va el viernes, como dice el aviso
-    const ft = [{ ...sesion(LUN, 'FRIDA'), fridaTipo: 'torso' as const }, sesion(MAR, 'A')]
-    expect(planDe(ft, {}, en(JUE, '20:59'))).toEqual({ [JUE]: 'B' })
-    expect(planDe(ft, {}, en(JUE, '21:30'))).toEqual({ [VIE]: 'B' })
-    // Frida pierna, faltó el martes: el martes a las 10 pm, A el jueves y B el viernes
-    expect(planDe([{ ...sesion(LUN, 'FRIDA'), fridaTipo: 'pierna' }], {}, en(MAR, '22:00'))).toEqual({ [JUE]: 'A', [VIE]: 'B' })
-    // el domingo después de las 7 pm ya no hay plan
-    expect(planDe(ft, {}, en(DOM, '18:59'))).toEqual({ [DOM]: 'B' })
-    expect(planDe(ft, {}, en(DOM, '19:30'))).toEqual({})
+  it('en fin de semana no hay plan, solo lo hecho', () => {
+    expect(plan([s(L, 'A'), s(X, 'B')], dia(S, 10))).toEqual([null, null, null, null, null, null, null])
+    expect(hecho([s(L, 'A'), s(X, 'B'), s(S, 'A')], dia(S, 12))).toEqual(['A', '', 'B', '', '', 'A', ''])
   })
-  it('Frida movida al martes: ese día va la A en la mañana y Frida en la noche, y la B el jueves', () => {
-    const dias = tuSemana([], [], { fridaPlan: { [LUN]: MAR } }, en(LUN, '21:00'))
-    expect(dias[1]).toMatchObject({ plan: 'A', conFrida: true })
-    expect(planDe([], { fridaPlan: { [LUN]: MAR } }, en(LUN, '21:00'))).toEqual({ [MAR]: 'A', [JUE]: 'B' })
-    // y ya registrada la A en la mañana, el martes sigue con Frida planeada
-    const conA = tuSemana([sesion(MAR, 'A')], [], { fridaPlan: { [LUN]: MAR } }, en(MAR, '10:00'))
-    expect(conA[1]).toMatchObject({ plan: 'F', hecho: [{ tipo: 'A', noche: false }] })
+  it('lo de antes de la v8 no decide la primera: toca A', () => {
+    expect(plan([s('2026-11-20', 'A')], dia(M), { v8Desde: M })).toEqual([null, 'A', 'B', 'A', 'B', null, null])
   })
-  // Las nueve semanas de la tabla de la sección 2: cada día a las 6 am, con lo hecho antes, el plan de ese día es lo
-  // que dice la tabla (las extras no se planean)
-  const fp = (f: string): Sesion => ({ ...sesion(f, 'FRIDA'), fridaTipo: 'pierna' })
-  const ftt = (f: string): Sesion => ({ ...sesion(f, 'FRIDA'), fridaTipo: 'torso' })
-  const SIN_FRIDA = { [LUN]: null }
-  const TABLA: [string, Record<string, Sesion>, Record<string, string | null>?, string[]?][] = [
-    ['Frida pierna', { [LUN]: fp(LUN), [MAR]: sesion(MAR, 'A'), [JUE]: sesion(JUE, 'B') }],
-    ['Frida torso', { [LUN]: ftt(LUN), [MAR]: sesion(MAR, 'A'), [JUE]: sesion(JUE, 'B') }],
-    ['Sin Frida', { [MAR]: sesion(MAR, 'C'), [JUE]: sesion(JUE, 'A'), [VIE]: sesion(VIE, 'B') }, SIN_FRIDA],
-    ['Frida pierna con extra', { [LUN]: fp(LUN), [MAR]: sesion(MAR, 'A'), [JUE]: sesion(JUE, 'B'), [VIE]: sesion(VIE, 'C') }, {}, [VIE]],
-    ['Frida pierna, faltó el martes', { [LUN]: fp(LUN), [JUE]: sesion(JUE, 'A'), [VIE]: sesion(VIE, 'B') }],
-    ['Frida torso, faltó el jueves', { [LUN]: ftt(LUN), [MAR]: sesion(MAR, 'A'), [VIE]: sesion(VIE, 'B') }],
-    ['Martes en la noche', { [LUN]: ftt(LUN), [MAR]: { ...sesion(MAR, 'A'), momento: 'noche' }, [JUE]: sesion(JUE, 'B') }],
-    ['Frida el miércoles, torso', { [MAR]: sesion(MAR, 'A'), [MIE]: ftt(MIE), [JUE]: sesion(JUE, 'B') }, { [LUN]: MIE }],
-    ['Sin Frida, sin viernes', { [MAR]: sesion(MAR, 'C'), [JUE]: sesion(JUE, 'A'), [DOM]: sesion(DOM, 'B') }, SIN_FRIDA],
-  ]
-  for (const [nombre, hechas, fridaPlan = {}, extras = []] of TABLA) {
-    it(`la tabla de la sección 2, día por día: ${nombre}`, () => {
-      for (const f of SEMANA) {
-        const s = hechas[f]
-        if (!s || extras.includes(f)) continue
-        const antes = Object.values(hechas).filter((x) => x.fecha < f)
-        const dia = tuSemana(antes, [], { fridaPlan }, en(f, '06:00')).find((d) => d.fecha === f)!
-        expect(dia.plan, `${nombre}, ${f}`).toBe(s.tipo === 'FRIDA' ? 'F' : s.tipo)
-      }
-    })
-  }
 })

@@ -15,8 +15,8 @@ describe('unidades', () => {
   })
   it('todo el gym en lb, casa en kg', () => {
     expect(unidadPorDefecto(buscarEjercicio('jalon')!)).toBe('lb')
-    expect(unidadPorDefecto(buscarEjercicio('press-plano')!)).toBe('lb')
-    expect(unidadPorDefecto(buscarEjercicio('curl-alternado')!)).toBe('lb')
+    expect(unidadPorDefecto(buscarCualquiera('press-plano')!.item)).toBe('lb')
+    expect(unidadPorDefecto(buscarCualquiera('curl-alternado')!.item)).toBe('lb')
     expect(unidadPorDefecto(buscarEjercicio('laterales')!)).toBe('lb')
     expect(unidadPorDefecto(buscarEjercicio('laterales-casa')!)).toBe('kg')
     expect(unidadPorDefecto(buscarCualquiera('remo-mancuerna-casa')!.item)).toBe('kg')
@@ -24,7 +24,7 @@ describe('unidades', () => {
   })
   it('incrementos: 5 lb, 1 kg', () => {
     expect(incrementoDe(buscarEjercicio('jalon')!, 'lb')).toBe(5)
-    expect(incrementoDe(buscarEjercicio('press-plano')!, 'kg')).toBe(1)
+    expect(incrementoDe(buscarCualquiera('press-plano')!.item, 'kg')).toBe(1)
     expect(incrementoDe(buscarEjercicio('laterales')!, 'kg')).toBe(1)
     expect(incrementoDe(buscarEjercicio('laterales')!, 'lb')).toBe(5)
   })
@@ -43,7 +43,7 @@ describe('unidades', () => {
     for (const [id, v] of Object.entries(lb)) expect(pesoInicial(buscarCualquiera(id)!.item, 'lb'), id).toBe(v)
     expect(pesoInicial(buscarEjercicio('laterales-casa')!, 'kg')).toBe(4)
     // en kilos, a la rejilla de 1
-    expect(pesoInicial(buscarEjercicio('press-plano')!, 'kg')).toBe(16)
+    expect(pesoInicial(buscarCualquiera('press-plano')!.item, 'kg')).toBe(16)
     expect(pesoInicial(buscarEjercicio('laterales')!, 'kg')).toBe(5)
   })
 })

@@ -29,12 +29,10 @@ describe('fotos de la biblioteca', () => {
       if (f.b) expect(existsSync(`public/fotos/${f.b}.jpg`), `falta public/fotos/${f.b}.jpg`).toBe(true)
     })
   }
-  it('los ids son únicos salvo los compartidos: laterales (A, B y C), remo-polea (B y C) y crunch (A, C y CASA)', () => {
+  it('los ids son únicos salvo los compartidos con la C vieja o con casa: laterales, remo-polea, jalon y crunch', () => {
     const ids = EJERCICIOS.map((e) => e.id)
-    expect(ids.filter((i) => i === 'laterales')).toHaveLength(3)
-    expect(ids.filter((i) => i === 'remo-polea')).toHaveLength(2)
-    expect(ids.filter((i) => i === 'crunch')).toHaveLength(3)
-    expect(new Set(ids).size).toBe(ids.length - 5)
+    for (const id of ['laterales', 'remo-polea', 'jalon', 'crunch']) expect(ids.filter((i) => i === id), id).toHaveLength(2)
+    expect(new Set(ids).size).toBe(ids.length - 4)
   })
   it('cada ejercicio y cada alternativa tiene sus dos fotos', () => {
     for (const e of EJERCICIOS) for (const it of [e, ...e.alternativas]) expect(FOTOS_BASE[it.ilustracion]?.b, it.id).toBeTruthy()

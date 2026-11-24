@@ -1,16 +1,24 @@
 // Orden de la sesión en marcha (RUTINA-FINAL.md, 3): "Ocupado: después", el recorte en el camino y "Terminar aquí". Puro, sin React.
 import type { Ejercicio, Sesion, SetLog } from '../data/tipos'
-import { listaDe, RECORTE_ORDEN } from '../data/ejercicios'
+import { listaDe, protegidosDe } from '../data/ejercicios'
 import { segundosDeEjercicio, SEG_ENTRE_EJERCICIOS, SEG_CAMBIO_ZONA } from './duracion'
 
-/** Lista de ejercicios de una sesión en su orden actual: el guardado (si "Ocupado: después" lo cambió) sin los recortados */
-export function listaDeSesion(s: Pick<Sesion, 'tipo' | 'version' | 'orden' | 'recortados' | 'sinPierna'>): Ejercicio[] {
-  if (s.tipo === 'FRIDA') return []
-  const base = listaDe(s.tipo, s.version, !!s.sinPierna)
+/**
+ * Lista de ejercicios de una sesión en su orden actual: el guardado (si "Ocupado: después" lo cambió), sin los
+ * recortados y con las series que el recorte en el camino les haya quitado. Frida y la visita no llevan ejercicios.
+ */
+export function listaDeSesion(s: Pick<Sesion, 'tipo' | 'version' | 'orden' | 'recortados' | 'seriesMenos' | 'ligera'>): Ejercicio[] {
+  if (s.tipo === 'FRIDA' || s.tipo === 'VISITA') return []
+  const base = listaDe(s.tipo, s.version)
   const orden = s.orden ?? base.map((e) => e.id)
   const lista = orden.map((id) => base.find((e) => e.id === id)).filter((e): e is Ejercicio => !!e)
   for (const e of base) if (!lista.includes(e)) lista.push(e)
-  return lista.filter((e) => !s.recortados?.includes(e.id))
+  return lista.filter((e) => !s.recortados?.includes(e.id)).map((e) => {
+    const menos = s.seriesMenos?.[e.id] ?? 0
+    if (menos <= 0) return e
+    // en la semana ligera ya son 2 por ejercicio: el recorte se descuenta de esas
+    return { ...e, series: Math.max(1, (s.ligera ? Math.min(2, e.series) : e.series) - menos) }
+  })
 }
 
 /**
@@ -38,27 +46,43 @@ export function segundosRestantes(lista: Ejercicio[], indice: number, seriesHech
   return seg
 }
 
+export interface Recorte {
+  /** ejercicios que salen completos (ids) */
+  quitar: string[]
+  /** series que se le quitan a un ejercicio que se queda (id → cuántas) */
+  menos: Record<string, number>
+}
 /**
- * Recorte en el camino: si lo que falta no cabe antes del tope, quita de los pendientes (después del actual) en este
- * orden: abdomen, brazos, aperturas o puente. Nunca el press principal, el jalón, el remo, los laterales ni la goblet.
- * Devuelve los ids a quitar (además de los ya quitados) hasta que quepa, o todo lo quitable si ni así.
+ * Recorte en el camino (MANANAS-30.md, 4): si lo que falta no cabe antes del tope, quita de los pendientes (después del
+ * actual), empezando por el último: sus series de una en una hasta quitarlo, y luego lo mismo con el anterior. Nunca
+ * toca los dos primeros de la sesión (`protegidos`), que son también la corta. Devuelve lo que hay que quitar hasta que
+ * quepa, o todo lo quitable si ni así. `lista` ya trae lo recortado antes; lo que devuelve es además de eso.
  */
-export function recortar(lista: Ejercicio[], indice: number, seriesHechasActual: number, segundosDisponibles: number, ligera = false): string[] {
+export function recortar(lista: Ejercicio[], indice: number, seriesHechasActual: number, segundosDisponibles: number, protegidos: string[], ligera = false): Recorte {
   const quitar: string[] = []
+  const menos: Record<string, number> = {}
   let actual = lista
   const cabe = () => segundosRestantes(actual, indice, seriesHechasActual, ligera) <= segundosDisponibles
-  if (cabe()) return quitar
-  for (const grupo of RECORTE_ORDEN) {
-    // dentro del grupo, primero el que está más al final
-    const candidatos = actual.map((e, i) => ({ e, i })).filter(({ e, i }) => i > indice && grupo.includes(e.id)).reverse()
-    for (const { e } of candidatos) {
-      quitar.push(e.id)
-      actual = actual.filter((x) => x.id !== e.id)
-      if (cabe()) return quitar
+  if (cabe()) return { quitar, menos }
+  const candidatos = lista.filter((e, i) => i > indice && !protegidos.includes(e.id)).reverse()
+  for (const e of candidatos) {
+    // con la semana ligera ya van 2 series por ejercicio: se cuentan las que de verdad se harían
+    let quedan = ligera ? Math.min(2, e.series) : e.series
+    let n = 0
+    while (quedan > 1) {
+      quedan--
+      n++
+      actual = actual.map((x) => (x.id === e.id ? { ...x, series: quedan } : x))
+      if (cabe()) { menos[e.id] = n; return { quitar, menos } }
     }
+    quitar.push(e.id)
+    actual = actual.filter((x) => x.id !== e.id)
+    if (cabe()) return { quitar, menos }
   }
-  return quitar
+  return { quitar, menos }
 }
+/** Lo mismo que `recortar`, para la sesión: los protegidos salen de su tipo */
+export const protegidosDeSesion = (s: Pick<Sesion, 'tipo'>): string[] => (s.tipo === 'FRIDA' || s.tipo === 'VISITA' ? [] : protegidosDe(s.tipo))
 
 /** "Terminar aquí": lo que falta después del ejercicio actual queda fuera; la sesión se cierra con lo hecho y el cierre es de 5 min */
 export function terminarAqui(s: Sesion, lista: Ejercicio[], indice: number): Sesion {

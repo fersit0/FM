@@ -1,7 +1,7 @@
 // Duración estimada (RUTINA-FINAL.md, 3): 40 s por serie de 8-10, 45 de 10-12, 50 de 12-15 y 55 de 12-20, descansos
 // completos, 1 min entre ejercicios y 2 min al cambiar de zona, más calentamiento y cierre según versión. Puro, sin React.
 import type { Ejercicio, Letra } from '../data/tipos'
-import { CALENTAMIENTO, CIERRE, listaDe } from '../data/ejercicios'
+import { CALENTAMIENTO, CIERRE, listaDe, protegidosDe } from '../data/ejercicios'
 import { seriesPara } from './semana'
 import type { Duraciones } from './horario'
 
@@ -48,7 +48,16 @@ export function duracionEstimada(lista: Ejercicio[], version: Version, opciones:
   if (casa) return 12
   return Math.round(minutosHastaUltimaPesa(lista, version, ligera))
 }
-/** Minutos hasta la última pesa de la completa y de la corta de una sesión de club (para la versión automática) */
-export function duracionesDe(sesion: Letra, sinPierna = false): Duraciones {
-  return { completa: minutosHastaUltimaPesa(listaDe(sesion, 'completa', sinPierna), 'completa'), corta: minutosHastaUltimaPesa(listaDe(sesion, 'corta', sinPierna), 'corta') }
+/**
+ * Minutos hasta la última pesa de una sesión de club, para la versión automática: la completa entera, la completa con
+ * solo los dos primeros ejercicios (lo mínimo para empezarla: lo demás se recorta en el camino) y la corta.
+ */
+export function duracionesDe(sesion: Letra): Duraciones {
+  const completa = listaDe(sesion, 'completa')
+  const fijos = protegidosDe(sesion)
+  return {
+    completa: minutosHastaUltimaPesa(completa, 'completa'),
+    minima: minutosHastaUltimaPesa(completa.filter((e) => fijos.includes(e.id)), 'completa'),
+    corta: minutosHastaUltimaPesa(listaDe(sesion, 'corta'), 'corta'),
+  }
 }
