@@ -1,22 +1,22 @@
 import { useEffect, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import type { Sesion, SesionTipo, FridaTipo, Momento } from '../data/tipos'
+import type { Sesion, SesionTipo, FridaTipo, Momento, Rota } from '../data/tipos'
 import { armarRegistro, momentoPorDefecto, sugeridaPara } from '../logic/registro'
 import { cuenta, fridaTipoDe } from '../logic/semana'
 import { NOMBRE_SESION } from '../data/ejercicios'
 import { claveFecha, DIAS_NOMBRE, desdeClave } from '../logic/fechas'
 import { Hoja, Grupo, Fila, BotonPrincipal } from './fm'
 
-export type Respuesta = 'A' | 'B' | 'C' | 'FRIDA' | 'no'
-const ETIQUETA: Record<Respuesta, string> = { A: 'A', B: 'B', C: 'C', FRIDA: 'Frida', no: 'No fui' }
+/** Lo que se contesta por un día hábil sin registro (MANANAS-30.md, 4): pesas (la que tocaba), solo regadera o no fui */
+export type Respuesta = 'PESAS' | 'VISITA' | 'no'
 
-/** Los botones de un día: A, B, C, Frida y No fui, con el marcado relleno. Un toque y listo. */
-export function BotonesDia({ marcado, onElegir, sinNo = false }: { marcado: Respuesta | null; onElegir: (r: Respuesta) => void; sinNo?: boolean }) {
+/** Los botones de "¿Fuiste al club el martes?": Pesas con la letra que tocaba, Solo regadera y No fui. Un toque y listo. */
+export function BotonesDia({ letra, onElegir }: { letra: Rota; onElegir: (r: Respuesta) => void }) {
   return (
     <div className="dia-botones" role="group">
-      {(['A', 'B', 'C', 'FRIDA', 'no'] as Respuesta[]).filter((r) => !(sinNo && r === 'no')).map((r) => (
-        <button key={r} className={`dia-boton ${marcado === r ? 'marcado' : ''}`} aria-pressed={marcado === r} onClick={() => onElegir(r)}>{ETIQUETA[r]}</button>
-      ))}
+      <button className="dia-boton marcado" aria-pressed="true" onClick={() => onElegir('PESAS')}>Pesas: {letra}</button>
+      <button className="dia-boton" aria-pressed="false" onClick={() => onElegir('VISITA')}>Solo regadera</button>
+      <button className="dia-boton" aria-pressed="false" onClick={() => onElegir('no')}>No fui</button>
     </div>
   )
 }
@@ -30,7 +30,7 @@ export function textoDia(fecha: string): string {
 type Eleccion = Exclude<SesionTipo, 'FRIDA'> | 'FRIDA:pierna' | 'FRIDA:torso'
 const tipoDe = (e: Eleccion): SesionTipo => (e.startsWith('FRIDA') ? 'FRIDA' : (e as SesionTipo))
 const fridaDe = (e: Eleccion): FridaTipo | undefined => (e === 'FRIDA:pierna' ? 'pierna' : e === 'FRIDA:torso' ? 'torso' : undefined)
-const NOMBRE_ELECCION = (e: Eleccion) => (e === 'FRIDA:pierna' ? 'Frida pierna' : e === 'FRIDA:torso' ? 'Frida torso' : e === 'CASA' ? 'casa' : e)
+const NOMBRE_ELECCION = (e: Eleccion) => (e === 'FRIDA:pierna' ? 'Frida pierna' : e === 'FRIDA:torso' ? 'Frida torso' : e === 'CASA' ? 'casa' : e === 'VISITA' ? 'solo regadera' : e)
 
 /**
  * "Registrar sesión": fecha (hoy por defecto, nunca en el futuro), mañana o noche, y qué fue. Si ese día ya tiene una de
@@ -43,13 +43,12 @@ export function RegistrarHoja({ datos, ahora, abierta, onCerrar, onGuardado, fec
   const tipo = tipoDe(eleccion)
   // por defecto Frida en la noche y las de club en la mañana; se puede cambiar con un toque
   const [momentoElegido, setMomento] = useState<Momento | null>(null)
-  const momento = momentoElegido ?? momentoPorDefecto(fecha, datos.settings.fridaPlan, tipo)
+  const momento = momentoElegido ?? momentoPorDefecto(tipo)
   /** Un día que ya tiene algo abre con eso (para cambiarlo); si no, con la de club que tocaba */
   function deDia(f: string) {
     const del = datos.sesiones.filter((s) => s.fecha === f && cuenta(s, datos.sets))
     const s = del.find((x) => x.tipo === 'A' || x.tipo === 'B' || x.tipo === 'C') ?? del.find((x) => x.tipo === 'FRIDA') ?? del[0]
-    const sugerida = sugeridaPara(f, datos.sesiones, datos.sets, datos.settings.fridaPlan)
-    setEleccion(s ? (s.tipo === 'FRIDA' ? `FRIDA:${fridaTipoDe(s)}` : s.tipo) : sugerida === 'FRIDA' ? 'A' : sugerida)
+    setEleccion(s ? (s.tipo === 'FRIDA' ? `FRIDA:${fridaTipoDe(s)}` : s.tipo) : sugeridaPara(f, datos.sesiones, datos.sets, datos.settings.v8Desde))
     setMomento(s?.momento ?? null)
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,21 +83,23 @@ export function RegistrarHoja({ datos, ahora, abierta, onCerrar, onGuardado, fec
       {aviso && <p className="t-cuerpo">{aviso}</p>}
       {pendiente ? <BotonPrincipal onClick={cambiar}>Cambiar a {NOMBRE_ELECCION(eleccion)}</BotonPrincipal> : <BotonPrincipal onClick={() => guardar()}>Guardar</BotonPrincipal>}
     </>}>
-      <p className="t-cuerpo tenue">Una sesión hecha sin la app. Se puede editar o borrar en Historial.</p>
+      <p className="t-cuerpo tenue">Una sesión hecha sin la app, o un día de solo regadera. Se puede editar o borrar en Historial.</p>
       <Grupo>
         <Fila texto="Fecha"><input type="date" value={fecha} max={hoy} onChange={(e) => { setFecha(e.target.value); deDia(e.target.value); setAviso(null); setPendiente(null) }} aria-label="Fecha" /></Fila>
-        <Fila texto="Cuándo">
+        {tipo !== 'VISITA' && <Fila texto="Cuándo">
           <div className="dia-botones" role="group" aria-label="Cuándo">
             {(['manana', 'noche'] as Momento[]).map((m) => <button key={m} className={`dia-boton ${momento === m ? 'marcado' : ''}`} aria-pressed={momento === m} onClick={() => setMomento(m)}>{m === 'manana' ? 'Mañana' : 'Noche'}</button>)}
           </div>
-        </Fila>
+        </Fila>}
         <Fila texto="Qué hice">
           <select value={eleccion} onChange={(e) => { setEleccion(e.target.value as Eleccion); setAviso(null); setPendiente(null) }} aria-label="Qué hice">
             <option value="A">A: {NOMBRE_SESION.A.toLowerCase()}</option>
             <option value="B">B: {NOMBRE_SESION.B.toLowerCase()}</option>
-            <option value="C">C: {NOMBRE_SESION.C.toLowerCase()}</option>
+            {/* la C ya no se ofrece: solo sale si ese día ya era C */}
+            {eleccion === 'C' && <option value="C">C: {NOMBRE_SESION.C.toLowerCase()}</option>}
             <option value="FRIDA:pierna">Frida pierna</option>
             <option value="FRIDA:torso">Frida torso</option>
+            <option value="VISITA">Solo regadera</option>
             <option value="CASA">Casa</option>
           </select>
         </Fila>

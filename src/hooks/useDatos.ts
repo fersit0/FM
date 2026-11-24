@@ -35,7 +35,7 @@ export interface Datos {
   cerrarAbiertas: () => Promise<void>
 }
 
-const valida = (x: Sesion) => x && typeof x.id === 'string' && typeof x.fecha === 'string' && typeof x.inicio === 'number' && ['A', 'B', 'C', 'FRIDA', 'CASA'].includes(x.tipo)
+const valida = (x: Sesion) => x && typeof x.id === 'string' && typeof x.fecha === 'string' && typeof x.inicio === 'number' && ['A', 'B', 'C', 'FRIDA', 'CASA', 'VISITA'].includes(x.tipo)
 
 export function useDatos(): Datos {
   const [listo, setListo] = useState(false)
@@ -69,13 +69,22 @@ export function useDatos(): Datos {
   useEffect(() => {
     (async () => {
       const [s, l] = await Promise.all([db.todasLasSesiones(), db.todosLosSets()])
-      const st = leerSettings()
+      let st = leerSettings()
       let cambio = false
       if (!st.migracionRutinaFinal && hayIdsViejos(l, s, [])) { await recargar(); return }
       if (!st.cargaInicialV5) {
         const a = cargaInicial(s.filter(valida))
         if (a) { await db.guardarSesion(a); cambio = true }
-        setSettings({ ...st, cargaInicialV5: true })
+        st = { ...st, cargaInicialV5: true }
+        setSettings(st)
+      }
+      // v8 (MANANAS-30.md, 3 y 7), una sola vez: la rotación arranca hoy en A y ya no sale "Pon al día tu semana". Si la
+      // salida del club y el baño siguen como venían en la v7 (8:40 y 25), pasan a 8:45 y 35; lo que se haya cambiado a
+      // mano se respeta
+      if (!st.v8Desde) {
+        const deFabrica = st.salidaManana === '08:40' && st.minBano === 25
+        st = { ...st, v8Desde: claveFecha(new Date()), semanaAlDiaV5: true, semanaAlDiaV6: true, ...(deFabrica ? { salidaManana: '08:45', minBano: 35 } : {}) }
+        setSettings(st)
       }
       const c = cierresPendientes(s.filter(valida), l, claveFecha(new Date()))
       for (const x of c.guardar) await db.guardarSesion(x)

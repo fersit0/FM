@@ -1,19 +1,19 @@
 // Datos ficticios de 4 semanas, activables con ?seed=1 (y ?seed=0 para borrarlos)
 import { borrarTodo, guardarSesion, guardarSet } from '../data/db'
-import { ejerciciosDe, EJERCICIOS, A_SIN_PIERNA } from '../data/ejercicios'
+import { ejerciciosDe, EJERCICIOS } from '../data/ejercicios'
 import { FOTOS_BASE } from '../data/fotos'
 import { claveFecha, inicioSemana, sumarDias } from '../logic/fechas'
 import { leerSettings, escribirSettings } from '../data/settings'
 import type { Sesion, SetLog } from '../data/tipos'
-import { sesionRegistrada } from '../logic/registro'
+import { sesionRegistrada, visita } from '../logic/registro'
 
 declare global {
-  interface Window { fmBiblioteca?: { ejercicios: unknown; aSinPierna: unknown; fotos: unknown } }
+  interface Window { fmBiblioteca?: { ejercicios: unknown; fotos: unknown } }
 }
 
 export async function sembrarSiToca(): Promise<void> {
   // en desarrollo las pruebas de punta a punta leen la biblioteca real desde aquí
-  if (import.meta.env.DEV) window.fmBiblioteca = { ejercicios: EJERCICIOS, aSinPierna: A_SIN_PIERNA, fotos: FOTOS_BASE }
+  if (import.meta.env.DEV) window.fmBiblioteca = { ejercicios: EJERCICIOS, fotos: FOTOS_BASE }
   const params = new URLSearchParams(location.search)
   const seed = params.get('seed')
   const frida = params.get('frida')
@@ -26,7 +26,7 @@ export async function sembrarSiToca(): Promise<void> {
     const st = leerSettings()
     const noFui: string[] = []
     for (let i = 1; i <= 7; i++) noFui.push(claveFecha(sumarDias(new Date(), -i)))
-    escribirSettings({ ...st, cargaInicialV5: true, semanaAlDiaV5: true, semanaAlDiaV6: true, noFui })
+    escribirSettings({ ...st, cargaInicialV5: true, semanaAlDiaV5: true, semanaAlDiaV6: true, noFui, v8Desde: st.v8Desde ?? claveFecha(sumarDias(new Date(), -28)) })
   }
   // frida=hecha (o torso): FRIDA torso registrada el lunes de esta semana en la noche; frida=pierna, pierna;
   // frida=no: "esta semana no hay" (entra la sesión C)
@@ -40,7 +40,7 @@ export async function sembrarSiToca(): Promise<void> {
   for (const r of registro ? registro.split(',') : []) {
     const [fecha, tipoTexto] = r.split(':')
     const [tipo, fridaTipoR] = (tipoTexto || 'A').split('-')
-    await guardarSesion({ ...sesionRegistrada(fecha, tipo as Sesion['tipo']), ...(fridaTipoR ? { fridaTipo: fridaTipoR as 'pierna' | 'torso' } : {}) })
+    await guardarSesion(tipo === 'VISITA' ? visita(fecha) : { ...sesionRegistrada(fecha, tipo as Sesion['tipo']), ...(fridaTipoR ? { fridaTipo: fridaTipoR as 'pierna' | 'torso' } : {}) })
   }
   history.replaceState(null, '', location.pathname)
 }
@@ -67,7 +67,7 @@ async function sembrar(): Promise<void> {
       const id = `seed-${fecha}-${tipo}`
       const s: Sesion = { id, fecha, tipo, version: 'completa', inicio, fin: inicio + 62 * 60000, terminada: true, cambios: [], como: 'completa', origen: 'app' }
       await guardarSesion(s)
-      if (tipo === 'FRIDA') continue
+      if (tipo === 'FRIDA' || tipo === 'VISITA') continue
       // progreso: semana 4 y 3 mismo peso; semana 2 llega al tope; semana 1 sube
       const paso = 4 - w // 0..3
       for (const e of ejerciciosDe(tipo)) {

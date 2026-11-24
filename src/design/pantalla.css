@@ -28,6 +28,8 @@
 .tira-marca.hecho { background: var(--texto); color: var(--fondo); display: flex; justify-content: center; align-items: center; }
 .tira-marca.plan { box-shadow: inset 0 0 0 2px var(--texto-2); color: var(--texto-2); }
 .tira-marca.vacia::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--texto-4); }
+/* solo regadera: un punto lleno, más chico que el círculo de las pesas (MANANAS-30.md, 5) */
+.tira-marca.visita::before { content: ''; width: 14px; height: 14px; border-radius: 50%; background: var(--texto); }
 .tira-dia.hoy .tira-marca { outline: 2px solid var(--rojo); outline-offset: 2px; }
 .tira-noche { width: 4px; height: 4px; border-radius: 50%; }
 .tira-noche.si { background: var(--texto-2); }

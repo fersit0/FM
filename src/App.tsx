@@ -50,14 +50,14 @@ export default function App() {
     if (Date.now() - sesionEnCurso.inicio < HORAS_PARA_RETOMAR * 3600_000) setEnSesion(true)
   }, [datos.listo, retomada, activa, sesionEnCurso, setActiva])
 
-  const empezar = useCallback(async (tipo: Letra, version: Version, sinPierna = false) => {
+  const empezar = useCallback(async (tipo: Letra, version: Version) => {
     // al empezar otra, la abierta se cierra sola (con series cuenta; sin series se descarta)
     await datos.cerrarAbiertas()
     const inicio = Date.now()
     const id = `${claveFecha(new Date(inicio))}-${tipo}-${inicio}`
     pedirPersistencia()
-    // mañana o noche sale de la hora de Empezar; la A sin pierna, de la semana (RUTINA-FINAL.md v7, 2 y 4b)
-    await datos.guardarSesion({ id, fecha: claveFecha(new Date(inicio)), tipo, version, inicio, terminada: false, cambios: [], origen: 'app', momento: momentoDe(inicio), ...(tipo === 'A' ? { sinPierna } : {}) })
+    // mañana o noche sale de la hora de Empezar (RUTINA-FINAL.md v7, 2)
+    await datos.guardarSesion({ id, fecha: claveFecha(new Date(inicio)), tipo, version, inicio, terminada: false, cambios: [], origen: 'app', momento: momentoDe(inicio) })
     setActiva({ sessionId: id, paso: 0 })
     setEnSesion(true)
   }, [datos, setActiva])
