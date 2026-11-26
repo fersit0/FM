@@ -31,9 +31,9 @@ const ROTA: Rota[] = ['A', 'B']
  * Qué muestra Hoy (MANANAS-30.md, 4): 'club' ofrece la sesión que toca; 'regadera', en la mañana de un día hábil cuando
  * ya no alcanza ni la corta ("Hoy solo regadera", con "Ya llegué"); 'sinclub', un día hábil que se quedó sin club ("Hoy
  * no hubo club", con "Sí fui" y "Voy en la noche"); 'hecha', ya hubo pesas en el club (una de club por día); 'visita',
- * llegó y solo se bañó; 'libre', sábado y domingo, sin plan.
+ * llegó y solo se bañó; 'descanso', un día hábil en que dijo "Hoy descanso"; 'libre', sábado y domingo, sin plan.
  */
-type Modo = 'club' | 'regadera' | 'sinclub' | 'hecha' | 'visita' | 'libre'
+type Modo = 'club' | 'regadera' | 'sinclub' | 'hecha' | 'visita' | 'descanso' | 'libre'
 
 /** 6.1 Inicio: círculo rojo cortado arriba a la derecha, texto abajo a la izquierda, Empezar. */
 export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescartar, onAjustes }: Props) {
@@ -47,7 +47,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   // rotación y contadores (MANANAS-30.md, 3 y 5)
   const toca = useMemo(() => tocaSesion(sesiones, ahora, sets, { desde: settings.v8Desde, elegida: settings.sesionElegida }), [sesiones, ahora, sets, settings.v8Desde, settings.sesionElegida])
   const piezasContadores = useMemo(() => textoContadores(contadores(sesiones, ahora, sets)), [sesiones, ahora, sets])
-  const aviso = useMemo(() => avisoAyer(sesiones, sets, ahora, settings.v8Desde), [sesiones, sets, ahora, settings.v8Desde])
+  const aviso = useMemo(() => avisoAyer(sesiones, sets, ahora, settings.v8Desde, settings.descansos), [sesiones, sets, ahora, settings.v8Desde, settings.descansos])
   const dias = useMemo(() => tuSemana(sesiones, sets, settings, ahora), [sesiones, sets, settings, ahora])
   // versión automática por hora, mañana o noche (MANANAS-30.md, 4)
   const listaCompleta = useMemo(() => listaDe(toca, 'completa'), [toca])
@@ -105,10 +105,12 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   const pasoLaNoche = tiempo.franja === 'noche' && tiempo.minutosParaTope <= 0
   const hayNoche = habil && dow !== 1 && !pasoLaNoche
   const elegidaHoy = settings.sesionElegida?.fecha === claveHoy
+  const descansoHoy = !!settings.descansos?.includes(claveHoy)
   let modo: Modo = 'club'
   if (sesionEnCurso) modo = 'club'
   else if (clubDeHoy) modo = 'hecha'
   else if (!habil) modo = elegidaHoy && !pasoLaNoche ? 'club' : 'libre'
+  else if (descansoHoy) modo = 'descanso'
   else if (irNoche && hayNoche) modo = 'club'
   else if (visitaHoy) modo = 'visita'
   else if (tiempo.franja === 'manana' && minHoy < minutosDe(settings.salidaManana)) modo = tiempo.version === 'regadera' ? 'regadera' : 'club'
@@ -140,6 +142,12 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     const antes = settings
     datos.setSettings({ ...settings, vaEnLaNoche: claveHoy })
     setAccion({ texto: 'Vas en la noche.', deshacer: () => datos.setSettings(antes) })
+  }
+  /** "Hoy descanso": hoy no va (enfermo, por ejemplo) y mañana no sale el aviso de ayer. La rotación y los contadores no cambian. */
+  function hoyDescanso() {
+    const antes = settings
+    datos.setSettings({ ...settings, descansos: [...(settings.descansos ?? []).filter((x) => x !== claveHoy), claveHoy] })
+    setAccion({ texto: 'Hoy descansas.', deshacer: () => datos.setSettings(antes) })
   }
   /** "Ya llegué" y "Solo regadera hoy": la visita, una por día, con la hora real (MANANAS-30.md, 4) */
   async function yaLlegue() {
@@ -182,10 +190,13 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     sinclub: { titulo: 'Hoy no hubo club', nota: textoSigue },
     hecha: { titulo: `${clubDeHoy?.tipo ?? ''} hecha`, nota: textoSigue },
     visita: { titulo: 'Llegaste', nota: `Solo regadera: cuenta como ida al club. ${textoSigue}` },
+    descanso: { titulo: 'Descanso', nota: textoSigue },
     libre: { titulo: 'Libre', nota: pasoLaNoche ? textoSigue : `Si vas al club, va la ${toca} y cuenta. ${textoSigue}` },
   }
   // la pregunta por un día sin registro va primero; luego lo del día
   const pantallaClub = !pregunta
+  const ofrecerRegadera = pantallaClub && !sesionEnCurso && modo === 'club' && tiempo.franja === 'manana' && habil && !visitaHoy
+  const ofrecerDescanso = pantallaClub && !sesionEnCurso && habil && (modo === 'club' || modo === 'regadera' || modo === 'sinclub')
   // el círculo rojo nunca queda debajo del texto: si el texto le queda cerca (pantallas bajas, línea larga), se hace más
   // chico y, si no basta, sube; sigue arriba a la derecha, cortado. El texto no depende del círculo, así que no brinca.
   const textoRef = useRef<HTMLDivElement>(null)
@@ -267,8 +278,13 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
             {modo !== 'sinclub' && <BotonTexto onClick={() => abrirRegistrar()}>Registrar sesión</BotonTexto>}
           </div>
         )}
-        {/* en las mañanas, siempre a la mano (MANANAS-30.md, 4) */}
-        {pantallaClub && !sesionEnCurso && modo === 'club' && tiempo.franja === 'manana' && habil && !visitaHoy && <BotonTexto onClick={yaLlegue}>Solo regadera hoy</BotonTexto>}
+        {/* en las mañanas, siempre a la mano (MANANAS-30.md, 4); "Hoy descanso" en un día hábil sin club. En su propio renglón para que nada se parta en dos líneas */}
+        {(ofrecerRegadera || ofrecerDescanso) && (
+          <div className="botones-fila" style={{ justifyContent: 'center' }}>
+            {ofrecerRegadera && <BotonTexto onClick={yaLlegue}>Solo regadera hoy</BotonTexto>}
+            {ofrecerDescanso && <BotonTexto onClick={hoyDescanso}>Hoy descanso</BotonTexto>}
+          </div>
+        )}
         {ofrecerCasa && <BotonTexto onClick={() => onEmpezar('CASA', 'completa')}>Casa, 12 minutos. Llevas {casaHechas} de {CASA_MAX}.</BotonTexto>}
         {sesionEnCurso ? (
           <>

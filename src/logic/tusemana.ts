@@ -2,7 +2,8 @@
 // Hecho: las pesas con su letra (o Frida con su tipo) y la visita de solo regadera. Planeado: en los días hábiles que
 // faltan, la letra que tocaría siguiendo la rotación A, B, A, B. Sábado y domingo no llevan plan. Hoy lleva letra solo
 // mientras el día todavía da para pesas en el club: en la mañana hasta la salida del club, o hasta las 21:00 si se dijo
-// "Voy en la noche" (el lunes en la tarde el club no abre). Se recalcula sola con cada registro.
+// "Voy en la noche" (el lunes en la tarde el club no abre). Un día de "Hoy descanso" no lleva plan. Se recalcula sola
+// con cada registro.
 import type { Sesion, SetLog, Club, Rota, FridaTipo, Settings } from '../data/tipos'
 import { claveFecha, inicioSemana, sumarDias, desdeClave, minutosAhora, minutosDe } from './fechas'
 import { hechas, tocaSesion, fridaTipoDe, esClub, esPesas, NOCHE_MIN } from './semana'
@@ -29,7 +30,7 @@ const LETRAS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 /** Una sesión de mentiras, ya hecha, para seguir la rotación en los días que faltan */
 const virtual = (fecha: string, tipo: Rota): Sesion => ({ id: `plan-${fecha}-${tipo}`, fecha, tipo, version: 'completa', inicio: new Date(`${fecha}T07:40:00`).getTime(), terminada: true })
 
-export function tuSemana(sesiones: Sesion[], sets: SetLog[], settings: Pick<Settings, 'sesionElegida' | 'v8Desde' | 'vaEnLaNoche' | 'salidaManana'>, ahora: Date): DiaTuSemana[] {
+export function tuSemana(sesiones: Sesion[], sets: SetLog[], settings: Pick<Settings, 'sesionElegida' | 'v8Desde' | 'vaEnLaNoche' | 'salidaManana' | 'descansos'>, ahora: Date): DiaTuSemana[] {
   const ini = inicioSemana(ahora)
   const hoy = claveFecha(ahora)
   const min = minutosAhora(ahora)
@@ -48,7 +49,7 @@ export function tuSemana(sesiones: Sesion[], sets: SetLog[], settings: Pick<Sett
   // lunes a viernes; sábado y domingo sin plan
   for (let i = 0; i < 5; i++) {
     const fecha = fechas[i]
-    if (fecha < hoy) continue
+    if (fecha < hoy || settings.descansos?.includes(fecha)) continue
     const d = desdeClave(fecha)
     if (fecha === hoy) {
       // ya hubo pesas en el club: nada que planear. Con visita, o pasada la salida de la mañana, solo si va en la noche

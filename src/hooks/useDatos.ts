@@ -3,7 +3,7 @@ import type { Sesion, SetLog, Bodyweight, Photo, Settings, FotoEjercicio, Cintur
 import * as db from '../data/db'
 import { leerSettings, escribirSettings } from '../data/settings'
 import { hayIdsViejos } from '../logic/migracion'
-import { cargaInicial, cierresPendientes } from '../logic/registro'
+import { cargaInicial, cierresPendientes, sinDescanso } from '../logic/registro'
 import { claveFecha } from '../logic/fechas'
 
 export interface Datos {
@@ -107,10 +107,19 @@ export function useDatos(): Datos {
     if (c.guardar.length || c.borrar.length) await recargar()
   }, [sesiones, sets, recargar])
 
+  // un día de "Hoy descanso" en que luego se registra pesas o visita deja de ser descanso (se lee lo guardado, que siempre va al día)
+  const guardarSesion = async (s: Sesion) => {
+    await db.guardarSesion(s)
+    const st = leerSettings()
+    const d = sinDescanso(st.descansos, s)
+    if (d) setSettings({ ...st, descansos: d })
+    await recargar()
+  }
+
   const necesitaMigracion = listo && !settings.migracionRutinaFinal && hayIdsViejos(sets, sesiones, fotosEjercicio)
   return {
     listo, necesitaMigracion, sesiones, sets, peso, fotos, fotosEjercicio, cintura, settings, recargar, setSettings, cerrarAbiertas,
-    guardarSesion: envuelve(db.guardarSesion),
+    guardarSesion,
     borrarSesion: envuelve(db.borrarSesion),
     guardarSet: envuelve(db.guardarSet),
     borrarSet: envuelve(db.borrarSet),

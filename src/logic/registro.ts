@@ -3,7 +3,7 @@
 // registro se preguntan una sola vez y se puede registrar una sesión hecha sin la app, o una visita de solo regadera.
 import type { Sesion, SetLog, SesionTipo, Settings, FridaTipo, Momento, Rota } from '../data/tipos'
 import { claveFecha, desdeClave, sumarDias, minutosAhora } from './fechas'
-import { cuenta, hechas, tocaSesion, fridaTipoDe, esClub, esHabil } from './semana'
+import { cuenta, hechas, tocaSesion, fridaTipoDe, esClub, esHabil, esPesas } from './semana'
 import { listaDeSesion } from './sesion'
 
 /** Fecha y hora de la A del 7 oct 2026 que Fer hizo sin la app (RUTINA-FINAL.md, 2.7) */
@@ -80,9 +80,10 @@ export interface DiaPendiente {
 export const DIAS_ATRAS_MAX = 7
 /**
  * Días hábiles sin registro desde la última sesión (máximo una semana atrás, y nunca de antes de la v8) hasta ayer, que
- * no se hayan contestado "No fui". Se preguntan uno por uno antes de armar la sesión de hoy: "¿Fuiste al club el martes?"
+ * no se hayan contestado "No fui" ni sean de "Hoy descanso". Se preguntan uno por uno antes de armar la sesión de hoy:
+ * "¿Fuiste al club el martes?"
  */
-export function diasSinRegistro(sesiones: Sesion[], sets: SetLog[], settings: Pick<Settings, 'noFui' | 'v8Desde'>, hoy: Date): DiaPendiente[] {
+export function diasSinRegistro(sesiones: Sesion[], sets: SetLog[], settings: Pick<Settings, 'noFui' | 'v8Desde' | 'descansos'>, hoy: Date): DiaPendiente[] {
   const desde = settings.v8Desde
   if (!desde) return []
   const todas = hechas(sesiones, sets)
@@ -92,12 +93,18 @@ export function diasSinRegistro(sesiones: Sesion[], sets: SetLog[], settings: Pi
   for (let i = DIAS_ATRAS_MAX; i >= 1; i--) {
     const fecha = claveFecha(sumarDias(hoy, -i))
     if (fecha < desde || fecha <= ultima || fecha >= hoyClave) continue
-    if (settings.noFui?.includes(fecha)) continue
+    if (settings.noFui?.includes(fecha) || settings.descansos?.includes(fecha)) continue
     if (!esDiaDeGym(fecha)) continue
     out.push({ fecha, sugerida: sugeridaPara(fecha, sesiones, sets, desde) })
   }
   return out
 }
+/** "Hoy descanso" que deja de serlo: si ese día se registra pesas o visita, se quita de `descansos`. Devuelve la lista nueva, o null si no cambia. */
+export function sinDescanso(descansos: string[] | undefined, s: Pick<Sesion, 'fecha' | 'tipo'>): string[] | null {
+  if (!descansos?.includes(s.fecha) || !(esPesas(s.tipo) || s.tipo === 'VISITA')) return null
+  return descansos.filter((f) => f !== s.fecha)
+}
+
 /** Qué tocaba un día: la de la rotación con lo hecho antes de ese día */
 export function sugeridaPara(fecha: string, sesiones: Sesion[], sets: SetLog[], desde?: string): Rota {
   return tocaSesion(sesiones.filter((s) => s.fecha < fecha), desdeClave(fecha), sets, { desde })

@@ -113,6 +113,17 @@ describe('días hábiles y el único aviso (MANANAS-30.md, 4 y 5)', () => {
     expect(avisoAyer([], [], dia(M), M)).toBeNull()
     expect(avisoAyer([], [], dia(X))).toBeNull()
   })
+  it('"Hoy descanso": al día siguiente no avisa, y el viernes de descanso no avisa el lunes', () => {
+    expect(avisoAyer([s(L, 'A')], [], dia(X), L, [M])).toBeNull()
+    expect(avisoAyer([s(J, 'A')], [], dia(L2), L, [V])).toBeNull()
+    // un descanso de otro día no tapa el de ayer
+    expect(avisoAyer([s(L, 'A')], [], dia(X), L, [L])).toBe('Ayer no hubo club. Hoy sí: nunca dos seguidos.')
+  })
+  it('"Hoy descanso" no mueve la rotación ni los contadores', () => {
+    // lunes A, martes descanso: el miércoles toca B y la meta de Club sigue en 5
+    expect(tocaSesion([s(L, 'A')], dia(X))).toBe('B')
+    expect(textoContadores(contadores([s(L, 'A')], dia(X)))).toEqual(['Club 1 de 5', 'Pesas 1'])
+  })
   it('semana ligera: 2 series por ejercicio', () => {
     expect(seriesPara(4)).toBe(4)
     expect(seriesPara(4, true)).toBe(2)

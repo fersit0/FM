@@ -28,6 +28,9 @@ describe('Tu semana (MANANAS-30.md, 5)', () => {
     expect(hecho(todo, dia(M, 9))).toEqual(['A', 'VISITA', '', '', '', '', ''])
     expect(plan(todo, dia(M, 8))).toEqual([null, null, 'B', 'A', 'B', null, null])
   })
+  it('"Hoy descanso": ese día no lleva plan y la letra pasa al día siguiente', () => {
+    expect(plan([s(L, 'A')], dia(M), { descansos: [M] })).toEqual([null, null, 'B', 'A', 'B', null, null])
+  })
   it('con pesas y visita el mismo día, se ve solo la de pesas', () => {
     expect(hecho([s(L, 'VISITA'), s(L, 'A')], dia(M))[0]).toBe('A')
   })

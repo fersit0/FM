@@ -173,6 +173,8 @@ export interface Settings {
   vaEnLaNoche?: string
   /** día en que arrancó la v8 (YYYY-MM-DD): la rotación empieza en A y solo se pregunta por días desde entonces (MANANAS-30.md, 3) */
   v8Desde?: string
+  /** "Hoy descanso" (YYYY-MM-DD): días hábiles en que no fue a propósito (enfermo, por ejemplo). No avisa al día siguiente ni se pregunta por ellos; la rotación y los contadores no cambian */
+  descansos?: string[]
 }
 
 export interface Cintura {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Sesion, SesionTipo, SetLog } from '../data/tipos'
-import { sesionRegistrada, visita, absorbida, cargaInicial, seriesPlaneadas, comoQuedo, cierresPendientes, esDiaDeGym, momentoDe, momentoPorDefecto, diasSinRegistro, sugeridaPara, armarRegistro, textoUltima, cambiarTipo } from './registro'
+import { sesionRegistrada, visita, absorbida, cargaInicial, seriesPlaneadas, comoQuedo, cierresPendientes, esDiaDeGym, momentoDe, momentoPorDefecto, diasSinRegistro, sugeridaPara, armarRegistro, textoUltima, cambiarTipo, sinDescanso } from './registro'
 import { desdeClave, DIAS_NOMBRE } from './fechas'
 
 // semana del lunes 23 al domingo 29 de noviembre de 2026
@@ -91,6 +91,19 @@ describe('días sin registro (MANANAS-30.md, 4)', () => {
     expect(diasSinRegistro([s('2026-11-18', 'A')], [], { v8Desde: M }, dia(J))).toEqual([{ fecha: M, sugerida: 'A' }, { fecha: X, sugerida: 'A' }])
     expect(diasSinRegistro([s('2026-11-18', 'A')], [], { v8Desde: J }, dia(J))).toEqual([])
     expect(diasSinRegistro([s(L, 'A')], [], {}, dia(J))).toEqual([])
+  })
+  it('no pregunta por los días de "Hoy descanso"', () => {
+    expect(diasSinRegistro([s(L, 'A')], [], { v8Desde: L, descansos: [M] }, dia(J))).toEqual([{ fecha: X, sugerida: 'B' }])
+    expect(diasSinRegistro([s(J, 'A')], [], { v8Desde: L, descansos: [V] }, dia(L2))).toEqual([])
+  })
+  it('si un día de descanso luego se registra pesas o visita, deja de ser descanso', () => {
+    expect(sinDescanso([L, M], s(M, 'A'))).toEqual([L])
+    expect(sinDescanso([M], s(M, 'FRIDA'))).toEqual([])
+    expect(sinDescanso([M], visita(M))).toEqual([])
+    // casa no es ir al club, otro día no lo toca, y sin descansos no hay nada que quitar
+    expect(sinDescanso([M], s(M, 'CASA'))).toBeNull()
+    expect(sinDescanso([M], s(X, 'A'))).toBeNull()
+    expect(sinDescanso(undefined, s(M, 'A'))).toBeNull()
   })
   it('lo que tocaba un día sale de la rotación con lo hecho antes', () => {
     expect(sugeridaPara(X, [s(L, 'A'), s(X, 'B')], [])).toBe('B')

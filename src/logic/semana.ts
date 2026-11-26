@@ -143,13 +143,14 @@ export const NOCHE_MIN = 21 * 60
 export const DOMINGO_CIERRE = 19 * 60
 /**
  * El único aviso (MANANAS-30.md, 5): en día hábil, si el día hábil anterior no hubo nada (ni club ni Frida) y hoy
- * todavía no hay club, "Ayer no hubo club. Hoy sí: nunca dos seguidos.". Solo por días desde que arrancó la v8.
+ * todavía no hay club, "Ayer no hubo club. Hoy sí: nunca dos seguidos.". Solo por días desde que arrancó la v8, y no
+ * si ese día se dijo "Hoy descanso" (`descansos`).
  */
-export function avisoAyer(sesiones: Sesion[], sets: SetLog[], ahora: Date, desde?: string): string | null {
+export function avisoAyer(sesiones: Sesion[], sets: SetLog[], ahora: Date, desde?: string, descansos: string[] = []): string | null {
   if (!esHabil(ahora) || !desde) return null
   const anterior = habilAnterior(ahora)
   const clave = claveFecha(anterior)
-  if (clave < desde) return null
+  if (clave < desde || descansos.includes(clave)) return null
   if (hechas(sesiones, sets).some((s) => s.fecha === clave && (esPesas(s.tipo) || s.tipo === 'VISITA'))) return null
   if (fueAlClub(sesiones, sets, claveFecha(ahora))) return null
   const cuando = clave === claveFecha(sumarDias(ahora, -1)) ? 'Ayer' : `El ${DIAS_NOMBRE[anterior.getDay()]}`
