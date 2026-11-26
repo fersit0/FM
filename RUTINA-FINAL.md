@@ -1,3 +1,5 @@
+> Desde el 24 nov 2026 manda MANANAS-30.md (FM versión 8) donde choque con este archivo.
+
 # RUTINA-FINAL.md · versión 7 (28 oct 2026)
 
 Para Claude Code. Este archivo es la única fuente de verdad de la rutina de FM y lo autoriza Fer. Sustituye a la versión 6 y a todas las anteriores. Sale de dos cambios en la vida de Fer: ahora entrena en la mañana, y con Frida a veces hace pierna y a veces torso, sin aviso. Las sesiones A, B y C no cambian, salvo la nueva "A sin pierna". Donde choque con BRIEF.md, NOTAS o cualquier otra cosa en el repo, manda este archivo. En CLAUDE.md debe seguir la línea: "La rutina, los ejercicios, las alternativas y las fotos salen de RUTINA-FINAL.md".
