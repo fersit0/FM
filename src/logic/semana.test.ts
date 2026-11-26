@@ -88,6 +88,23 @@ describe('contadores Club y Pesas (MANANAS-30.md, 5)', () => {
   })
 })
 
+describe('cardio (PENDIENTE-V8.md, 2)', () => {
+  const cardio = (f: string, extra: Partial<Sesion> = {}) => s(f, 'VISITA', { cardio: { aparato: 'eliptica', min: 25 }, ...extra })
+  it('cuenta para Club (también en fin de semana), no para Pesas', () => {
+    expect(contadores([s(L, 'A'), cardio(M), cardio(S)], dia(D))).toEqual({ club: 3, pesas: 1 })
+  })
+  it('con pesas el mismo día no suma otro día de Club', () => {
+    expect(contadores([s(L, 'A'), cardio(L)], dia(M))).toEqual({ club: 1, pesas: 1 })
+  })
+  it('no mueve la rotación', () => {
+    expect(tocaSesion([s(L, 'A'), cardio(M)], dia(X))).toBe('B')
+  })
+  it('el día con cardio es día con club para el aviso', () => {
+    expect(avisoAyer([s(L, 'A'), cardio(M)], [], dia(X), L)).toBeNull()
+    expect(fueAlClub([cardio(X)], [], X)).toBe(true)
+  })
+})
+
 describe('días hábiles y el único aviso (MANANAS-30.md, 4 y 5)', () => {
   it('el hábil anterior al lunes es el viernes y el que sigue al viernes es el lunes', () => {
     expect(claveFecha(habilAnterior(dia(L2)))).toBe(V)

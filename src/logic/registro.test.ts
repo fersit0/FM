@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Sesion, SesionTipo, SetLog } from '../data/tipos'
-import { sesionRegistrada, visita, absorbida, cargaInicial, seriesPlaneadas, comoQuedo, cierresPendientes, esDiaDeGym, momentoDe, momentoPorDefecto, diasSinRegistro, sugeridaPara, armarRegistro, textoUltima, cambiarTipo, sinDescanso } from './registro'
+import { sesionRegistrada, visita, absorbida, cargaInicial, seriesPlaneadas, comoQuedo, cierresPendientes, esDiaDeGym, momentoDe, momentoPorDefecto, diasSinRegistro, sugeridaPara, armarRegistro, textoUltima, cambiarTipo, sinDescanso, ultimoCardio, textoCardio } from './registro'
 import { desdeClave, DIAS_NOMBRE } from './fechas'
 
 // semana del lunes 23 al domingo 29 de noviembre de 2026
@@ -28,6 +28,41 @@ describe('visita de solo regadera (MANANAS-30.md, 4)', () => {
     expect('sesion' in r && r.reemplaza?.id).toBe(`visita-${M}`)
     const nueva = armarRegistro([], M, 'VISITA', M)
     expect('sesion' in nueva && nueva.reemplaza).toBeNull()
+  })
+})
+
+describe('cardio (PENDIENTE-V8.md, 2)', () => {
+  const eliptica = { aparato: 'eliptica' as const, min: 25 }
+  it('va dentro de la visita del día: misma id, sin ejercicios', () => {
+    const r = armarRegistro([], M, 'VISITA', M, undefined, { cardio: eliptica })
+    if (!('sesion' in r)) throw new Error('debía armar')
+    expect(r.sesion).toMatchObject({ id: `visita-${M}`, tipo: 'VISITA', cardio: eliptica, terminada: true })
+    expect(seriesPlaneadas(r.sesion)).toBe(0)
+  })
+  it('si ya marcó "Ya llegué", se actualiza esa misma visita y se queda con su hora', () => {
+    const llegue = visita(M, new Date(`${M}T08:20:00`).getTime())
+    const r = armarRegistro([llegue], M, 'VISITA', M, undefined, { cardio: { aparato: 'caminadora', min: 30 }, inicio: new Date(`${M}T08:50:00`).getTime() })
+    if (!('sesion' in r)) throw new Error('debía armar')
+    expect(r.reemplaza).toBe(llegue)
+    expect(r.sesion).toMatchObject({ id: llegue.id, inicio: llegue.inicio, cardio: { aparato: 'caminadora', min: 30 } })
+  })
+  it('en la noche queda como noche', () => {
+    const r = armarRegistro([], M, 'VISITA', M, undefined, { cardio: eliptica, inicio: new Date(`${M}T20:10:00`).getTime() })
+    expect('sesion' in r && r.sesion.momento).toBe('noche')
+  })
+  it('se registra aunque ese día haya pesas; la de solo regadera no', () => {
+    expect('sesion' in armarRegistro([s(M, 'B')], M, 'VISITA', M, undefined, { cardio: eliptica })).toBe(true)
+    expect(armarRegistro([s(M, 'B')], M, 'VISITA', M)).toEqual({ error: 'Ese día ya tiene B: la ida al club ya está contada.' })
+  })
+  it('con pesas el mismo día no queda absorbida: se lista', () => {
+    const v = { ...visita(M), cardio: eliptica }
+    expect(absorbida(v, [v, s(M, 'A')])).toBe(false)
+  })
+  it('abre con el último aparato y minutos; la primera vez, elíptica y 25', () => {
+    expect(ultimoCardio([])).toEqual({ aparato: 'eliptica', min: 25 })
+    expect(ultimoCardio([{ ...visita(L), cardio: { aparato: 'caminadora', min: 40 } }, { ...visita(M), cardio: { aparato: 'eliptica', min: 15 } }, visita(X)])).toEqual({ aparato: 'eliptica', min: 15 })
+    expect(textoCardio({ aparato: 'eliptica', min: 25 })).toBe('elíptica 25 min')
+    expect(textoCardio({ aparato: 'caminadora', min: 30 })).toBe('caminadora 30 min')
   })
 })
 

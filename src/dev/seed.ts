@@ -35,11 +35,13 @@ export async function sembrarSiToca(): Promise<void> {
   if (frida === 'hecha' || frida === 'torso' || frida === 'pierna' || seed === '1') await guardarSesion({ id: `frida-${lunes}`, fecha: lunes, tipo: 'FRIDA', fridaTipo, momento: 'noche', version: 'completa', inicio: new Date(lunes + 'T20:00:00').getTime(), fin: new Date(lunes + 'T21:00:00').getTime(), terminada: true })
   if (frida === 'no') { const s = leerSettings(); escribirSettings({ ...s, fridaPlan: { ...(s.fridaPlan ?? {}), [lunes]: null } }) }
   // registro=YYYY-MM-DD:TIPO deja una sesión registrada sin la app en esa fecha (para probar las preguntas de días sin
-  // registro); varias separadas por coma; FRIDA-pierna y FRIDA-torso para Frida con tipo
+  // registro); varias separadas por coma; FRIDA-pierna y FRIDA-torso para Frida con tipo; CARDIO (elíptica 25 min) o
+  // CARDIO-caminadora para una visita con cardio
   const registro = params.get('registro')
   for (const r of registro ? registro.split(',') : []) {
     const [fecha, tipoTexto] = r.split(':')
     const [tipo, fridaTipoR] = (tipoTexto || 'A').split('-')
+    if (tipo === 'CARDIO') { await guardarSesion({ ...visita(fecha), cardio: { aparato: fridaTipoR === 'caminadora' ? 'caminadora' : 'eliptica', min: 25 } }); continue }
     await guardarSesion(tipo === 'VISITA' ? visita(fecha) : { ...sesionRegistrada(fecha, tipo as Sesion['tipo']), ...(fridaTipoR ? { fridaTipo: fridaTipoR as 'pierna' | 'torso' } : {}) })
   }
   history.replaceState(null, '', location.pathname)

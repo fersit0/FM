@@ -1,7 +1,7 @@
 // Registro de sesiones a prueba de olvidos (RUTINA-FINAL.md, 2, con MANANAS-30.md, 4). Puro, sin React.
 // Una sola lista de sesiones; todo lo demás se calcula de ahí. Las sesiones se cierran solas, los días hábiles sin
 // registro se preguntan una sola vez y se puede registrar una sesión hecha sin la app, o una visita de solo regadera.
-import type { Sesion, SetLog, SesionTipo, Settings, FridaTipo, Momento, Rota } from '../data/tipos'
+import type { Sesion, SetLog, SesionTipo, Settings, FridaTipo, Momento, Rota, Cardio } from '../data/tipos'
 import { claveFecha, desdeClave, sumarDias, minutosAhora } from './fechas'
 import { cuenta, hechas, tocaSesion, fridaTipoDe, esClub, esHabil, esPesas } from './semana'
 import { listaDeSesion } from './sesion'
@@ -18,9 +18,27 @@ export function sesionRegistrada(fecha: string, tipo: SesionTipo, id = `registro
 export function visita(fecha: string, inicio = new Date(fecha + 'T07:40:00').getTime()): Sesion {
   return { id: `visita-${fecha}`, fecha, tipo: 'VISITA', version: 'completa', inicio, fin: inicio, terminada: true, cambios: [], como: 'registrada', origen: 'registro', momento: 'manana' }
 }
-/** La visita de un día que ya tiene pesas en el club queda absorbida: no se lista ni se cuenta aparte */
+/**
+ * La visita de solo regadera de un día que ya tiene pesas en el club queda absorbida: no se lista ni se cuenta aparte.
+ * La de cardio sí se lista (no suma otro día de club: los contadores cuentan días).
+ */
 export function absorbida(s: Sesion, sesiones: Sesion[], sets: SetLog[] = []): boolean {
-  return s.tipo === 'VISITA' && sesiones.some((x) => x.fecha === s.fecha && esClub(x.tipo) && cuenta(x, sets))
+  return s.tipo === 'VISITA' && !s.cardio && sesiones.some((x) => x.fecha === s.fecha && esClub(x.tipo) && cuenta(x, sets))
+}
+
+// ---------- Cardio (PENDIENTE-V8.md, 2) ----------
+export const CARDIO_DEFAULT: Cardio = { aparato: 'eliptica', min: 25 }
+export const CARDIO_MIN = 10
+export const CARDIO_MAX = 60
+export const CARDIO_PASO = 5
+/** El último cardio registrado (aparato y minutos), para abrir con eso; la primera vez, elíptica y 25 */
+export function ultimoCardio(sesiones: Sesion[]): Cardio {
+  const con = sesiones.filter((s) => s.tipo === 'VISITA' && s.cardio).sort((a, b) => a.fecha.localeCompare(b.fecha) || a.inicio - b.inicio)
+  return con.length ? { ...con[con.length - 1].cardio! } : { ...CARDIO_DEFAULT }
+}
+/** "elíptica 25 min" */
+export function textoCardio(c: Cardio): string {
+  return `${c.aparato === 'eliptica' ? 'elíptica' : 'caminadora'} ${c.min} min`
 }
 
 /** La A del 7 oct 2026, una sola vez: si no hay ninguna sesión ese día */
@@ -113,17 +131,21 @@ export function sugeridaPara(fecha: string, sesiones: Sesion[], sets: SetLog[], 
 /**
  * Registrar una sesión hecha sin la app. Nunca en el futuro. Máximo una sesión de club (A, B o C) por día: si ese
  * día ya tiene una, se devuelve en `reemplaza` para ofrecer cambiarla en vez de duplicarla. FRIDA es una por día
- * (mismo id) y puede llevar una nota. La visita es una por día y no se registra sobre un día que ya tiene pesas.
+ * (mismo id) y puede llevar una nota. La visita es una por día y la de solo regadera no se registra sobre un día que ya
+ * tiene pesas. Con `cardio` es la misma visita del día: si ya había una ("Ya llegué"), se actualiza esa, con su hora.
  */
-export function armarRegistro(sesiones: Sesion[], fecha: string, tipo: SesionTipo, hoy: string, nota?: string, opciones: { fridaTipo?: FridaTipo; momento?: Momento } = {}): { sesion: Sesion; reemplaza: Sesion | null } | { error: string } {
+export function armarRegistro(sesiones: Sesion[], fecha: string, tipo: SesionTipo, hoy: string, nota?: string, opciones: { fridaTipo?: FridaTipo; momento?: Momento; cardio?: Cardio; inicio?: number } = {}): { sesion: Sesion; reemplaza: Sesion | null } | { error: string } {
   if (fecha > hoy) return { error: 'Esa fecha todavía no llega.' }
-  const { fridaTipo, momento } = opciones
+  const { fridaTipo, momento, cardio, inicio } = opciones
   const conMomento = (s: Sesion): Sesion => (momento ? { ...s, momento } : s)
   if (tipo === 'VISITA') {
     const club = sesiones.find((s) => s.fecha === fecha && esClub(s.tipo))
-    if (club) return { error: `Ese día ya tiene ${club.tipo}: la ida al club ya está contada.` }
+    if (club && !cardio) return { error: `Ese día ya tiene ${club.tipo}: la ida al club ya está contada.` }
     const antes = sesiones.find((s) => s.id === `visita-${fecha}`) ?? null
-    return { sesion: visita(fecha), reemplaza: antes }
+    if (!cardio) return { sesion: visita(fecha, inicio), reemplaza: antes }
+    const hora = antes?.inicio ?? inicio
+    const v = visita(fecha, hora)
+    return { sesion: { ...v, momento: momento ?? antes?.momento ?? (hora !== undefined ? momentoDe(hora) : 'manana'), cardio: { ...cardio } }, reemplaza: antes }
   }
   if (esClub(tipo)) {
     const otra = sesiones.find((s) => s.fecha === fecha && esClub(s.tipo))
@@ -151,5 +173,5 @@ export function textoUltima(ultima: Sesion | null, nombresDia: string[]): string
 export function cambiarTipo(sesiones: Sesion[], s: Sesion, tipo: SesionTipo, fridaTipo?: FridaTipo): Sesion | { error: string } {
   const otra = esClub(tipo) ? sesiones.find((x) => x.id !== s.id && x.fecha === s.fecha && esClub(x.tipo)) : undefined
   if (otra) return { error: `Ese día ya tiene ${otra.tipo}.` }
-  return { ...s, tipo, fridaTipo: tipo === 'FRIDA' ? fridaTipo ?? fridaTipoDe(s) : undefined, sinPierna: tipo === 'A' && s.tipo === 'A' ? s.sinPierna : undefined }
+  return { ...s, tipo, fridaTipo: tipo === 'FRIDA' ? fridaTipo ?? fridaTipoDe(s) : undefined, sinPierna: tipo === 'A' && s.tipo === 'A' ? s.sinPierna : undefined, cardio: tipo === 'VISITA' ? s.cardio : undefined }
 }

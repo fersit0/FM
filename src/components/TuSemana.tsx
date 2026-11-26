@@ -4,7 +4,7 @@ import { DIAS_NOMBRE, desdeClave } from '../logic/fechas'
 /**
  * Tu semana (MANANAS-30.md, 5): siete días, L a D. Las pesas, rellenas con su letra (o F con P o T para Frida, y un
  * punto chico si fue en la noche); la visita de solo regadera, un punto lleno; lo planeado, la letra en contorno; nada
- * en los días sin plan, y hoy marcado. Tocar un día que ya pasó abre registrar o editar ese día; los de hoy en adelante
+ * en los días sin plan, y hoy marcado. El cardio se ve como la visita: es ida al club. Tocar un día que ya pasó abre registrar o editar ese día; los de hoy en adelante
  * no hacen nada.
  */
 export function TuSemana({ dias, onDia }: { dias: DiaTuSemana[]; onDia: (fecha: string) => void }) {
@@ -18,7 +18,7 @@ export function TuSemana({ dias, onDia }: { dias: DiaTuSemana[]; onDia: (fecha: 
         const fridaHecha = h && !visita && h.tipo !== 'FRIDA' ? d.hecho.find((x) => x.tipo === 'FRIDA') : undefined
         const nombre = `${DIAS_NOMBRE[desdeClave(d.fecha).getDay()]} ${desdeClave(d.fecha).getDate()}`
         const texto = h
-          ? visita ? 'solo regadera' : `${h.tipo === 'FRIDA' ? `Frida ${h.fridaTipo}` : h.tipo}${h.noche ? ', en la noche' : ''}${fridaHecha ? ` y Frida ${fridaHecha.fridaTipo}` : ''}`
+          ? visita ? (h.cardio ? 'cardio' : 'solo regadera') : `${h.tipo === 'FRIDA' ? `Frida ${h.fridaTipo}` : h.tipo}${h.noche ? ', en la noche' : ''}${fridaHecha ? ` y Frida ${fridaHecha.fridaTipo}` : ''}`
           : d.plan ? `toca ${d.plan}` : 'nada'
         const marca = (
           <>

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
-import type { Sesion, Version, Letra, Rota } from '../data/tipos'
+import type { Sesion, Version, Letra, Rota, Aparato } from '../data/tipos'
 import { usePantalla, useMedidas } from '../design/pantallaActiva'
 import { tocaSesion, contadores, textoContadores, avisoAyer, casaDeSemana, casaDisponible, CASA_MAX, cuenta, esClub, esHabil, habilSiguiente } from '../logic/semana'
-import { diasSinRegistro, armarRegistro, visita, type DiaPendiente } from '../logic/registro'
+import { diasSinRegistro, armarRegistro, visita, ultimoCardio, textoCardio, type DiaPendiente } from '../logic/registro'
 import { duracionEstimada, duracionesDe } from '../logic/duracion'
 import { estadoTiempo, estadoTiempoEnMinutos, estadoSiSalgo, versionParaHora, topeDe, MEDIODIA } from '../logic/horario'
 import { tuSemana } from '../logic/tusemana'
@@ -13,7 +13,7 @@ import { listaDe, itemDeRutina, nombreSesion, ZONA_NOMBRE, rutaDe } from '../dat
 import { claveFecha, DIAS_NOMBRE, formatoHora, minutosDe, minutosAhora, sumarDias } from '../logic/fechas'
 import { tocaRespaldo } from '../logic/respaldo'
 import { Circulo, BotonPrincipal, BotonTexto, Hoja, Grupo, Fila, Pez, Deshacer, LineaPiezas } from '../components/fm'
-import { BotonesDia, RegistrarHoja, textoDia, type Respuesta } from '../components/Registrar'
+import { BotonesDia, RegistrarHoja, CardioCampos, textoDia, textoRegistrada, type Respuesta } from '../components/Registrar'
 import { TuSemana } from '../components/TuSemana'
 
 interface Props {
@@ -31,7 +31,7 @@ const ROTA: Rota[] = ['A', 'B']
  * Qué muestra Hoy (MANANAS-30.md, 4): 'club' ofrece la sesión que toca; 'regadera', en la mañana de un día hábil cuando
  * ya no alcanza ni la corta ("Hoy solo regadera", con "Ya llegué"); 'sinclub', un día hábil que se quedó sin club ("Hoy
  * no hubo club", con "Sí fui" y "Voy en la noche"); 'hecha', ya hubo pesas en el club (una de club por día); 'visita',
- * llegó y solo se bañó; 'descanso', un día hábil en que dijo "Hoy descanso"; 'libre', sábado y domingo, sin plan.
+ * llegó y solo se bañó, o solo hizo cardio; 'descanso', un día hábil en que dijo "Hoy descanso"; 'libre', sábado y domingo, sin plan.
  */
 type Modo = 'club' | 'regadera' | 'sinclub' | 'hecha' | 'visita' | 'descanso' | 'libre'
 
@@ -71,6 +71,9 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   const [hojaPrefiero, setHojaPrefiero] = useState(false)
   const [registrar, setRegistrar] = useState(false)
   const [registrarFecha, setRegistrarFecha] = useState<string | undefined>(undefined)
+  const [hojaCardio, setHojaCardio] = useState(false)
+  const [aparatoCardio, setAparatoCardio] = useState<Aparato>('eliptica')
+  const [minCardio, setMinCardio] = useState(25)
   const [accion, setAccion] = useState<Accion | null>(null)
   const cerrarAccion = useCallback(() => setAccion(null), [])
   const [versionNueva, setVersionNueva] = useState(() => typeof window.fmActualizar === 'function')
@@ -100,7 +103,8 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   const pregunta: DiaPendiente | null = !sesionEnCurso && pendientes.length ? pendientes[0] : null
   // máximo una de club por día: ya hecha, Hoy ya no ofrece otra
   const clubDeHoy = sesiones.find((s) => s.fecha === claveHoy && esClub(s.tipo) && cuenta(s, sets))
-  const visitaHoy = sesiones.some((s) => s.fecha === claveHoy && s.tipo === 'VISITA')
+  const visitaDeHoy = sesiones.find((s) => s.fecha === claveHoy && s.tipo === 'VISITA')
+  const visitaHoy = !!visitaDeHoy
   // después de la última pesa de la noche (21:15; el domingo 18:45) ya no hay club hoy; el lunes en la tarde no abre
   const pasoLaNoche = tiempo.franja === 'noche' && tiempo.minutosParaTope <= 0
   const hayNoche = habil && dow !== 1 && !pasoLaNoche
@@ -152,9 +156,26 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
   /** "Ya llegué" y "Solo regadera hoy": la visita, una por día, con la hora real (MANANAS-30.md, 4) */
   async function yaLlegue() {
     setHojaTarde(false)
+    setHojaCardio(false)
     const v = visita(claveHoy, Date.now())
     await datos.guardarSesion(v)
     setAccion({ texto: 'Llegaste. Solo regadera: cuenta.', deshacer: () => datos.borrarSesion(v.id) })
+  }
+  /** "Cardio o solo regadera": abre con el último aparato y minutos (la primera vez, elíptica y 25) */
+  function abrirCardio() {
+    const c = ultimoCardio(sesiones)
+    setAparatoCardio(c.aparato)
+    setMinCardio(c.min)
+    setHojaCardio(true)
+  }
+  /** El cardio va en la visita del día: si ya marcó "Ya llegué", se actualiza esa (PENDIENTE-V8.md, 2) */
+  async function guardarCardio() {
+    const cardio = { aparato: aparatoCardio, min: minCardio }
+    const arm = armarRegistro(sesiones, claveHoy, 'VISITA', claveHoy, undefined, { cardio, inicio: Date.now() })
+    if ('error' in arm) return
+    setHojaCardio(false)
+    await datos.guardarSesion(arm.sesion)
+    setAccion({ texto: `Cardio: ${textoCardio(cardio)}.`, deshacer: async () => { if (arm.reemplaza) await datos.guardarSesion(arm.reemplaza); else await datos.borrarSesion(arm.sesion.id) } })
   }
   function abrirRegistrar(fecha?: string) {
     setRegistrarFecha(fecha)
@@ -189,13 +210,16 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
     regadera: { titulo: 'Hoy solo regadera', nota: `Para pesas ya no alcanza. Llegar cuenta. ${textoSigue}` },
     sinclub: { titulo: 'Hoy no hubo club', nota: textoSigue },
     hecha: { titulo: `${clubDeHoy?.tipo ?? ''} hecha`, nota: textoSigue },
-    visita: { titulo: 'Llegaste', nota: `Solo regadera: cuenta como ida al club. ${textoSigue}` },
+    visita: visitaDeHoy?.cardio ? { titulo: 'Cardio hecho', nota: textoSigue } : { titulo: 'Llegaste', nota: `Solo regadera: cuenta como ida al club. ${textoSigue}` },
     descanso: { titulo: 'Descanso', nota: textoSigue },
     libre: { titulo: 'Libre', nota: pasoLaNoche ? textoSigue : `Si vas al club, va la ${toca} y cuenta. ${textoSigue}` },
   }
   // la pregunta por un día sin registro va primero; luego lo del día
   const pantallaClub = !pregunta
-  const ofrecerRegadera = pantallaClub && !sesionEnCurso && modo === 'club' && tiempo.franja === 'manana' && habil && !visitaHoy
+  // "Cardio o solo regadera": siempre que Hoy ofrezca Empezar, y en el modo regadera (PENDIENTE-V8.md, 2)
+  const ofrecerCardio = pantallaClub && !sesionEnCurso && (modo === 'club' || modo === 'regadera')
+  // en la noche y en fin de semana la hoja no ofrece "Solo regadera"
+  const cardioConRegadera = habil && tiempo.franja === 'manana'
   const ofrecerDescanso = pantallaClub && !sesionEnCurso && habil && (modo === 'club' || modo === 'regadera' || modo === 'sinclub')
   // el círculo rojo nunca queda debajo del texto: si el texto le queda cerca (pantallas bajas, línea larga), se hace más
   // chico y, si no basta, sube; sigue arriba a la derecha, cortado. El texto no depende del círculo, así que no brinca.
@@ -278,10 +302,10 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
             {modo !== 'sinclub' && <BotonTexto onClick={() => abrirRegistrar()}>Registrar sesión</BotonTexto>}
           </div>
         )}
-        {/* en las mañanas, siempre a la mano (MANANAS-30.md, 4); "Hoy descanso" en un día hábil sin club. En su propio renglón para que nada se parta en dos líneas */}
-        {(ofrecerRegadera || ofrecerDescanso) && (
+        {/* cardio o solo regadera, siempre a la mano; "Hoy descanso" en un día hábil sin club. En su propio renglón para que nada se parta en dos líneas */}
+        {(ofrecerCardio || ofrecerDescanso) && (
           <div className="botones-fila" style={{ justifyContent: 'center' }}>
-            {ofrecerRegadera && <BotonTexto onClick={yaLlegue}>Solo regadera hoy</BotonTexto>}
+            {ofrecerCardio && <BotonTexto onClick={abrirCardio}>Cardio o solo regadera</BotonTexto>}
             {ofrecerDescanso && <BotonTexto onClick={hoyDescanso}>Hoy descanso</BotonTexto>}
           </div>
         )}
@@ -329,7 +353,14 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
           {tiempo.franja !== 'cerrado' && <Fila texto={`Corta de todas formas: ${toca}`} detalle={listaCorta.map((e) => e.nombre.toLowerCase()).join(', ')} onClick={() => { setHojaCasa(false); onEmpezar(toca, 'corta') }} />}
         </Grupo>
       </Hoja>
-      <RegistrarHoja datos={datos} ahora={ahora} abierta={registrar} fecha={registrarFecha} onCerrar={() => setRegistrar(false)} onGuardado={(s, reemplazada) => setAccion({ texto: `${textoDia(s.fecha)}: ${s.tipo === 'FRIDA' ? `Frida ${s.fridaTipo ?? 'torso'}` : s.tipo === 'CASA' ? 'casa' : s.tipo === 'VISITA' ? 'solo regadera' : s.tipo} registrada.`, deshacer: async () => { if (reemplazada) await datos.guardarSesion(reemplazada); else await datos.borrarSesion(s.id) } })} />
+      <Hoja abierta={hojaCardio} titulo="Cardio o solo regadera" onCerrar={() => setHojaCardio(false)} pie={<>
+        <BotonPrincipal onClick={guardarCardio}>Guardar cardio</BotonPrincipal>
+        {cardioConRegadera && <BotonTexto onClick={yaLlegue}>Solo regadera</BotonTexto>}
+      </>}>
+        <p className="t-cuerpo tenue">Cuenta como ida al club, no como pesas.</p>
+        <CardioCampos aparato={aparatoCardio} min={minCardio} onAparato={setAparatoCardio} onMin={setMinCardio} />
+      </Hoja>
+      <RegistrarHoja datos={datos} ahora={ahora} abierta={registrar} fecha={registrarFecha} onCerrar={() => setRegistrar(false)} onGuardado={(s, reemplazada) => setAccion({ texto: textoRegistrada(s), deshacer: async () => { if (reemplazada) await datos.guardarSesion(reemplazada); else await datos.borrarSesion(s.id) } })} />
     </div>
   )
 }

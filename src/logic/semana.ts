@@ -1,7 +1,7 @@
 // Lógica de la semana (MANANAS-30.md, 3 y 5). Puro, sin React.
 // Entre semana se va al club todas las mañanas y las pesas son lo que quepa. Dos sesiones, A (empuje) y B (jalón), que
 // se alternan sin reiniciar por semana: toca la contraria de la última. Dos contadores de lunes a domingo: Club (días con
-// pesas en el club o visita de solo regadera, meta 5) y Pesas (A, B, la C vieja y Frida, meta 3 y sin tope). Una sesión
+// pesas en el club o visita de solo regadera o de cardio, meta 5) y Pesas (A, B, la C vieja y Frida, meta 3 y sin tope). Una sesión
 // cuenta si está terminada o si tiene al menos una serie registrada.
 import type { Sesion, SetLog, Club, Rota, FridaTipo } from '../data/tipos'
 import { claveFecha, inicioSemana, sumarDias, DIAS_NOMBRE } from './fechas'

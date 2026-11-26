@@ -31,6 +31,11 @@ describe('Tu semana (MANANAS-30.md, 5)', () => {
   it('"Hoy descanso": ese día no lleva plan y la letra pasa al día siguiente', () => {
     expect(plan([s(L, 'A')], dia(M), { descansos: [M] })).toEqual([null, null, 'B', 'A', 'B', null, null])
   })
+  it('el cardio se ve como la visita (punto lleno) y no mueve la rotación', () => {
+    const todo = [s(L, 'A'), s(M, 'VISITA', { cardio: { aparato: 'eliptica', min: 25 } })]
+    expect(tuSemana(todo, [], AJ, dia(M, 9))[1].hecho).toEqual([{ tipo: 'VISITA', noche: false, cardio: true }])
+    expect(plan(todo, dia(X))).toEqual([null, null, 'B', 'A', 'B', null, null])
+  })
   it('con pesas y visita el mismo día, se ve solo la de pesas', () => {
     expect(hecho([s(L, 'VISITA'), s(L, 'A')], dia(M))[0]).toBe('A')
   })

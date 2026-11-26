@@ -13,6 +13,8 @@ export interface HechoDia {
   /** solo FRIDA */
   fridaTipo?: FridaTipo
   noche: boolean
+  /** solo VISITA: fue a hacer cardio (se ve igual, el mismo punto lleno: es ida al club) */
+  cardio?: boolean
 }
 export interface DiaTuSemana {
   fecha: string
@@ -42,7 +44,7 @@ export function tuSemana(sesiones: Sesion[], sets: SetLog[], settings: Pick<Sett
     const club = pesas.some((s) => esClub(s.tipo))
     const visita = delDia.find((s) => s.tipo === 'VISITA')
     const hecho: HechoDia[] = pesas.map((s) => ({ tipo: s.tipo as Club | 'FRIDA', ...(s.tipo === 'FRIDA' ? { fridaTipo: fridaTipoDe(s) } : {}), noche: s.momento === 'noche' }))
-    if (visita && !club) hecho.push({ tipo: 'VISITA', noche: false })
+    if (visita && !club) hecho.push({ tipo: 'VISITA', noche: false, ...(visita.cardio ? { cardio: true } : {}) })
     return { fecha, letra: LETRAS[i], hoy: fecha === hoy, pasado: fecha < hoy, hecho, plan: null }
   })
   const supuestas: Sesion[] = [...sesiones]

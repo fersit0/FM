@@ -1,13 +1,13 @@
 import { useRef } from 'react'
 
-/** 5. Stepper de reps: dos círculos de 64 con − y +, cifra 56/700 al centro y la unidad debajo. */
-export function Stepper({ valor, onChange, min = 0, max = 99, unidad = 'reps' }: { valor: number; onChange: (v: number) => void; min?: number; max?: number; unidad?: string }) {
+/** 5. Stepper de reps: dos círculos de 64 con − y +, cifra 56/700 al centro y la unidad debajo. `paso`: de cuánto en cuánto (1). */
+export function Stepper({ valor, onChange, min = 0, max = 99, unidad = 'reps', paso = 1 }: { valor: number; onChange: (v: number) => void; min?: number; max?: number; unidad?: string; paso?: number }) {
   const timer = useRef<number | null>(null)
   const repetidor = useRef<number | null>(null)
   const actual = useRef(valor)
   actual.current = valor
   function cambiar(d: number) {
-    const v = Math.max(min, Math.min(max, actual.current + d))
+    const v = Math.max(min, Math.min(max, actual.current + d * paso))
     actual.current = v
     onChange(v)
   }

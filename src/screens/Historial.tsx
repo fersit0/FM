@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Datos } from '../hooks/useDatos'
 import type { Sesion, SesionTipo, SetLog, FridaTipo, Momento } from '../data/tipos'
 import { fridaTipoDe } from '../logic/semana'
-import { cambiarTipo, absorbida } from '../logic/registro'
+import { cambiarTipo, absorbida, textoCardio } from '../logic/registro'
 import { usePantalla } from '../design/pantallaActiva'
 import { semanasHistorial, tocaPesarse, tocaFoto, promedioSemanal, type SemanaHistorial } from '../logic/progreso'
 import { claveFecha, fechaCorta, DIAS_NOMBRE, desdeClave, sumarDias, inicioSemana } from '../logic/fechas'
 import { Grupo, Fila, Hoja, BotonTexto, Pez, Deshacer } from '../components/fm'
-import { RegistrarHoja, textoDia } from '../components/Registrar'
+import { RegistrarHoja, textoDia, textoRegistrada } from '../components/Registrar'
 import { SerieEditable } from './Sesion'
 import { Linea } from '../components/Linea'
 import { haptico } from '../lib/haptics'
@@ -17,7 +17,7 @@ const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', '
 /** 7.3 Historial: cifra grande del mes, semanas con puntos, sesiones y series. */
 export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
   usePantalla('tinta')
-  // la visita de un día que ya tiene pesas en el club no se lista aparte (MANANAS-30.md, 4)
+  // la visita de solo regadera de un día que ya tiene pesas en el club no se lista aparte (MANANAS-30.md, 4); la de cardio sí
   const visibles = useMemo(() => datos.sesiones.filter((s) => !absorbida(s, datos.sesiones, datos.sets)), [datos.sesiones, datos.sets])
   const semanas = useMemo(() => semanasHistorial(visibles, ahora, 12).reverse(), [visibles, ahora])
   // la cifra del mes son sesiones de entrenamiento: la visita de solo regadera no cuenta ahí
@@ -77,10 +77,10 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
           </Grupo>
         ))}
       </Hoja>
-      <Hoja abierta={sesion !== null} altura="completa" titulo={sesion ? `${sesion.tipo === 'FRIDA' ? 'Frida' : sesion.tipo === 'VISITA' ? 'Solo regadera' : sesion.tipo}, ${fechaCorta(sesion.fecha)}` : ''} onCerrar={() => setSesion(null)}>
+      <Hoja abierta={sesion !== null} altura="completa" titulo={sesion ? `${sesion.tipo === 'FRIDA' ? 'Frida' : sesion.tipo === 'VISITA' ? (sesion.cardio ? 'Cardio' : 'Solo regadera') : sesion.tipo}, ${fechaCorta(sesion.fecha)}` : ''} onCerrar={() => setSesion(null)}>
         {sesion && <DetalleSesion datos={datos} sesion={datos.sesiones.find((s) => s.id === sesion.id) ?? sesion} onBorrada={() => { setSesion(null); setSemana(null) }} onAccion={setAccion} />}
       </Hoja>
-      <RegistrarHoja datos={datos} ahora={ahora} abierta={agregar} onCerrar={() => setAgregar(false)} onGuardado={(s, reemplazada) => setAccion({ texto: `${textoDia(s.fecha)}: ${etiquetaDe(s)} registrada.`, deshacer: async () => { if (reemplazada) await datos.guardarSesion(reemplazada); else await datos.borrarSesion(s.id) } })} />
+      <RegistrarHoja datos={datos} ahora={ahora} abierta={agregar} onCerrar={() => setAgregar(false)} onGuardado={(s, reemplazada) => setAccion({ texto: textoRegistrada(s), deshacer: async () => { if (reemplazada) await datos.guardarSesion(reemplazada); else await datos.borrarSesion(s.id) } })} />
       {accion && <Deshacer clave={accion} texto={accion.texto} onDeshacer={async () => { const a = accion; setAccion(null); await a.deshacer() }} onCerrar={cerrarAccion} />}
       <PesoHoja datos={datos} ahora={ahora} abierta={peso} onCerrar={() => setPeso(false)} onAccion={setAccion} />
       <FotosHoja datos={datos} ahora={ahora} abierta={fotos} onCerrar={() => setFotos(false)} onAccion={setAccion} />
@@ -92,11 +92,11 @@ export function Historial({ datos, ahora }: { datos: Datos; ahora: Date }) {
 /** Sin diálogos de confirmación: lo que se borra muestra Deshacer unos segundos (RUTINA-FINAL.md, 2.6) */
 type Accion = { texto: string; deshacer: () => void | Promise<void> }
 
-/** "A completa", "B corta", "A parcial", "A registrada", "Frida torso", "casa", "solo regadera" */
+/** "A completa", "B corta", "A parcial", "A registrada", "Frida torso", "casa", "solo regadera", "cardio · elíptica 25 min" */
 function etiquetaDe(s: Sesion): string {
   if (s.tipo === 'FRIDA') return `Frida ${fridaTipoDe(s)}`
   if (s.tipo === 'CASA') return 'casa'
-  if (s.tipo === 'VISITA') return 'solo regadera'
+  if (s.tipo === 'VISITA') return s.cardio ? `cardio · ${textoCardio(s.cardio)}` : 'solo regadera'
   return `${s.tipo}${s.tipo === 'A' && s.sinPierna ? ' sin pierna' : ''} ${s.ligera ? 'ligera' : s.como ?? (s.origen === 'registro' ? 'registrada' : s.version)}`
 }
 
@@ -113,7 +113,7 @@ function DetalleSesion({ datos, sesion, onBorrada, onAccion }: { datos: Datos; s
           {/* una de club por día: si ese día ya tiene otra, A y B no se pueden elegir. La C ya no se ofrece: solo sale si
               la sesión ya era C. "Solo regadera" solo si no tiene series (MANANAS-30.md, 4 y 7) */}
           <select value={sesion.tipo === 'FRIDA' ? `FRIDA:${fridaTipoDe(sesion)}` : sesion.tipo} onChange={(e) => { const [tipo, fridaTipo] = e.target.value.split(':'); const r = cambiarTipo(datos.sesiones, sesion, tipo as SesionTipo, fridaTipo as FridaTipo | undefined); if (!('error' in r)) datos.guardarSesion(r) }} aria-label="Qué hice">
-            {(['A', 'B', 'C'] as const).filter((t) => t !== 'C' || sesion.tipo === 'C').map((t) => <option key={t} value={t} disabled={otraClub && sesion.tipo !== t}>{t}</option>)}<option value="FRIDA:pierna">Frida pierna</option><option value="FRIDA:torso">Frida torso</option><option value="CASA">Casa</option>{(propios.length === 0 || sesion.tipo === 'VISITA') && <option value="VISITA">Solo regadera</option>}
+            {(['A', 'B', 'C'] as const).filter((t) => t !== 'C' || sesion.tipo === 'C').map((t) => <option key={t} value={t} disabled={otraClub && sesion.tipo !== t}>{t}</option>)}<option value="FRIDA:pierna">Frida pierna</option><option value="FRIDA:torso">Frida torso</option><option value="CASA">Casa</option>{(propios.length === 0 || sesion.tipo === 'VISITA') && <option value="VISITA">{sesion.cardio ? 'Cardio' : 'Solo regadera'}</option>}
           </select>
         </Fila>
         <Fila texto="Cuándo" detalle={sesion.momento ? undefined : 'Sin dato: es de antes de que la app lo guardara'}>
@@ -123,7 +123,7 @@ function DetalleSesion({ datos, sesion, onBorrada, onAccion }: { datos: Datos; s
           </select>
         </Fila>
       </Grupo>
-      {sesion.tipo === 'FRIDA' ? <p className="t-cuerpo tenue">Con Frida, a su ritmo y con su app.{sesion.nota ? ` Nota: ${sesion.nota}` : ''}</p> : sesion.tipo === 'VISITA' ? <p className="t-cuerpo tenue">Llegaste al club y te bañaste. Cuenta como ida al club, no como pesas.</p> : ordenados.length === 0 ? <p className="t-cuerpo tenue">Sin series registradas.</p> : (
+      {sesion.tipo === 'FRIDA' ? <p className="t-cuerpo tenue">Con Frida, a su ritmo y con su app.{sesion.nota ? ` Nota: ${sesion.nota}` : ''}</p> : sesion.tipo === 'VISITA' ? <p className="t-cuerpo tenue">{sesion.cardio ? `Cardio: ${textoCardio(sesion.cardio)}.` : 'Llegaste al club y te bañaste.'} Cuenta como ida al club, no como pesas.</p> : ordenados.length === 0 ? <p className="t-cuerpo tenue">Sin series registradas.</p> : (
         <Grupo>{ordenados.map((s) => <SerieEditable key={s.id} set={s} datos={datos} onBorrada={(b: SetLog) => onAccion({ texto: 'Serie borrada.', deshacer: () => { datos.guardarSet(b) } })} />)}</Grupo>
       )}
       <BotonTexto onClick={async () => {

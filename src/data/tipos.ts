@@ -4,8 +4,14 @@
 export type Club = 'A' | 'B' | 'C'
 /** Las dos que se alternan (MANANAS-30.md, 3) */
 export type Rota = 'A' | 'B'
-/** VISITA: llegó al club y solo se bañó, sin ejercicios (MANANAS-30.md, 4) */
+/** VISITA: llegó al club y solo se bañó, sin ejercicios (MANANAS-30.md, 4); con `cardio`, fue a hacer solo cardio */
 export type SesionTipo = Club | 'FRIDA' | 'CASA' | 'VISITA'
+export type Aparato = 'eliptica' | 'caminadora'
+/** Cardio de un día en que solo fue a eso: va dentro de la VISITA */
+export interface Cardio {
+  aparato: Aparato
+  min: number
+}
 export type Version = 'completa' | 'corta'
 export type Letra = Club | 'CASA'
 /** Zonas del Club Britania (RUTINA-FINAL.md, 3) */
@@ -93,6 +99,8 @@ export interface Sesion {
   momento?: Momento
   /** A sin pierna de la v7: ya no se ofrece; queda en las sesiones viejas para el historial */
   sinPierna?: boolean
+  /** VISITA: el cardio de ese día (elíptica o caminadora y minutos). Sin él es solo regadera. */
+  cardio?: Cardio
 }
 export type FridaTipo = 'pierna' | 'torso'
 export type Momento = 'manana' | 'noche'
