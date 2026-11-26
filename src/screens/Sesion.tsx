@@ -86,12 +86,15 @@ export function Sesion({ datos, sesion, activa, setActiva, onSalir, onTerminar }
   // Recorte en el camino (MANANAS-30.md, 4): si lo que falta ya no cabe antes de la última pesa, quita series del último
   // ejercicio, luego ese ejercicio, y luego lo mismo con el tercero. Los dos primeros no se tocan.
   const hechosAntes = useRef(hechos.length)
+  const indiceAntes = useRef(indice)
   // si se deshace un recorte, en esta sesión ya no se vuelve a recortar solo ("Terminar aquí" sigue a la mano)
   const sinRecorte = useRef(false)
   useEffect(() => {
-    // borrar una serie no es avanzar: no recorta ni tapa el Deshacer del borrado
-    const borro = hechos.length < hechosAntes.current
+    // borrar una serie no es avanzar: no recorta ni tapa el Deshacer del borrado. Llegar a otro ejercicio (con menos
+    // series hechas que el anterior) sí es avanzar: ahí se revisa, también al llegar al segundo
+    const borro = indice === indiceAntes.current && hechos.length < hechosAntes.current
     hechosAntes.current = hechos.length
+    indiceAntes.current = indice
     if (casa || !ej || borro || sinRecorte.current) return
     // se decide con el ritmo real y no con la cuenta del principio: mientras falte por empezar alguno de los dos primeros
     // ejercicios, todavía no se recorta nada

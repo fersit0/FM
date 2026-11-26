@@ -180,22 +180,26 @@ test('"Ocupado: después" manda el ejercicio al final de su zona y, si sigue ocu
 })
 
 test('recorte en el camino: ya en el segundo ejercicio, si no cabe antes de la última pesa quita de atrás para adelante, nunca el press ni los laterales', async ({ page }) => {
-  // A el jueves en la noche: empezar a las 20:10 da completa; ya en los laterales el reloj salta a las 21:05 y ya no cabe
-  // todo antes de las 21:15
+  // A el jueves en la noche: empezar a las 20:10 da completa; a media A el reloj salta a las 21:05 y, al llegar a los
+  // laterales (el segundo), ya no cabe todo antes de las 21:15
   await limpiar(page, 'hecha')
   await reloj(page, '2026-10-08T20:10:00')
   await page.goto('')
   await expect(page.getByText(/unos \d+ min(\. Completa si empiezas| · completa)/)).toBeVisible()
   await page.getByRole('button', { name: /^Empezar/ }).click()
   await page.getByRole('button', { name: 'Saltar' }).click()
+  // una serie de press: al llegar al segundo ya no hay series hechas, y eso no es borrar
+  await page.getByRole('button', { name: 'Serie hecha' }).click()
+  await page.getByRole('button', { name: 'Saltar' }).click()
+  await reloj(page, '2026-10-08T21:05:00')
   await menu(page, 'Saltar ejercicio')
   await expect(page.locator('.sesion-titulo-fila h1')).toHaveText('Elevaciones laterales')
-  await reloj(page, '2026-10-08T21:05:00')
-  await page.getByRole('button', { name: 'Serie hecha' }).click()
+  // se revisa al llegar, sin esperar a la primera serie
   await expect(page.locator('.deshacer')).toContainText('Para terminar a tiempo se quitó')
   const texto = await page.locator('.deshacer').innerText()
   expect(texto).toContain('tríceps con mancuerna sobre la cabeza')
   expect(texto).not.toMatch(/press inclinado|laterales/)
+  await page.getByRole('button', { name: 'Serie hecha' }).click()
   // y la línea de la hora del descanso lo dice
   await expect(page.locator('.sesion-linea')).toContainText('se quitó')
   await page.getByRole('button', { name: 'Saltar' }).click()
