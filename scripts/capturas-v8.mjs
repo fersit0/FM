@@ -45,6 +45,20 @@ for (const ancho of [375, 430]) { const page = await abrir('2026-11-24T07:42:00'
 { const page = await abrir('2026-11-25T07:30:00', { registro: '2026-11-23:A', ajustes: { noFui: ['2026-11-24'] } }); await foto(page, 'hoy-aviso-ayer'); await page.context().close() }
 // Tu semana con 2 pesas y 1 visita: A lunes, regadera martes, B miércoles; jueves en la mañana
 { const page = await abrir('2026-11-26T07:30:00', { registro: '2026-11-23:A,2026-11-24:VISITA,2026-11-25:B' }); await foto(page, 'tu-semana-2-pesas-1-visita'); await page.context().close() }
+// Tu semana con visita y cardio: A lunes, regadera martes, B miércoles, cardio jueves; viernes en la mañana
+{ const page = await abrir('2026-11-27T07:30:00', { registro: '2026-11-23:A,2026-11-24:VISITA,2026-11-25:B,2026-11-26:CARDIO' }); await foto(page, 'tu-semana-visita-y-cardio'); await page.context().close() }
+// "Hoy descanso" (ya sin el aviso de Deshacer) y la hoja de cardio, un martes a las 7:42
+{
+  const page = await abrir('2026-11-24T07:42:00', { registro: '2026-11-23:A' })
+  await page.getByRole('button', { name: 'Cardio o solo regadera' }).click()
+  await foto(page, 'hoja-cardio')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(500)
+  await page.getByRole('button', { name: 'Hoy descanso' }).click()
+  await page.waitForTimeout(6500)
+  await foto(page, 'hoy-descanso')
+  await page.context().close()
+}
 // la pregunta por un día sin registro
 { const page = await abrir('2026-11-26T07:30:00', { registro: '2026-11-23:A', sinNoFui: true }); await foto(page, 'hoy-pregunta'); await page.context().close() }
 // ya hecha la del día, y el sábado
