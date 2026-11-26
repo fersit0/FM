@@ -40,7 +40,7 @@ test('el lugar apartado se suelta al cambiar de paso: el calentamiento llega sin
 
 test('en Hoy, cuando se va el aviso no se mueven la semana, el título ni los botones', async ({ page }) => {
   await page.getByRole('button', { name: 'Hoy prefiero…' }).click()
-  await page.locator('.hoja-fondo.abierta').getByRole('button', { name: /^C:/ }).click()
+  await page.locator('.hoja-fondo.abierta').getByRole('button', { name: /^B:/ }).click()
   await expect(page.locator('.deshacer')).toBeVisible()
   await page.waitForTimeout(1000)
   const conAviso = await posiciones(page, '.inicio h1, .inicio button')

@@ -9,8 +9,9 @@ test.beforeEach(async ({ page }) => {
 
 test('sesión completa de principio a fin', async ({ page }) => {
   await empezarSesion(page)
+  // sin cierre de cardio (MANANAS-30.md, 2): de las pesas al resumen
   for (let i = 0; i < 60; i++) {
-    if (await page.getByText('Cierre', { exact: true }).isVisible()) break
+    if (await page.getByText('Listo.').isVisible()) break
     if (await page.getByRole('button', { name: 'Serie hecha' }).isVisible()) {
       await page.getByRole('button', { name: 'Serie hecha' }).click()
       await expect(pausa(page)).toBeVisible()
@@ -24,8 +25,6 @@ test('sesión completa de principio a fin', async ({ page }) => {
     if (await page.getByRole('button', { name: 'Siguiente ejercicio' }).isVisible()) { await page.getByRole('button', { name: 'Siguiente ejercicio' }).click(); await page.waitForTimeout(300); continue }
     await page.waitForTimeout(200)
   }
-  await expect(page.getByText('Cierre', { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Saltar' }).click()
   await expect(page.getByText('Listo.')).toBeVisible()
   await expect(page.locator('.resumen-cifra .t-cifra').nth(2)).not.toHaveText('0')
   await page.getByRole('button', { name: 'Cerrar' }).click()
@@ -39,10 +38,9 @@ test('sesión completa de principio a fin', async ({ page }) => {
 test('saltar todos los ejercicios', async ({ page }) => {
   await empezarSesion(page)
   for (let i = 0; i < 10; i++) {
-    if (await page.getByText('Cierre', { exact: true }).isVisible()) break
+    if (await page.getByText('Listo.').isVisible()) break
     await menu(page, 'Saltar ejercicio')
   }
-  await page.getByRole('button', { name: 'Saltar' }).click()
   await expect(page.getByText('Listo.')).toBeVisible()
   await page.getByRole('button', { name: 'Cerrar' }).click()
   await expect(page.locator('h1')).toHaveText('A hecha')
@@ -112,42 +110,6 @@ test('tras un error no se retoma sola', async ({ page }) => {
   await page.evaluate(() => sessionStorage.setItem('gym-app:sin-retomar', '1'))
   await page.goto('')
   await expect(page.getByText('Sesión a medias')).toBeVisible()
-})
-
-test('terminar aquí con 0 series: ofrece el cierre de 5 min y cuenta', async ({ page }) => {
-  await page.getByRole('button', { name: /^Empezar/ }).click()
-  await terminarAqui(page)
-  await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
-  await expect(page.getByText(/5 min a elección/)).toBeVisible()
-  await page.getByRole('button', { name: 'Saltar' }).click()
-  await expect(page.getByText('Listo.')).toBeVisible()
-  await page.getByRole('button', { name: 'Cerrar' }).click()
-  await page.getByRole('button', { name: 'Historial' }).click()
-  await expect(page.locator('.t-listo.num')).toHaveText('2')
-})
-
-test('lunes con Frida', async ({ page }) => {
-  // el lunes 12 de la semana siguiente, en la noche: Hoy muestra "Hoy vas con Frida" y "Fui con Frida" la registra con
-  // nota y su tipo (en la mañana del lunes es cardio)
-  await reloj(page, '2026-10-12T20:00:00')
-  await page.goto('')
-  await contestarNo(page)
-  await expect(page.getByText('Hoy vas con Frida')).toBeVisible()
-  await page.getByLabel('Nota').fill('espalda y bíceps')
-  await page.getByRole('button', { name: 'Fui con Frida' }).click()
-  await page.locator('.hoja-fondo.abierta').getByRole('button', { name: 'Torso', exact: true }).click()
-  await expect(page.getByText('Hoy vas con Frida')).toHaveCount(0)
-  await expect(page.getByText('lunes 12: Frida torso registrada.')).toBeVisible()
-  await page.getByRole('button', { name: 'Historial' }).click()
-  await page.locator('.lista .fila').first().click()
-  await page.locator('.hoja-fondo.abierta .fila', { hasText: 'lunes 12, Frida torso' }).click()
-  await expect(page.locator('.hoja-fondo.abierta').last()).toContainText('Nota: espalda y bíceps')
-  await page.keyboard.press('Escape')
-  await page.keyboard.press('Escape')
-  await page.getByRole('button', { name: 'Hoy' }).click()
-  // el lunes en la noche el club no abre
-  await expect(page.locator('h1')).toHaveText('Club cerrado')
-  await expect(page.locator('.tira-marca.hecho')).toHaveCount(1)
 })
 
 test('registrar un día pasado', async ({ page }) => {

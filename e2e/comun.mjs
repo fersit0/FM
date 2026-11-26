@@ -1,9 +1,8 @@
-// Helpers compartidos. El reloj se fija en el jueves 8 oct 2026 a las 7 pm (avanza desde ahí): es día de pesas, la
-// versión automática da completa y la semana es siempre la misma. Como en la v7 a esa hora Hoy pregunta "¿Vas en la
-// noche?", `limpiar` deja contestado "Voy en la noche" para ese día. `frida`: 'hecha' registra FRIDA el lunes de esa semana
-// (entonces toca A); 'no' marca "esta semana no hay" (entra C y toca C); 'ninguna' no registra nada (Hoy pregunta
-// "¿Fuiste con Frida el lunes?").
-// Con ?seed= la app arranca sin carga inicial, sin "Pon al día tu semana" y con los días anteriores contestados.
+// Helpers compartidos. El reloj se fija en el jueves 8 oct 2026 a las 7 pm (avanza desde ahí): la versión automática da
+// completa y la semana es siempre la misma. A esa hora, sin plan, Hoy dice "Hoy no hubo club"; `limpiar` deja dicho
+// "Voy en la noche" para ese día. `frida`: 'hecha' registra FRIDA torso el lunes de esa semana (cuenta como B, entonces
+// toca A); 'no' y 'ninguna' no registran nada (toca A). `extra` agrega más al seed (por ejemplo `&registro=2026-10-07:A`).
+// Con ?seed= la app arranca sin carga inicial y con los días anteriores contestados.
 import { expect } from '@playwright/test'
 
 export const HOY = '2026-10-08'
@@ -55,12 +54,11 @@ export async function registrar(page, fecha, tipo) {
   await expect(page.locator('.hoja-fondo.abierta')).toHaveCount(0)
   await page.getByRole('button', { name: 'Hoy' }).click()
 }
-/** Contesta "No hubo" a la pregunta de Frida y "No fui" a las preguntas por días sin registro que haya */
+/** Contesta "No fui" a las preguntas por días sin registro que haya */
 export async function contestarNo(page) {
   for (let i = 0; i < 8; i++) {
     await page.waitForTimeout(250)
-    if (await page.getByText(/¿Fuiste con Frida el/).isVisible().catch(() => false)) { await page.getByRole('button', { name: 'No hubo' }).click(); continue }
-    if (!(await page.getByText(/¿Entrenaste el/).isVisible().catch(() => false))) return
+    if (!(await page.getByText(/¿Fuiste al club el/).isVisible().catch(() => false))) return
     await page.getByRole('button', { name: 'No fui' }).click()
   }
 }

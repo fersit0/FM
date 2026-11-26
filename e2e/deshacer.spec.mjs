@@ -90,7 +90,8 @@ test('descartar pide confirmación; "Terminar aquí" no, pero se deshace', async
   await expect(page.getByText(/Serie 1 de/)).toBeVisible()
   await page.keyboard.press('Escape')
   await terminarAqui(page)
-  await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
+  // sin cierre de cardio: va directo al resumen
+  await expect(page.getByText('Listo.')).toBeVisible()
   await page.getByText('Terminaste aquí. Cuenta para la semana.').waitFor()
   await page.getByRole('button', { name: 'Deshacer' }).click()
   await expect(page.getByText(/Serie 1 de/)).toBeVisible()
@@ -99,8 +100,7 @@ test('descartar pide confirmación; "Terminar aquí" no, pero se deshace', async
 test('editar y borrar una sesión pasada desde Historial', async ({ page }) => {
   await page.getByRole('button', { name: 'Serie hecha' }).click()
   await terminarAqui(page)
-  await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
-  await page.getByRole('button', { name: 'Saltar' }).click()
+  await expect(page.getByText('Listo.')).toBeVisible()
   await page.getByRole('button', { name: 'Cerrar' }).click()
   await page.getByRole('button', { name: 'Historial' }).click()
   await page.locator('.lista .fila').first().click()

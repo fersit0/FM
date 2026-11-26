@@ -2,7 +2,7 @@
 // en cuatro iPhones, en Safari (viewport recortado por sus barras) y como app instalada (pantalla completa con
 // áreas seguras arriba y abajo), con el nombre más largo, una alternativa elegida y la foto grande.
 import { test, expect } from '@playwright/test'
-import { reloj, terminarAqui } from './comun.mjs'
+import { reloj, terminarAqui, contestarNo } from './comun.mjs'
 
 const DISPOSITIVOS = [
   { nombre: 'iPhone SE', w: 375, h: 667, top: 20, bottom: 0, safari: 553 },
@@ -132,36 +132,27 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
       }, { top: d.top, bottom: d.bottom })
     }
     await reloj(page)
-    await page.goto('?seed=1&fresco=1')
-    await page.waitForTimeout(800)
-    await page.evaluate(() => localStorage.removeItem('gym-app:sesion-activa'))
-    await page.goto('')
-    // "Pon al día tu semana" y la pregunta por un día
-    await expect(page.getByText('Pon al día tu semana')).toBeVisible()
-    await page.waitForTimeout(500)
-    await revisar(page, 'pon al día tu semana')
-    await page.getByRole('button', { name: 'Listo' }).click()
-    // de nuevo con el historial sembrado y el martes sin contestar: pregunta por el martes
+    // con el historial sembrado y los días de esta semana sin contestar: pregunta por el martes
     await page.goto('?seed=1')
     await page.waitForTimeout(800)
-    await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('gym-app:settings')); s.noFui = []; localStorage.setItem('gym-app:settings', JSON.stringify(s)) })
+    await page.evaluate(() => { localStorage.removeItem('gym-app:sesion-activa'); const s = JSON.parse(localStorage.getItem('gym-app:settings')); s.noFui = []; localStorage.setItem('gym-app:settings', JSON.stringify(s)) })
     await page.goto('')
-    await expect(page.getByText(/¿Entrenaste el/)).toBeVisible()
+    await expect(page.getByText(/¿Fuiste al club el/)).toBeVisible()
     await page.waitForTimeout(500)
     await revisar(page, 'pregunta por un día')
-    await page.getByRole('button', { name: 'No fui' }).click()
-    // jueves a las 7 pm sin sesión: primero "¿Vas en la noche?" (RUTINA-FINAL.md v7, 2.4)
-    await expect(page.getByText('No fuiste en la mañana')).toBeVisible()
+    await contestarNo(page)
+    // jueves a las 7 pm sin sesión: "Hoy no hubo club", con "Voy en la noche" y "Hoy descanso"
+    await expect(page.locator('.inicio-texto h1')).toHaveText('Hoy no hubo club')
     await page.waitForTimeout(500)
-    await revisar(page, 'vas en la noche')
+    await revisar(page, 'sin club')
     await page.getByRole('button', { name: 'Voy en la noche' }).click()
-    // "Hoy prefiero C" para que salga el jalón con aviso y la alternativa de nombre más largo
+    // "Hoy prefiero B" para que salga el jalón con aviso y la alternativa de nombre más largo
     await page.getByRole('button', { name: 'Hoy prefiero…' }).click()
     await page.waitForTimeout(500)
     await revisar(page, 'hoy prefiero')
-    await page.locator('.hoja-fondo.abierta').getByRole('button', { name: /^C:/ }).click()
-    await expect(page.locator('h1')).toContainText('C:')
-    // con el aviso de Deshacer a la vista ("Hoy C."): ocupa su lugar y no tapa nada
+    await page.locator('.hoja-fondo.abierta').getByRole('button', { name: /^B:/ }).click()
+    await expect(page.locator('.inicio-texto h1')).toContainText('B:')
+    // con el aviso de Deshacer a la vista ("Hoy B."): ocupa su lugar y no tapa nada
     await expect(page.locator('.deshacer')).toBeVisible()
     await page.waitForTimeout(500)
     await revisar(page, 'inicio')
@@ -213,10 +204,7 @@ for (const d of DISPOSITIVOS) for (const modo of ['Safari', 'instalada']) {
     await revisar(page, 'ejercicio completo con Siguiente ejercicio')
     await page.getByRole('button', { name: 'Siguiente ejercicio' }).click()
     await terminarAqui(page)
-    await expect(page.locator('h1', { hasText: 'Cierre' })).toBeVisible()
-    await page.waitForTimeout(700)
-    await revisar(page, 'cierre')
-    await page.getByRole('button', { name: 'Saltar' }).click()
+    // sin cierre de cardio: va directo al resumen
     await expect(page.getByText('Listo.')).toBeVisible()
     await page.waitForTimeout(700)
     await revisar(page, 'resumen')

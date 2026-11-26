@@ -1,7 +1,7 @@
 // Pesos en lb por serie: paso del ejercicio con − y +, cifra exacta con el teclado, kg/lb que se queda guardado,
 // cada serie con su propio peso, borrador que sobrevive a cerrar la app, y CASA en kg.
 import { test, expect } from '@playwright/test'
-import { limpiar, empezarSesion as aSerie, reloj, contestarNo } from './comun.mjs'
+import { limpiar, empezarSesion as aSerie, reloj, contestarNo, vaEnLaNoche } from './comun.mjs'
 
 async function seguirSiHaceFalta(page) {
   const seguir = page.getByRole('button', { name: 'Seguir sesión' })
@@ -12,8 +12,8 @@ const unidad = (page) => page.locator('button.kg')
 
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (d) => d.accept())
-  // semana sin Frida: toca C, que empieza con el jalón
-  await limpiar(page, 'no')
+  // Frida torso el lunes (cuenta como B) y A el miércoles: toca B, que empieza con el jalón
+  await limpiar(page, 'hecha', '&registro=2026-10-07:A')
 })
 
 test('el jalón arranca en 90 lb y sube de 5 en 5; kg/lb se queda guardado', async ({ page }) => {
@@ -97,8 +97,10 @@ test('cerrar la app a medio ajuste conserva peso y reps', async ({ page }) => {
 })
 
 test('CASA va en kg y arranca en 4', async ({ page }) => {
-  // viernes en la noche, ya sin "¿Vas en la noche?": se ofrece casa (en la mañana no)
+  // viernes en la noche con "Voy en la noche" y ya sin tiempo para la corta: se ofrece casa (en la mañana no)
   await reloj(page, '2026-10-09T21:05:00')
+  await page.goto('')
+  await vaEnLaNoche(page)
   await page.goto('')
   await contestarNo(page)
   await page.getByRole('button', { name: /Casa, 12 minutos/ }).click()
