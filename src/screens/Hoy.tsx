@@ -293,7 +293,7 @@ export function Hoy({ datos, ahora, sesionEnCurso, onEmpezar, onSeguir, onDescar
         <div className="aviso-lugar de-pantalla" data-al-fondo />
         {versionNueva && <button className="inicio-linea-roja" onClick={() => window.fmActualizar?.()}>Hay versión nueva. Toca para actualizar.</button>}
         {pregunta && <BotonesDia letra={pregunta.sugerida} onElegir={(r) => contestar(pregunta, r)} />}
-        {recordarRespaldo && <BotonTexto onClick={onAjustes}>{settings.ultimoRespaldo ? 'Ya pasaron 2 semanas del último respaldo. Descárgalo en Ajustes.' : 'Descarga tu primer respaldo en Ajustes.'}</BotonTexto>}
+        {recordarRespaldo && <BotonTexto onClick={onAjustes} className="inicio-respaldo">{settings.ultimoRespaldo ? 'Ya pasaron 2 semanas del último respaldo. Descárgalo en Ajustes.' : 'Descarga tu primer respaldo en Ajustes.'}</BotonTexto>}
         {pantallaClub && !sesionEnCurso && (
           <div className="botones-fila" style={{ justifyContent: 'center' }}>
             {modo === 'club' && <BotonTexto onClick={() => setHojaPrefiero(true)}>Hoy prefiero…</BotonTexto>}

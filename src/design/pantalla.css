@@ -69,6 +69,9 @@
   .tira { margin: 0 0 2px; }
   .tira-marca { width: 30px; height: 30px; font-size: 14px; }
   .tira-marca small { margin-bottom: 7px; }
+  /* con los dos renglones de botones de texto (cardio y "Hoy descanso") no cabe también el recordatorio del respaldo: se
+     queda en Ajustes */
+  .inicio-pie:has(> .botones-fila + .botones-fila) > .inicio-respaldo { display: none; }
 }
 
 /* Ficha */
