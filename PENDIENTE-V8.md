@@ -21,9 +21,21 @@ La v8 (MANANAS-30.md) ya está aplicada en esta rama: datos, lógica, pantallas 
 9. La visita de un día con pesas no se borra: se oculta en Historial y no suma otro día de club.
 10. La línea de Hoy lleva solo los contadores ("Club 2 de 5 · Pesas 2"); la letra va en el título.
 
-## Falta
-1. **e2e** (`e2e/*.spec.mjs`): siguen escritas para la v7 y no se han corrido contra esta rama. Córrelas una vez, borra las que prueban cosas que ya no existen (plan y "Mover" de Frida, "¿Vas en la noche?", sesión C, A sin pierna, cierre, "Pon al día") y agrega pocas para lo nuevo: rotación en Hoy, "Ya llegué" y "Solo regadera hoy", la pregunta "¿Fuiste al club el…?", "Voy en la noche" y Tu semana con visita. `e2e/comun.mjs` fija el reloj en un jueves a las 7 pm con "Voy en la noche"; `seed.ts` ya acepta `registro=FECHA:VISITA`.
-2. Versión `0.8.0` en `package.json` y `package-lock.json`.
-3. Una nota arriba de `RUTINA-FINAL.md` que diga que MANANAS-30.md manda.
-4. Revisar a mano en 390 px: sesión B completa de principio a fin, un recorte en el camino (reloj a las 7:55 al llegar al segundo ejercicio) y "Terminar aquí".
-5. Enseñarle a Fer las capturas y, si dice que sí, merge a `main` y push.
+## Falta (en este orden)
+
+0. **Arranque.** En la carpeta del proyecto: si `git status` muestra cambios sin commit en `main`, para y pregúntale a Fer. Si está limpio: `git fetch origin`, `git checkout mananas-30`, `npm ci` y confirma que `npm test` y `npm run build` pasan antes de tocar nada.
+
+1. **"Hoy descanso" (nuevo, lo pidió Fer el 25 nov, el día que amaneció enfermo).** Hoy no tiene cómo decir "hoy no voy, estoy malo" sin que al día siguiente salga "Ayer no hubo club. Hoy sí: nunca dos seguidos.".
+   - `Settings.descansos?: string[]` (YYYY-MM-DD).
+   - En Hoy, en un día hábil sin club (modos `club`, `regadera` y `sinclub`, nunca con sesión en curso): botón de texto "Hoy descanso", un toque y Deshacer, como los demás. Ese día Hoy queda en un modo nuevo `descanso`: título "Descanso", nota con lo que sigue ("Mañana: B.") y solo "Registrar sesión".
+   - `avisoAyer` no avisa si el día hábil anterior está en `descansos`. `diasSinRegistro` no pregunta por esos días. En Tu semana ese día no lleva plan. La rotación y los contadores no cambian (la meta de Club sigue en 5).
+   - Si ese día luego se registra pesas o visita, se quita de `descansos`.
+   - Pruebas en `semana.test.ts`, `registro.test.ts` y `tusemana.test.ts`. Nada más que esto: no agregues otros modos ni ajustes.
+
+2. **e2e, sin gastar de más.** Siguen escritas para la v7. Corre `npx playwright test` una vez en chromium. Borra completos `frida.spec.mjs`, `v7.spec.mjs` y `revision-v6.spec.mjs` (prueban cosas que ya no existen). En los demás, borra los casos de cosas que ya no existen (plan y "Mover" de Frida, "¿Vas en la noche?", sesión C, A sin pierna, cierre, "Pon al día") y arregla solo lo que truene por textos o por el reloj de `e2e/comun.mjs` (hoy fija un jueves 7 pm con "Voy en la noche"; `seed.ts` ya acepta `registro=FECHA:VISITA`). Agrega un `v8.spec.mjs` corto: rotación en Hoy, "Ya llegué" a las 8:20, "Solo regadera hoy", la pregunta "¿Fuiste al club el…?", "Voy en la noche", "Hoy descanso" y Tu semana con visita. WebKit (`NAVEGADOR=webkit`) una sola vez al final.
+
+3. Versión `0.8.0` en `package.json` y `package-lock.json`, y una línea arriba de `RUTINA-FINAL.md` que diga que `MANANAS-30.md` manda.
+
+4. **Revisión a mano a 390 px:** con `npm run dev` corriendo, `node scripts/capturas-v8.mjs` (agrégale la captura de "Hoy descanso"). Revisa tú las capturas, y con el reloj del navegador fijo haz una B completa, un recorte en el camino (7:55 al llegar al segundo ejercicio) y "Terminar aquí".
+
+5. **Enséñale a Fer 5 capturas** (Hoy 7:42, Hoy 8:20, Tu semana con visita, Hoy descanso y la sesión B) y dile en tres líneas qué cambió. Solo si dice que sí: merge a `main` y push, que es lo que publica la app. Después dile que abra FM en el iPhone, toque "Hay versión nueva" y revise en Ajustes que diga salida 8:45 y 35 de baño.
